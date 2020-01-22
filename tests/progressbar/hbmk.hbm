@@ -1,0 +1,10 @@
+-w3
+-es2
+-b 
+-warn=max 
+-jobs=3 
+-gc3
+-lhbct
+-lgui
+-i/home/elama/libguiGrandFinale/include/
+-L/home/elama/libguiGrandFinale/

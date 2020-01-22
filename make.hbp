@@ -1,0 +1,12 @@
+./prg/*.prg
+./c/*.c
+-beep 
+-b 
+-warn=max 
+-jobs=3 
+-gc3
+-es2
+-w3
+-hbdyn
+-ogui
+-i./include/
