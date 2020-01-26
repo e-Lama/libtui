@@ -9,7 +9,7 @@ CREATE CLASS AlertLG
 
 EXPORTED:
 
-    METHOD AlertLG(xMessage, acOptions, cColorMessage, cColorButtons, nDelay, nRow, nLeft, nRight, nCurrentOption, lAllowEscape, lAllowMove, cBorder)
+    METHOD AlertLG(xMessage, acOptions, cColorMessage, cColorButtons, nDelay, nRow, nLeft, nRight, nCurrentOption, lAllowEscape, lAllowMove, lCyclic, cBorder)
     METHOD keys_map(hKeysMap) SETGET
     METHOD create_centered(lCreateCentered)
 
@@ -31,7 +31,7 @@ HIDDEN:
 
 ENDCLASS LOCK
 
-METHOD AlertLG(xMessage, acOptions, cColorMessage, cColorButtons, nDelay, nRow, nLeft, nRight, nCurrentOption, lAllowEscape, lAllowMove, cBorder) CLASS AlertLG
+METHOD AlertLG(xMessage, acOptions, cColorMessage, cColorButtons, nDelay, nRow, nLeft, nRight, nCurrentOption, lAllowEscape, lAllowMove, lCyclic, cBorder) CLASS AlertLG
 
     LOCAL nOldWindow := WSelect()
     LOCAL acOptionsTrimmed := Array(Len(acOptions))
@@ -48,7 +48,7 @@ METHOD AlertLG(xMessage, acOptions, cColorMessage, cColorButtons, nDelay, nRow, 
 
     WSelect(0)
 
-    IF PCount() < 2 .OR. PCount() > 12
+    IF PCount() < 2 .OR. PCount() > 13
         throw(ARGUMENTS_NUMBER_EXCEPTION)
     ENDIF
 
@@ -168,10 +168,8 @@ METHOD AlertLG(xMessage, acOptions, cColorMessage, cColorButtons, nDelay, nRow, 
 
     nWidth := Max(Max(max_of_array(length_array(acMessage)), nOptionsLength), Min(nRight - nLeft - 4, Len(cMessage)))
 
-    //WOpen(nRow, nLeft, nRow + nMessageHeight + 5, nLeft + nWidth + 4, .T.)
     WOpen(nRow, nLeft, nRow + nMessageHeight + 3, nLeft + nWidth + 4, .T.)
     WBox(cBorder)
-
 
     IF ::lCreateCentered
         WCenter(.T.)
@@ -220,10 +218,14 @@ METHOD AlertLG(xMessage, acOptions, cColorMessage, cColorButtons, nDelay, nRow, 
             CASE nKey == K_LEFT
                 IF nCurrentOption > 1
                     --nCurrentOption
+                ELSEIF lCyclic
+                    nCurrentOption := Len(acOptionsTrimmed)
                 ENDIF
             CASE nKey == K_RIGHT
                 IF nCurrentOption < Len(acOptionsTrimmed)
                     ++nCurrentOption
+                ELSEIF lCyclic
+                    nCurrentOption := 1
                 ENDIF
             CASE nKey == K_ENTER
                 EXIT

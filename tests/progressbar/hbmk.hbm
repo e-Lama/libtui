@@ -6,5 +6,5 @@
 -gc3
 -lhbct
 -lgui
--i/home/elama/libguiGrandFinale/include/
--L/home/elama/libguiGrandFinale/
+-i../../include/
+-L../../

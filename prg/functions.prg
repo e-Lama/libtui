@@ -842,13 +842,13 @@ FUNCTION hash_to_row(hHash, lAppendBlank, lSubset)
     ENDIF
 
     IF lAppendBlank
-        APPEND BLANK
+        dbAppend(.F.)
 
         IF NetErr()
             RETURN .F.
         ENDIF
     ELSE
-        IF !RLock()
+        IF !dbRLock(RecNo())
             RETURN .F.
         ENDIF
     ENDIF

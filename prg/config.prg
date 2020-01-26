@@ -145,6 +145,10 @@ HIDDEN:
                                                                           };
                                                                       };
                                             ; /*** ERRORS ***/
+                                            , 'UnknownVariable', {'Unknown variable', {| xArgument | ValType(xArgument) == 'C';
+                                                                             .AND. !Empty(xArgument);
+                                                                          };
+                                                                      };
                                             , 'CantCreateConfigFile', {"Can't create the configuration file", {| xArgument |;
                                                                              ValType(xArgument) == 'C';
                                                                              .AND. !Empty(xArgument);

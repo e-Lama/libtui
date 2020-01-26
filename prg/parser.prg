@@ -342,6 +342,7 @@ METHOD basic_parse(xRow, cType, hVariables) CLASS Parser
     xRow := Right(xRow, Len(xRow) - 2)
 
     IF lInHash
+        xRow := AllTrim(xRow)
         IF hb_hHasKey(hVariables, xRow)
             IF AScan(::axUsedKeys, xRow) != 0
                 ::add_to_debug(Config():get_config('VariableRepeating'))
@@ -556,7 +557,7 @@ METHOD validate_say(axRow, hVariables) CLASS Parser
         IF ValType(axRow[i]) != cType
             ::add_to_debug(Config():get_config('IncorrectValue'))
             RETURN .F.
-        ELSEIF axRow[i] < 0
+        ELSEIF axRow[i] < -2//0
             ::add_to_debug(Config():get_config('IncorrectValue'))
             RETURN .F.
         ENDIF
@@ -607,6 +608,7 @@ RETURN .T.
 METHOD validate_get(axRow, hVariables) CLASS Parser
 
     LOCAL axSayPart := Array(C_SAY_COLOR_GET)
+    LOCAL nIndex
     LOCAL cType
     LOCAL i
 
@@ -639,7 +641,15 @@ METHOD validate_get(axRow, hVariables) CLASS Parser
     AAdd(::axUsedKeys, axRow[X_ID_VAR_GET])
 
     axRow[X_ID_VAR_GET] := AllTrim(Right(axRow[X_ID_VAR_GET], Len(axRow[X_ID_VAR_GET]) - 2))
-    ::axValues[AScan(::axKeys, axRow[X_ID_VAR_GET])] := cast(::axValues[AScan(::axKeys, axRow[X_ID_VAR_GET])], cType)
+
+    nIndex := AScan(::axKeys, axRow[X_ID_VAR_GET])
+
+    IF nIndex == 0
+        ::add_to_debug(Config():get_config('UnknownVariable'))
+        RETURN .F.
+    ELSE
+        ::axValues[nIndex] := cast(::axValues[nIndex], cType)
+    ENDIF
 
     FOR i := C_GET_PICTURE_GET TO C_VALID_FNC_GET
 
@@ -666,6 +676,7 @@ RETURN .T.
 METHOD validate_checkbox(axRow, hVariables) CLASS Parser
 
     LOCAL cType
+    LOCAL nIndex
     LOCAL i
 
     IF Len(axRow) != C_STYLE_CHB
@@ -713,7 +724,15 @@ METHOD validate_checkbox(axRow, hVariables) CLASS Parser
     AAdd(::axUsedKeys, axRow[L_ID_VAR_CHB])
 
     axRow[L_ID_VAR_CHB] := AllTrim(Right(axRow[L_ID_VAR_CHB], Len(axRow[L_ID_VAR_CHB]) - 2))
-    ::axValues[AScan(::axKeys, axRow[L_ID_VAR_CHB])] := cast(::axValues[AScan(::axKeys, axRow[L_ID_VAR_CHB])], cType)
+
+    nIndex := AScan(::axKeys, axRow[L_ID_VAR_CHB])
+
+    IF nIndex == 0
+        ::add_to_debug(Config():get_config('UnknownVariable'))
+        RETURN .F.
+    ELSE
+        ::axValues[nIndex] := cast(::axValues[nIndex], cType)
+    ENDIF
 
     FOR i := C_CAPTION_CHB TO C_STYLE_CHB
 
@@ -746,6 +765,7 @@ METHOD validate_listbox(axRow, hVariables) CLASS Parser
 
     LOCAL cType
     LOCAL hHash
+    LOCAL nIndex
     LOCAL i
 
     IF Len(axRow) != L_SCROLLBAR_LSB
@@ -802,9 +822,18 @@ METHOD validate_listbox(axRow, hVariables) CLASS Parser
     AAdd(::axUsedKeys, axRow[NC_ID_VAR_LSB])
 
     axRow[NC_ID_VAR_LSB] := AllTrim(Right(axRow[NC_ID_VAR_LSB], Len(axRow[NC_ID_VAR_LSB]) - 2))
-    ::axValues[AScan(::axKeys, axRow[NC_ID_VAR_LSB])] := cast(::axValues[AScan(::axKeys, axRow[NC_ID_VAR_LSB])], cType)
 
-    IF ValType(axRow[NC_ID_VAR_LSB]) != cType
+    nIndex := AScan(::axKeys, axRow[NC_ID_VAR_LSB])
+
+    IF nIndex == 0
+        ::add_to_debug(Config():get_config('UnknownVariable'))
+        RETURN .F.
+    ELSE
+        ::axValues[nIndex] := cast(::axValues[nIndex], cType)
+    ENDIF
+
+    //IF ValType(axRow[NC_ID_VAR_LSB]) != cType
+    IF ValType(::axValues[nIndex]) != cType
         ::add_to_debug(Config():get_config('IncorrectValue'))
         RETURN .F.
     ENDIF
@@ -885,6 +914,7 @@ METHOD validate_radiogroup(axRow, hVariables) CLASS Parser
 
     LOCAL cType
     LOCAL hHash
+    LOCAL nIndex
     LOCAL i
 
     IF Len(axRow) != C_VALID_FNC_RGB
@@ -941,7 +971,15 @@ METHOD validate_radiogroup(axRow, hVariables) CLASS Parser
     AAdd(::axUsedKeys, axRow[NC_ID_VAR_RGB])
 
     axRow[NC_ID_VAR_RGB] := AllTrim(Right(axRow[NC_ID_VAR_RGB], Len(axRow[NC_ID_VAR_RGB]) - 2))
-    ::axValues[AScan(::axKeys, axRow[NC_ID_VAR_RGB])] := cast(::axValues[AScan(::axKeys, axRow[NC_ID_VAR_RGB])], cType)
+
+    nIndex := AScan(::axKeys, axRow[NC_ID_VAR_RGB])
+
+    IF nIndex == 0
+        ::add_to_debug(Config():get_config('UnknownVariable'))
+        RETURN .F.
+    ELSE
+        ::axValues[nIndex] := cast(::axValues[nIndex], cType)
+    ENDIF
 
     axRow[NC_ID_VAR_RGB] := cast(axRow[NC_ID_VAR_RGB], cType)
 
@@ -995,7 +1033,7 @@ RETURN .T.
 METHOD validate_pushbutton(axRow, hVariables) CLASS Parser
 
     LOCAL cType
-
+    LOCAL nIndex
     LOCAL i
 
     IF Len(axRow) != C_STYLE_PSB
@@ -1038,9 +1076,14 @@ METHOD validate_pushbutton(axRow, hVariables) CLASS Parser
     ENDIF
     AAdd(::axUsedKeys, axRow[L_ID_VAR_PSB])
 
-    axRow[L_ID_VAR_PSB] := AllTrim(Right(axRow[L_ID_VAR_PSB], Len(axRow[L_ID_VAR_PSB]) - 2))
-    ::axValues[AScan(::axKeys, axRow[L_ID_VAR_PSB])] := cast(::axValues[AScan(::axKeys, axRow[L_ID_VAR_PSB])], cType)
+    nIndex := AScan(::axKeys, axRow[L_ID_VAR_PSB])
 
+    IF nIndex == 0
+        ::add_to_debug(Config():get_config('UnknownVariable'))
+        RETURN .F.
+    ELSE
+        ::axValues[nIndex] := cast(::axValues[nIndex], cType)
+    ENDIF
 
     FOR i := C_CAPTION_PSB TO C_COLOR_PSB
 
@@ -1149,6 +1192,8 @@ METHOD make_listbox(nTop, nLeft, nBottom, nRight, xIdVar, axList, cCaption, cMes
         @ nTop, nLeft, nBottom, nRight GET ::axValues[nPosition] LISTBOX axList CAPTION cCaption MESSAGE cMessage;
           COLOR cColor FOCUS &(cFocus) STATE &(cState) DROPDOWN
     ELSEIF !lDropDown .AND. lScrollBar
+        //Alert(Str(Len(axList)))
+        //Alert("'" + ::axValues[nPosition] + "'")
         @ nTop, nLeft, nBottom, nRight GET ::axValues[nPosition] LISTBOX axList CAPTION cCaption MESSAGE cMessage;
           COLOR cColor FOCUS &(cFocus) STATE &(cState) SCROLLBAR
     ELSE
