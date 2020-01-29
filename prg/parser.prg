@@ -15,7 +15,11 @@ EXPORTED:
     METHOD get_answers()
 
     METHOD log(cLog) SETGET
+
     METHOD get_window_handler() INLINE ::nWindow
+
+    METHOD getlist(aoGetList) SETGET
+    METHOD use_memvar(lUseMemvar) SETGET
 
 HIDDEN:
 
@@ -24,6 +28,8 @@ HIDDEN:
     CLASSVAR axValues AS ARRAY INIT Array(0)
     CLASSVAR axUsedKeys AS ARRAY INIT Array(0)
     CLASSVAR nWindow AS NUMERIC INIT -1
+    CLASSVAR aoGetList AS ARRAY INIT Array(0)
+    CLASSVAR lUseMemvar AS LOGICAL INIT .T.
 
     METHOD validate_window(axRow, hVariables)
     METHOD validate_box(axRow, hVariables)
@@ -52,15 +58,37 @@ HIDDEN:
     METHOD handle_hash(hVariables)
     METHOD handle_object(axRow)
 
-    METHOD add_when_valid(cWhen, cValid)
-
 ENDCLASS LOCK 
+
+METHOD getlist(aoGetList) CLASS Parser
+
+    LOCAL aoWasGetList := clone_objects_array(::aoGetList)
+
+    IF aoGetList != NIL
+        assert_type(aoGetList, 'A')
+        AEval(aoGetList, {| oElement | assert_type(oElement, 'O')})
+        ::aoGetList := aoGetList
+    ENDIF
+
+RETURN aoWasGetList
+
+METHOD use_memvar(lUseMemvar) CLASS Parser
+
+    LOCAL lWasUseMemvar := ::lUseMemvar
+
+    IF lUseMemvar != NIL
+        assert_type(lUseMemvar, 'L')
+        ::lUseMemvar := lUseMemvar
+    ENDIF
+
+RETURN lWasUseMemvar
 
 METHOD log(cLog) CLASS Parser
 
     LOCAL cWasLog := ::cLog
 
     IF cLog != NIL
+        assert_type(cLog, 'C')
         ::cLog := cLog
     ENDIF
 
@@ -832,7 +860,6 @@ METHOD validate_listbox(axRow, hVariables) CLASS Parser
         ::axValues[nIndex] := cast(::axValues[nIndex], cType)
     ENDIF
 
-    //IF ValType(axRow[NC_ID_VAR_LSB]) != cType
     IF ValType(::axValues[nIndex]) != cType
         ::add_to_debug(Config():get_config('IncorrectValue'))
         RETURN .F.
@@ -849,10 +876,6 @@ METHOD validate_listbox(axRow, hVariables) CLASS Parser
 
     IF ValType(axRow[A_LIST_LSB]) != 'A'
         hHash := hb_JsonDecode(axRow[A_LIST_LSB])
-        //IF ValType(axRow[A_LIST_LSB]) != 'A'
-          //  ::add_to_debug(Config():get_config('IncorrectValue'))
-            //RETURN .F.
-        //ENDIF
 
         IF ValType(hHash) != 'H'
             ::add_to_debug(Config():get_config('IncorrectValue'))
@@ -1136,9 +1159,19 @@ METHOD make_pushbutton(nRow, nCol, xIdVar, cCaption, cMessage, cWhen, cValid, cC
         RETURN .F.
     ENDIF
 
-    @ nRow, nCol GET ::axValues[nPosition] PUSHBUTTON MESSAGE cMessage CAPTION cCaption COLOR cColor FOCUS &(cFocus) STATE &(cState) STYLE cStyle
+    SetPos(nRow, nCol)
 
-    ::add_when_valid(cWhen, cValid)
+    IF ::lUseMemvar
+        AAdd(GETLIST, _GET_(::axValues[nPosition], "::axValues[nPosition]", NIL, &(cValid), &(cWhen)))
+        ATail(GETLIST):control := _PushButt_(cCaption, cMessage, cColor, {|| &(cFocus)}, {|| &(cState)}, cStyle)
+        ATail(GETLIST):reader := {| a, b, c, d | GUIReader(a, b, c, d)}
+        ATail(GETLIST):control:display()
+    ELSE
+        AAdd(::aoGetList, _GET_(::axValues[nPosition], "::axValues[nPosition]", NIL, &(cValid), &(cWhen)))
+        ATail(::aoGetList):control := _PushButt_(cCaption, cMessage, cColor, {|| &(cFocus)}, {|| &(cState)}, cStyle)
+        ATail(::aoGetList):reader := {| a, b, c, d | GUIReader(a, b, c, d)}
+        ATail(::aoGetList):control:display()
+    ENDIF
 
 RETURN .T.
 
@@ -1152,10 +1185,25 @@ METHOD make_radiogroup(nTop, nLeft, nBottom, nRight, xIdVar, aGroup, cCaption, c
         RETURN .F.
     ENDIF
 
-    @ nTop, nLeft, nBottom, nRight GET ::axValues[nPosition] RADIOGROUP ::make_buttons(aGroup) CAPTION;
-    cCaption MESSAGE cMessage COLOR cColor FOCUS &(cFocus)
+    SetPos(nTop, nLeft)
 
-    ::add_when_valid(cWhen, cValid)
+    IF ::lUseMemvar
+        AAdd(GETLIST, _GET_(::axValues[nPosition], "::axValues[nPosition]", NIL, &(cValid), &(cWhen)))
+        ATail(GETLIST):control := _RadioGrp_(ATail(GETLIST):row, ATail(GETLIST):col, nBottom, nRight;
+                                             , ::axValues[nPosition], ::make_buttons(aGroup), cCaption;
+                                             , cMessage, cColor, {|| &(cFocus)};
+                                            )
+        ATail(GETLIST):reader := {| a, b, c, d | GUIReader(a, b, c, d)}
+        ATail(GETLIST):control:display()
+    ELSE
+        AAdd(::aoGetList, _GET_(::axValues[nPosition], "::axValues[nPosition]", NIL, &(cValid), &(cWhen)))
+        ATail(::aoGetList):control := _RadioGrp_(ATail(::aoGetList):row, ATail(::aoGetList):col, nBottom;
+                                                 , nRight, ::axValues[nPosition], ::make_buttons(aGroup);
+                                                 , cCaption, cMessage, cColor, {|| &(cFocus)};
+                                                )
+        ATail(::aoGetList):reader := {| a, b, c, d | GUIReader(a, b, c, d)}
+        ATail(::aoGetList):control:display()
+    ENDIF
 
 RETURN .T.
 
@@ -1169,9 +1217,19 @@ METHOD make_checkbox(nRow, nCol, xIdVar, cCaption, cMessage, cWhen, cValid, cCol
         RETURN .F.
     ENDIF
 
-    @ nRow, nCol GET ::axValues[nPosition] CHECKBOX CAPTION cCaption MESSAGE cMessage COLOR cColor FOCUS &(cFocus) STATE &(cState) STYLE cStyle
+    SetPos(nRow, nCol)
 
-    ::add_when_valid(cWhen, cValid)
+    IF ::lUseMemvar
+        AAdd(GETLIST, _GET_(::axValues[nPosition], '::axValues[nPosition]', NIL, &(cValid), &(cWhen)))
+        ATail(GETLIST):control := _CheckBox_(::axValues[nPosition], cCaption, cMessage, cColor, {|| &(cFocus)}, {|| &(cState)}, cStyle)
+        ATail(GETLIST):reader := {|a, b, c, d| GUIReader(a, b, c, d)}
+        ATail(GETLIST):control:display()
+    ELSE
+        AAdd(::aoGetList, _GET_(::axValues[nPosition], '::axValues[nPosition]', NIL, &(cValid), &(cWhen)))
+        ATail(::aoGetList):control := _CheckBox_(::axValues[nPosition], cCaption, cMessage, cColor, {|| &(cFocus)}, {|| &(cState)}, cStyle)
+        ATail(::aoGetList):reader := {|a, b, c, d| GUIReader(a, b, c, d)}
+        ATail(::aoGetList):control:display()
+    ENDIF
 
 RETURN .T.
 
@@ -1185,23 +1243,26 @@ METHOD make_listbox(nTop, nLeft, nBottom, nRight, xIdVar, axList, cCaption, cMes
         RETURN .F.
     ENDIF
 
-    IF lDropDown .AND. lScrollBar
-        @ nTop, nLeft, nBottom, nRight GET ::axValues[nPosition] LISTBOX axList CAPTION cCaption MESSAGE cMessage;
-          COLOR cColor FOCUS &(cFocus) STATE &(cState) DROPDOWN SCROLLBAR
-    ELSEIF lDropDown .AND. !lScrollBar
-        @ nTop, nLeft, nBottom, nRight GET ::axValues[nPosition] LISTBOX axList CAPTION cCaption MESSAGE cMessage;
-          COLOR cColor FOCUS &(cFocus) STATE &(cState) DROPDOWN
-    ELSEIF !lDropDown .AND. lScrollBar
-        //Alert(Str(Len(axList)))
-        //Alert("'" + ::axValues[nPosition] + "'")
-        @ nTop, nLeft, nBottom, nRight GET ::axValues[nPosition] LISTBOX axList CAPTION cCaption MESSAGE cMessage;
-          COLOR cColor FOCUS &(cFocus) STATE &(cState) SCROLLBAR
+    SetPos(nTop, nLeft)
+
+    IF ::lUseMemvar
+        AAdd(GETLIST, _GET_(::axValues[nPosition], "::axValues[nPosition]", NIL, &(cValid), &(cWhen)))
+        ATail(GETLIST):control := _ListBox_(ATail(GETLIST):row, ATail(GETLIST):col, nBottom, nRight;
+                                            , ::axValues[nPosition], axList, cCaption, cMessage, cColor;
+                                            , {|| &(cFocus)}, {|| &(cState)}, lDropDown, lScrollBar;
+                                           )
+        ATail(GETLIST):reader := {| a, b, c, d | GUIReader(a, b, c, d)}
+        ATail(GETLIST):control:display()
     ELSE
-        @ nTop, nLeft, nBottom, nRight GET ::axValues[nPosition] LISTBOX axList CAPTION cCaption MESSAGE cMessage;
-          COLOR cColor FOCUS &(cFocus) STATE &(cState) 
+        AAdd(::aoGetList, _GET_(::axValues[nPosition], "::axValues[nPosition]", NIL, &(cValid), &(cWhen)))
+        ATail(::aoGetList):control := _ListBox_(ATail(::aoGetList):row, ATail(::aoGetList):col, nBottom;
+                                                , nRight, ::axValues[nPosition], axList, cCaption, cMessage;
+                                                , cColor, {|| &(cFocus)}, {|| &(cState)}, lDropDown, lScrollBar;
+                                               )
+        ATail(::aoGetList):reader := {| a, b, c, d | GUIReader(a, b, c, d)}
+        ATail(::aoGetList):control:display()
     ENDIF
 
-    ::add_when_valid(cWhen, cValid)
 
 RETURN .T.
 
@@ -1217,19 +1278,36 @@ METHOD make_get(nRow, nCol, cExp, cSayPicture, cColorStringSay, xIdVar, cGetPict
     ENDIF
 
     IF lContainsSay
-        @ nRow, nCol SAY cExp PICTURE cSayPicture COLOR cColorStringSay GET ::axValues[nPosition] PICTURE cGetPicture;
-          COLOR cColorStringGet CAPTION cCaption MESSAGE cMessage
+        DevPos(nRow, nCol)
+        DevOutPict(cExp, cSayPicture, cColorStringSay)
+        SetPos(Row(), Col() + 1)
     ELSE
-        @ nRow, nCol GET ::axValues[nPosition] PICTURE cGetPicture COLOR cColorStringGet CAPTION cCaption MESSAGE cMessage
+        SetPos(nRow, nCol)
     ENDIF
 
-    ::add_when_valid(cWhen, cValid)
+    IF ::lUseMemvar
+        AAdd(GETLIST, _GET_(::axValues[nPosition], "::axValues[nPosition]", cGetPicture, &(cValid), &(cWhen)))
+        ATail(GETLIST):caption := cCaption
+        ATail(GETLIST):caprow := ATail(GETLIST):row
+        ATail(GETLIST):capcol := ATail(GETLIST):col - __CapLength(cCaption) - 1
+        ATail(GETLIST):message := cMessage
+        ATail(GETLIST):colordisp(cColorStringGet)
+        ATail(GETLIST):display()
+    ELSE
+        AAdd(::aoGetList, _GET_(::axValues[nPosition], "::axValues[nPosition]", cGetPicture, &(cValid), &(cWhen)))
+        ATail(::aoGetList):caption := cCaption
+        ATail(::aoGetList):caprow := ATail(::aoGetList):row
+        ATail(::aoGetList):capcol := ATail(::aoGetList):col - __CapLength(cCaption) - 1
+        ATail(::aoGetList):message := cMessage
+        ATail(::aoGetList):colordisp(cColorStringGet)
+        ATail(::aoGetList):display()
+    ENDIF
 
 RETURN .T.
 
 METHOD make_box(nTop, nLeft, nBottom, nRight, cBoxString, cColorString) CLASS Parser
 
-    @ nTop, nLeft, nBottom, nRight BOX cBoxString COLOR cColorString
+    DispBox(nTop, nLeft, nBottom, nRight, cBoxString, cColorString)
 
 RETURN .T.
 
@@ -1252,20 +1330,7 @@ RETURN ::nWindow != -1
 
 METHOD make_say(nRow, nCol, cExp, cSayPicture, cColorString) CLASS Parser
 
-    @ nRow, nCol SAY cExp PICTURE cSayPicture COLOR cColorString 
+    DevPos(nRow, nCol)
+    DevOutPict(cExp, cSayPicture, cColorString)
 
 RETURN .T.
-
-METHOD add_when_valid(cWhen, cValid)
-
-    MEMVAR GETLIST
-
-    IF !Empty(cWhen)
-        GETLIST[Len(GETLIST)][5] := &(cWhen)
-    ENDIF
-
-    IF !Empty(cValid)
-        GETLIST[Len(GETLIST)][4] := &(cValid)
-    ENDIF
-
-RETURN NIL

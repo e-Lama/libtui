@@ -1,6 +1,8 @@
 #include "hbclass.ch"
 #include "box.ch"
 
+#include "functions.ch"
+
 CREATE CLASS Window
 
 EXPORTED:
@@ -88,10 +90,10 @@ METHOD refresh_title(lRefreshBorder) CLASS Window
 
     LOCAL nOldWindow := WSelect()
     LOCAL nCol := Max(Int((::nLeft + ::nRight - Len(::cTitle)) / 2), ::nLeft)
-    LOCAL cOldColor// := SetColor(::cTitleColor)
+    LOCAL cOldColor
 
     IF ValType(lRefreshBorder) != 'U' .AND. ValType(lRefreshBorder) != 'L'
-        throw('Incorrect data type of argument')
+        throw(ARGUMENT_TYPE_EXCEPTION)
     ENDIF
     
     IF (ValType(lRefreshBorder) == 'U' .AND. !Empty(::cBorder)) .OR. lRefreshBorder
@@ -111,7 +113,7 @@ METHOD refresh_footer() CLASS Window
 
     LOCAL nOldWindow := WSelect()
     LOCAL nCol := Max(Int((::get_left() + ::get_right() - Len(::cFooter)) / 2), ::get_left()) 
-    LOCAL cOldColor// := SetColor(::cFooterColor)
+    LOCAL cOldColor
 
     WSelect(0)
     cOldColor := SetColor(::cFooterColor)
@@ -127,7 +129,7 @@ METHOD refresh_header() CLASS Window
 
     LOCAL nOldWindow := WSelect()
     LOCAL nCol := Max(Int((::get_left() + ::get_right() - Len(::cHeader)) / 2), ::get_left()) 
-    LOCAL cOldColor// := SetColor(::cHeaderColor)
+    LOCAL cOldColor
 
     WSelect(0)
     cOldColor := SetColor(::cHeaderColor)
@@ -162,7 +164,7 @@ METHOD border(cBorder) CLASS Window
     IF cBorder != NIL
         assert_type(cBorder, 'C')
         IF !is_box(cBorder)
-            throw('It is not border string')
+            throw(ARGUMENT_VALUE_EXCEPTION)
         ENDIF
         ::cBorder := cBorder
     ENDIF
@@ -209,7 +211,7 @@ METHOD border_color(cColor) CLASS Window
     IF cColor != NIL
         assert_type(cColor, 'C')
         IF !is_color(cColor)
-            throw('It is not color string')
+            throw(ARGUMENT_VALUE_EXCEPTION)
         ENDIF
         ::cBorderColor := cColor
     ENDIF
@@ -223,7 +225,7 @@ METHOD title_color(cColor) CLASS Window
     IF cColor != NIL
         assert_type(cColor, 'C')
         IF !is_color(cColor)
-            throw('It is not color string')
+            throw(ARGUMENT_VALUE_EXCEPTION)
         ENDIF
         ::cTitleColor := cColor
     ENDIF
@@ -237,7 +239,7 @@ METHOD header_color(cColor) CLASS Window
     IF cColor != NIL
         assert_type(cColor, 'C')
         IF !is_color(cColor)
-            throw('It is not color string')
+            throw(ARGUMENT_VALUE_EXCEPTION)
         ENDIF
         ::cHeaderColor := cColor
     ENDIF
@@ -251,7 +253,7 @@ METHOD footer_color(cColor) CLASS Window
     IF cColor != NIL
         assert_type(cColor, 'C')
         IF !is_color(cColor)
-            throw('It is not color string')
+            throw(ARGUMENT_VALUE_EXCEPTION)
         ENDIF
         ::cFooterColor := cColor
     ENDIF

@@ -406,13 +406,8 @@ METHOD handle_user_config(hUserConfig, cNoConfigFileDialog, cNoConfigFileInform)
 
     LOCAL lSuccess := .T.
 
-    IF Empty(cNoConfigFileDialog)
-        cNoConfigFileDialog := NO_CONFIG_DEFAULT_DIALOG
-    ENDIF
-
-    IF Empty(cNoConfigFileInform)
-        cNoConfigFileInform := NO_CONFIG_DEFAULT_INFORM
-    ENDIF
+    hb_Default(@cNoConfigFileDialog, NO_CONFIG_DEFAULT_DIALOG)
+    hb_Default(@cNoConfigFileInform, NO_CONFIG_DEFAULT_INFORM)
 
     IF !File(CONFIG_PATH)
         IF YesNo(cNoConfigFileDialog, , , .T.)
