@@ -1,8 +1,54 @@
 #include "achoice.ch"
 #include "inkey.ch"
+#include "hbclass.ch"
 
 #include "align.ch"
 #include "functions.ch"
+#include "menu.ch"
+
+CREATE CLASS Menu MODULE FRIENDLY
+
+EXPORTED:
+
+    METHOD keys(anKeys) SETGET
+    METHOD key(nPosition, nKey) SETGET
+
+HIDDEN:
+
+    CLASSVAR anKeys INIT {K_ENTER, K_ESC, K_ALT_UP, K_ALT_LEFT, K_ALT_DOWN, K_ALT_RIGHT, K_ALT_ENTER}
+
+ENDCLASS LOCK
+
+METHOD keys(anKeys) CLASS Menu
+
+    LOCAL anOldKeys := AClone(anKeys)
+
+    IF anKeys != NIL
+        assert_type(anKeys, 'A')
+        assert_length(anKeys, Len(::anKeys))
+        AEval(anKeys, {| nKey | assert_type(nKey, 'N')})
+        ::anKeys := anKeys
+    ENDIF
+
+RETURN anOldKeys
+
+METHOD key(nPosition, nKey) CLASS Menu
+
+    LOCAL nOldKey
+
+    assert_type(nPosition, 'N')
+    IF nPosition < 0 .OR. nPosition > Len(::anKeys) .OR. Int(nPosition) != nPosition
+        throw(ARGUMENT_VALUE_EXCEPTION)
+    ELSE
+        nOldKey := ::anKeys[nPosition]
+    ENDIF
+
+    IF ValType(nKey) != 'U'
+        assert_type(nKey, 'N')
+        ::anKeys[nPosition] := nKey
+    ENDIF
+
+RETURN nOldKey
 
 FUNCTION display_menu(nTop, nLeft, nBottom, nRight, acMenuItems, xSelectable, cUserFunctionName, nInitialItem, cColor, cBorder, cTitle, cTitleColor, cTitleAlign)
 
@@ -171,9 +217,9 @@ FUNCTION menu_search_allow_exit(nMode)//, nCurrentElement, nRowPosition)
     DO CASE
         CASE nMode == AC_EXCEPT
         DO CASE
-            CASE nKey == K_RETURN
+            CASE nKey == Menu():anKeys[SELECT]
                 nReturnMode := AC_SELECT
-            CASE nKey == K_ESC
+            CASE nKey == Menu():anKeys[ABORT]
                 IF YesNo(Config():get_config('DefaultExit'))
                     nReturnMode := AC_ABORT
                 ENDIF
@@ -192,7 +238,7 @@ FUNCTION menu_search_disallow_exit(nMode)//, nCurrentElement, nRowPosition)
     DO CASE
         CASE nMode == AC_EXCEPT
         DO CASE
-            CASE nKey == K_RETURN
+            CASE nKey == Menu():anKeys[SELECT]
                 nReturnMode := AC_SELECT
             OTHERWISE
                 nReturnMode := AC_GOTO
@@ -209,21 +255,21 @@ FUNCTION menu_search_allow_exit_move(nMode)//, nCurrentElement, nRowPosition)
     DO CASE
         CASE nMode == AC_EXCEPT
         DO CASE
-            CASE nKey == K_RETURN
+            CASE nKey == Menu():anKeys[SELECT]
                 nReturnMode := AC_SELECT
-            CASE nKey == K_ESC
+            CASE nKey == Menu():anKeys[ABORT]
                 IF YesNo(Config():get_config('DefaultExit'))
                     nReturnMode := AC_ABORT
                 ENDIF
-            CASE nKey == K_ALT_UP
+            CASE nKey == Menu():anKeys[UP]
                 WMove(WRow() - 1, WCol())
-            CASE nKey == K_ALT_DOWN
+            CASE nKey == Menu():anKeys[DOWN]
                 WMove(WRow() + 1, WCol())
-            CASE nKey == K_ALT_LEFT
+            CASE nKey == Menu():anKeys[LEFT]
                 WMove(WRow(), WCol() - 1)
-            CASE nKey == K_ALT_RIGHT
+            CASE nKey == Menu():anKeys[RIGHT]
                 WMove(WRow(), WCol() + 1)
-            CASE nKey == K_ALT_ENTER
+            CASE nKey == Menu():anKeys[SELECT]
                 WCenter(.T.)
             OTHERWISE
                 nReturnMode := AC_GOTO
@@ -240,17 +286,17 @@ FUNCTION menu_search_disallow_exit_move(nMode)//, nCurrentElement, nRowPosition)
     DO CASE
         CASE nMode == AC_EXCEPT
         DO CASE
-            CASE nKey == K_RETURN
+            CASE nKey == Menu():anKeys[SELECT]
                 nReturnMode := AC_SELECT
-            CASE nKey == K_ALT_UP
+            CASE nKey == Menu():anKeys[UP]
                 WMove(WRow() - 1, WCol())
-            CASE nKey == K_ALT_DOWN
+            CASE nKey == Menu():anKeys[DOWN]
                 WMove(WRow() + 1, WCol())
-            CASE nKey == K_ALT_LEFT
+            CASE nKey == Menu():anKeys[LEFT]
                 WMove(WRow(), WCol() - 1)
-            CASE nKey == K_ALT_RIGHT
+            CASE nKey == Menu():anKeys[RIGHT]
                 WMove(WRow(), WCol() + 1)
-            CASE nKey == K_ALT_ENTER
+            CASE nKey == Menu():anKeys[CENTER]
                 WCenter(.T.)
             OTHERWISE
                 nReturnMode := AC_GOTO

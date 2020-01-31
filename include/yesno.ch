@@ -11,5 +11,3 @@
 #define YESNO_COLOR Config():get_config('DefaultYesNoColor')
 #define DIALOG_COLOR Config():get_config('DefaultDialogColor')
 #define INFORM_COLOR Config():get_config('DefaultInformColor')
-
-

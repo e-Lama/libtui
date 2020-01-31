@@ -1,4 +1,4 @@
-#define USE_BUTTONS
+//#define VALIDATE_DIMENSIONS
 
 #include "hbclass.ch"
 #include "color.ch"
@@ -10,8 +10,8 @@ CREATE CLASS Parser
 EXPORTED:
 
     METHOD prepare_form_from_database(cLanguage, cId, hVariables, cDatabase)
-    METHOD prepare_form_from_record(axRows, hVariables)
-    METHOD check_correctness(axRows, hVariables)
+    METHOD prepare_form_from_record(acRows, hVariables)
+    METHOD check_correctness(acRows, hVariables)
     METHOD get_answers()
 
     METHOD log(cLog) SETGET
@@ -227,80 +227,80 @@ METHOD handle_object(axRow) CLASS Parser
 
 RETURN .F.
 
-METHOD check_correctness(axRows, hVariables) CLASS Parser
+METHOD check_correctness(acRows, hVariables) CLASS Parser
 
     LOCAL lWasWindow := .F.
-    LOCAL axRowsCopy
-    LOCAL axRow
+    LOCAL acRowsCopy
+    LOCAL acRow
 
-    assert_type(axRows, 'A')
+    assert_type(acRows, 'A')
     assert_type(hVariables, 'H')
 
-    AEval(axRows, {| cElement | assert_type(cElement, 'C')})
+    AEval(acRows, {| cElement | assert_type(cElement, 'C')})
 
     ::handle_hash(hVariables)
     ::nWindow := -1
 
-    axRowsCopy := AClone(axRows)
+    acRowsCopy := AClone(acRows)
 
-    FOR EACH axRow IN axRowsCopy
-        axRow := hb_ATokens(axRow, LINE_SEPARATOR)
+    FOR EACH acRow IN acRowsCopy
+        acRow := hb_ATokens(acRow, LINE_SEPARATOR)
 
-        IF axRow[OBJECT] == OBJECT_WINDOW
+        IF acRow[OBJECT] == OBJECT_WINDOW
             IF lWasWindow
                 RETURN .F.
             ENDIF
             lWasWindow := .T.
-            IF axRow:__enumIndex() != 1
+            IF acRow:__enumIndex() != 1
                 ::add_to_debug(Config():get_config('WindowMustBeFirst'))
                 RETURN .F.
             ENDIF
         ENDIF
 
-        IF !::validate(axRow, hVariables)
+        IF !::validate(acRow, hVariables)
             RETURN .F.
         ENDIF
     NEXT
 
 RETURN .T.
 
-METHOD prepare_form_from_record(axRows, hVariables) CLASS Parser
+METHOD prepare_form_from_record(acRows, hVariables) CLASS Parser
 
     LOCAL lWasWindow := .F.
-    LOCAL axRowsCopy
-    LOCAL axRow
+    LOCAL acRowsCopy
+    LOCAL acRow
 
-    assert_type(axRows, 'A')
+    assert_type(acRows, 'A')
     assert_type(hVariables, 'H')
 
-    AEval(axRows, {| cElement | assert_type(cElement, 'C')})
+    AEval(acRows, {| cElement | assert_type(cElement, 'C')})
 
     ::handle_hash(hVariables)
     ::nWindow := -1
 
-    axRowsCopy := AClone(axRows)
+    acRowsCopy := AClone(acRows)
 
-    FOR EACH axRow IN axRowsCopy
-        axRow := hb_ATokens(axRow, LINE_SEPARATOR)
+    FOR EACH acRow IN acRowsCopy
+        acRow := hb_ATokens(acRow, LINE_SEPARATOR)
 
-        IF axRow[OBJECT] == OBJECT_WINDOW
+        IF acRow[OBJECT] == OBJECT_WINDOW
             IF lWasWindow
                 RETURN .F.
             ENDIF
 
             lWasWindow := .T.
 
-            IF axRow:__enumIndex() != 1
+            IF acRow:__enumIndex() != 1
                 ::add_to_debug(Config():get_config('WindowMustBeFirst'))
                 RETURN .F.
             ENDIF
         ENDIF
 
-        IF !::validate(@axRow, hVariables)
+        IF !::validate(@acRow, hVariables)
             RETURN .F.
         ENDIF
 
-        IF !::handle_object(axRow)
+        IF !::handle_object(acRow)
             RETURN .F.
         ENDIF
 
@@ -439,18 +439,22 @@ METHOD validate_window(axRow, hVariables) CLASS Parser
         IF ValType(axRow[i]) != cType
             ::add_to_debug(Config():get_config('IncorrectValue'))
             RETURN .F.
+#ifdef VALIDATE_DIMENSIONS
         ELSEIF axRow[i] < 0
             ::add_to_debug(Config():get_config('IncorrectValue'))
             RETURN .F.
+#endif
         ENDIF
     NEXT
 
-    IF axRow[N_BOTTOM_WN] > MaxRow() .OR. axRow[N_TOP_WN] > MaxRow() .OR. axRow[N_RIGHT_WN] > MaxCol() .OR. axRow[N_LEFT_WN] > MaxCol()
-        ::add_to_debug(Config():get_config('IncorrectValue'))
-        RETURN .F.
-    ELSEIF axRow[N_BOTTOM_WN] < axRow[N_TOP_WN] .OR. axRow[N_RIGHT_WN] < axRow[N_LEFT_WN]
+    IF axRow[N_BOTTOM_WN] < axRow[N_TOP_WN] .OR. axRow[N_RIGHT_WN] < axRow[N_LEFT_WN]
         ::add_to_debug(Config():get_config('IncorrectDimensions'))
         RETURN .F.
+#ifdef VALIDATE_DIMENSIONS
+    ELSEIF axRow[N_BOTTOM_WN] > MaxRow() .OR. axRow[N_TOP_WN] > MaxRow() .OR. axRow[N_RIGHT_WN] > MaxCol() .OR. axRow[N_LEFT_WN] > MaxCol()
+        ::add_to_debug(Config():get_config('IncorrectValue'))
+        RETURN .F.
+#endif
     ENDIF
 
     IF !::basic_parse(@axRow[C_BOX_WN], @cType, hVariables)
@@ -525,18 +529,22 @@ METHOD validate_box(axRow, hVariables) CLASS Parser
         IF ValType(axRow[i]) != cType
             ::add_to_debug(Config():get_config('IncorrectValue'))
             RETURN .F.
+#ifdef VALIDATE_DIMENSIONS
         ELSEIF axRow[i] < 0
             ::add_to_debug(Config():get_config('IncorrectValue'))
             RETURN .F.
+#endif
         ENDIF
     NEXT
 
-    IF axRow[N_BOTTOM_BOX] > MaxRow() .OR. axRow[N_TOP_BOX] > MaxRow() .OR. axRow[N_RIGHT_BOX] > MaxCol() .OR. axRow[N_LEFT_BOX] > MaxCol()
-        ::add_to_debug(Config():get_config('IncorrectValue'))
-        RETURN .F.
-    ELSEIF axRow[N_BOTTOM_BOX] < axRow[N_TOP_BOX] .OR. axRow[N_RIGHT_BOX] < axRow[N_LEFT_BOX]
+    IF axRow[N_BOTTOM_BOX] < axRow[N_TOP_BOX] .OR. axRow[N_RIGHT_BOX] < axRow[N_LEFT_BOX]
         ::add_to_debug(Config():get_config('IncorrectDimensions'))
         RETURN .F.
+#ifdef VALIDATE_DIMENSIONS
+    ELSEIF axRow[N_BOTTOM_BOX] > MaxRow() .OR. axRow[N_TOP_BOX] > MaxRow() .OR. axRow[N_RIGHT_BOX] > MaxCol() .OR. axRow[N_LEFT_BOX] > MaxCol()
+        ::add_to_debug(Config():get_config('IncorrectValue'))
+        RETURN .F.
+#endif
     ENDIF
 
     IF !::basic_parse(@axRow[C_BOX_BOX], @cType, hVariables)
@@ -585,15 +593,20 @@ METHOD validate_say(axRow, hVariables) CLASS Parser
         IF ValType(axRow[i]) != cType
             ::add_to_debug(Config():get_config('IncorrectValue'))
             RETURN .F.
-        ELSEIF axRow[i] < -2//0
+#ifdef VALIDATE_DIMENSIONS
+        ELSEIF axRow[i] < 0
             ::add_to_debug(Config():get_config('IncorrectValue'))
             RETURN .F.
+#endif
         ENDIF
     NEXT
 
+#ifdef VALIDATE_DIMENSIONS
     IF axRow[N_ROW_SAY] > MaxRow() .OR. axRow[N_COL_SAY] > MaxCol()
+        ::add_to_debug(Config():get_config('IncorrectValue'))
         RETURN .F.
     ENDIF
+#endif
 
     IF !::basic_parse(@axRow[C_EXPRESSION_SAY], @cType, hVariables)
         RETURN .F.
@@ -728,15 +741,19 @@ METHOD validate_checkbox(axRow, hVariables) CLASS Parser
         IF ValType(axRow[i]) != cType
             ::add_to_debug(Config():get_config('IncorrectValue'))
             RETURN .F.
+#ifdef VALIDATE_DIMENSIONS
         ELSEIF axRow[i] < 0
             ::add_to_debug(Config():get_config('IncorrectValue'))
             RETURN .F.
+#endif
         ENDIF
     NEXT
 
+#ifdef VALIDATE_DIMENSIONS
     IF axRow[N_ROW_CHB] > MaxRow() .OR. axRow[N_COL_CHB] > MaxCol()
         RETURN .F.
     ENDIF
+#endif
 
     IF Left(axRow[L_ID_VAR_CHB], 1) != VARIABLE
         ::add_to_debug(Config():get_config('CorruptionDetected'))
@@ -817,18 +834,22 @@ METHOD validate_listbox(axRow, hVariables) CLASS Parser
         IF ValType(axRow[i]) != cType
             ::add_to_debug(Config():get_config('IncorrectValue'))
             RETURN .F.
+#ifdef VALIDATE_DIMENSIONS
         ELSEIF axRow[i] < 0
             ::add_to_debug(Config():get_config('IncorrectValue'))
             RETURN .F.
+#endif
         ENDIF
     NEXT
 
-    IF axRow[N_BOTTOM_LSB] > MaxRow() .OR. axRow[N_TOP_LSB] > MaxRow() .OR. axRow[N_RIGHT_LSB] > MaxCol() .OR. axRow[N_LEFT_LSB] > MaxCol()
-        ::add_to_debug(Config():get_config('IncorrectValue'))
-        RETURN .F.
-    ELSEIF axRow[N_BOTTOM_LSB] < axRow[N_TOP_LSB] .OR. axRow[N_RIGHT_LSB] < axRow[N_LEFT_LSB]
+    IF axRow[N_BOTTOM_LSB] < axRow[N_TOP_LSB] .OR. axRow[N_RIGHT_LSB] < axRow[N_LEFT_LSB]
         ::add_to_debug(Config():get_config('IncorrectDimensions'))
         RETURN .F.
+#ifdef VALIDATE_DIMENSIONS
+    ELSEIF axRow[N_BOTTOM_LSB] > MaxRow() .OR. axRow[N_TOP_LSB] > MaxRow() .OR. axRow[N_RIGHT_LSB] > MaxCol() .OR. axRow[N_LEFT_LSB] > MaxCol()
+        ::add_to_debug(Config():get_config('IncorrectValue'))
+        RETURN .F.
+#endif
     ENDIF
 
     IF Left(axRow[NC_ID_VAR_LSB], 1) != VARIABLE
@@ -961,18 +982,22 @@ METHOD validate_radiogroup(axRow, hVariables) CLASS Parser
         IF ValType(axRow[i]) != cType
             ::add_to_debug(Config():get_config('IncorrectValue'))
             RETURN .F.
+#ifdef VALIDATE_DIMENSIONS
         ELSEIF axRow[i] < 0
             ::add_to_debug(Config():get_config('IncorrectValue'))
             RETURN .F.
+#endif
         ENDIF
     NEXT
 
-    IF axRow[N_BOTTOM_RGB] > MaxRow() .OR. axRow[N_TOP_RGB] > MaxRow() .OR. axRow[N_RIGHT_RGB] > MaxCol() .OR. axRow[N_LEFT_RGB] > MaxCol()
-        ::add_to_debug(Config():get_config('IncorrectValue'))
-        RETURN .F.
-    ELSEIF axRow[N_BOTTOM_RGB] < axRow[N_TOP_RGB] .OR. axRow[N_RIGHT_RGB] < axRow[N_LEFT_RGB]
+    IF axRow[N_BOTTOM_RGB] < axRow[N_TOP_RGB] .OR. axRow[N_RIGHT_RGB] < axRow[N_LEFT_RGB]
         ::add_to_debug(Config():get_config('IncorrectDimensions'))
         RETURN .F.
+#ifdef VALIDATE_DIMENSIONS
+    ELSEIF axRow[N_BOTTOM_RGB] > MaxRow() .OR. axRow[N_TOP_RGB] > MaxRow() .OR. axRow[N_RIGHT_RGB] > MaxCol() .OR. axRow[N_LEFT_RGB] > MaxCol()
+        ::add_to_debug(Config():get_config('IncorrectValue'))
+        RETURN .F.
+#endif
     ENDIF
 
     IF Left(axRow[NC_ID_VAR_RGB], 1) != VARIABLE
@@ -1080,9 +1105,11 @@ METHOD validate_pushbutton(axRow, hVariables) CLASS Parser
         IF ValType(axRow[i]) != cType
             ::add_to_debug(Config():get_config('IncorrectValue'))
             RETURN .F.
+#ifdef VALIDATE_DIMENSIONS
         ELSEIF axRow[i] < 0
             ::add_to_debug(Config():get_config('IncorrectValue'))
             RETURN .F.
+#endif
         ENDIF
     NEXT
 

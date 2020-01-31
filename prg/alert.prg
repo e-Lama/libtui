@@ -9,7 +9,7 @@ CREATE CLASS AlertLG
 
 EXPORTED:
 
-    METHOD AlertLG(xMessage, acOptions, cColorMessage, cColorButtons, nDelay, nRow, nLeft, nRight, nCurrentOption, lAllowEscape, lAllowMove, lCyclic, cBorder)
+    METHOD AlertLG(xMessage, acOptions, cColorMessage, cColorButtons, nDelay, nRow, nLeft, nRight, nCurrentOption, lAllowEscape, lAllowMove, lCyclic, lAcceptFirstFounded, cBorder)
     METHOD keys_map(hKeysMap) SETGET
     METHOD create_centered(lCreateCentered)
 
@@ -31,12 +31,13 @@ HIDDEN:
 
 ENDCLASS LOCK
 
-METHOD AlertLG(xMessage, acOptions, cColorMessage, cColorButtons, nDelay, nRow, nLeft, nRight, nCurrentOption, lAllowEscape, lAllowMove, lCyclic, cBorder) CLASS AlertLG
+METHOD AlertLG(xMessage, acOptions, cColorMessage, cColorButtons, nDelay, nRow, nLeft, nRight, nCurrentOption, lAllowEscape, lAllowMove, lCyclic, lAcceptFirstFounded, cBorder) CLASS AlertLG
 
     LOCAL nOldWindow := WSelect()
     LOCAL acOptionsTrimmed := Array(Len(acOptions))
     LOCAL cOldColor
     LOCAL nOldCursor
+    LOCAL nWasOption
     LOCAL cMessage
     LOCAL acMessage
     LOCAL nMessageHeight
@@ -48,7 +49,7 @@ METHOD AlertLG(xMessage, acOptions, cColorMessage, cColorButtons, nDelay, nRow, 
 
     WSelect(0)
 
-    IF PCount() < 2 .OR. PCount() > 13
+    IF PCount() < 2 .OR. PCount() > 14
         throw(ARGUMENTS_NUMBER_EXCEPTION)
     ENDIF
 
@@ -149,6 +150,18 @@ METHOD AlertLG(xMessage, acOptions, cColorMessage, cColorButtons, nDelay, nRow, 
         assert_type(lAllowMove, 'L')
     ENDIF
 
+    IF lCyclic == NIL
+        lCyclic := .T.
+    ELSE
+        assert_type(lCyclic, 'L')
+    ENDIF
+
+    IF lAcceptFirstFounded == NIL
+        lAcceptFirstFounded := .F.
+    ELSE
+        assert_type(lAcceptFirstFounded, 'L')
+    ENDIF
+
     IF ValType(cBorder) == 'C' .AND. !is_box(cBorder)
         throw(ARGUMENT_VALUE_EXCEPTION)
     ELSE
@@ -243,7 +256,12 @@ METHOD AlertLG(xMessage, acOptions, cColorMessage, cColorButtons, nDelay, nRow, 
             CASE lAllowMove .AND. nKey == K_ALT_ENTER
                 WCenter(.T.)
             OTHERWISE
+                nWasOption := nCurrentOption
                 nCurrentOption := ::find_letter(nKey, nCurrentOption, acOptionsTrimmed)
+
+                IF nWasOption != nCurrentOption .AND. lAcceptFirstFounded
+                    EXIT
+                ENDIF
         ENDCASE
     ENDDO
 
