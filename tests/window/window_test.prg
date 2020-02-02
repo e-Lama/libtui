@@ -1,12 +1,15 @@
 PROCEDURE main()
 
-    MEMVAR GETLIST, oErr
+    MEMVAR GETLIST
+
+    LOCAL oError
 
     PUBLIC GETLIST
 
+
     BEGIN SEQUENCE
 
-        //ErrorBlock({| oError | standard_error_handler(oError)})
+        ErrorBlock({| oError | standard_error_handler(oError)})
 
         SET CURSOR OFF
 
@@ -22,8 +25,8 @@ PROCEDURE main()
         ELSE
             ? 'Failure'
         ENDIF
-    RECOVER USING oErr
-        standard_error_handler(oErr)
+    RECOVER USING oError
+        standard_error_handler(oError)
     END SEQUENCE
 
 RETURN

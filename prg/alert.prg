@@ -27,7 +27,7 @@ HIDDEN:
     METHOD word_length_from(cTxt, nFrom)
     METHOD create_message(cTxt, nMaxWidth)
     METHOD keys_map_asserts(hKeysMap)
-    METHOD find_letter(nKey, nCurrentOption, acOptions)
+    METHOD find_letter(nKey, nCurrentOption, acOptions, lAcceptFirstFounded, lFound)
 
 ENDCLASS LOCK
 
@@ -37,7 +37,6 @@ METHOD AlertLG(xMessage, acOptions, cColorMessage, cColorButtons, nDelay, nRow, 
     LOCAL acOptionsTrimmed := Array(Len(acOptions))
     LOCAL cOldColor
     LOCAL nOldCursor
-    LOCAL nWasOption
     LOCAL cMessage
     LOCAL acMessage
     LOCAL nMessageHeight
@@ -45,6 +44,7 @@ METHOD AlertLG(xMessage, acOptions, cColorMessage, cColorButtons, nDelay, nRow, 
     LOCAL nWidth
     LOCAL nKey
     LOCAL nShift
+    LOCAL lFound
     LOCAL i
 
     WSelect(0)
@@ -256,10 +256,11 @@ METHOD AlertLG(xMessage, acOptions, cColorMessage, cColorButtons, nDelay, nRow, 
             CASE lAllowMove .AND. nKey == K_ALT_ENTER
                 WCenter(.T.)
             OTHERWISE
-                nWasOption := nCurrentOption
-                nCurrentOption := ::find_letter(nKey, nCurrentOption, acOptionsTrimmed)
+                lFound := .F.
 
-                IF nWasOption != nCurrentOption .AND. lAcceptFirstFounded
+                nCurrentOption := ::find_letter(nKey, nCurrentOption, acOptionsTrimmed, lAcceptFirstFounded, @lFound)
+
+                IF lFound .AND. lAcceptFirstFounded
                     EXIT
                 ENDIF
         ENDCASE
@@ -273,19 +274,23 @@ METHOD AlertLG(xMessage, acOptions, cColorMessage, cColorButtons, nDelay, nRow, 
 
 RETURN nCurrentOption
 
-METHOD find_letter(nKey, nCurrentOption, acOptions) CLASS AlertLG
+METHOD find_letter(nKey, nCurrentOption, acOptions, lAcceptFirstFounded, lFound) CLASS AlertLG
 
     LOCAL cKey := Upper(Chr(nKey))
     LOCAL i
 
-    FOR i := nCurrentOption + 1 TO Len(acOptions)
+    lFound := .F.
+
+    FOR i := nCurrentOption + IF(lAcceptFirstFounded, 0, 1) TO Len(acOptions)
         IF cKey $ Upper(Left(acOptions[i], 1))
-           RETURN i
+            lFound := .T.
+            RETURN i
         ENDIF   
     NEXT
 
-    FOR i := 1 TO nCurrentOption
+    FOR i := 1 TO nCurrentOption - IF(lAcceptFirstFounded, 1, 0)
         IF cKey $ Upper(Left(acOptions[i], 1))
+            lFound := .T.
             RETURN i
         ENDIF
     NEXT

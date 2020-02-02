@@ -562,13 +562,19 @@ FUNCTION is_template_picture(cTemplate)
 
 RETURN .T.
 
-FUNCTION cast(xVar, cTo)
+FUNCTION cast(xVar, cTo, lAllowSpaces)
 
     LOCAL xResult := NIL
     LOCAL cType
 
-    IF PCount() != 2
+    IF PCount() < 2 .OR. PCount() > 3
         throw(ARGUMENTS_NUMBER_EXCEPTION)
+    ENDIF
+
+    IF ValType(lAllowSpaces) == 'U'
+        lAllowSpaces := .T.
+    ELSE
+        assert_type(lAllowSpaces, 'L')
     ENDIF
 
     assert_data_type(cTo)
@@ -585,154 +591,156 @@ FUNCTION cast(xVar, cTo)
         RETURN NIL
     ENDIF
 
-    DO CASE
-        CASE cType == 'C'
-            DO CASE
-                CASE cTo == 'D'
-                    IF is_date_string(xVar)
+    SWITCH cType
+        CASE 'C'
+            SWITCH cTo
+                CASE 'C'
+                    RETURN xVar
+                CASE 'D'
+                    IF is_date_string(xVar, lAllowSpaces)
                         RETURN SToD(xVar)
                     ELSE
                         RETURN NIL
                     ENDIF
-                CASE cTo == 'N'
-                    IF is_number_string(xVar)
+                CASE 'N'
+                    IF is_number_string(xVar, lAllowSpaces)
                         RETURN Val(xVar)
                     ELSE
                         RETURN NIL
                     ENDIF
-                CASE cTo == 'L'
-                    IF is_logical_string(xVar)
+                CASE 'L'
+                    IF is_logical_string(xVar, lAllowSpaces)
                         RETURN IF(xVar == '.T.' .OR. xVar == 'T' .OR. xVar == 'Y', .T., .F.) 
                     ELSE
                         RETURN NIL
                     ENDIF
-                CASE cTo == 'M'
+                CASE 'M'
                     RETURN xVar
-                CASE cTo == 'U'
+                CASE 'U'
                     RETURN ''
-                CASE cTo == 'B'
+                CASE 'B'
                     RETURN NIL
-                CASE cTo == 'A'
+                CASE 'A'
                     RETURN {xVar}
-                CASE cTo == 'H'
+                CASE 'H'
                     RETURN {'' => xVar}
-            ENDCASE
-        CASE cType == 'D'
-            DO CASE
-                CASE cTo == 'C'
+            ENDSWITCH
+        CASE 'D'
+            SWITCH cTo
+                CASE 'C'
                     RETURN DToC(xVar)
-                CASE cTo == 'N'
+                CASE 'N'
                     RETURN NIL
-                CASE cTo == 'L'
+                CASE 'L'
                     RETURN NIL
-                CASE cTo == 'M'
+                CASE 'M'
                     RETURN DToS(xVar)
-                CASE cTo == 'U'
+                CASE 'U'
                     RETURN d"0000-00-00"
-                CASE cTo == 'B'
+                CASE 'B'
                     RETURN NIL
-                CASE cTo == 'A'
+                CASE 'A'
                     RETURN {xVar}
-                CASE cTo == 'H'
+                CASE 'H'
                     RETURN {'' => xVar}
-            ENDCASE
-        CASE cType == 'N'
-            DO CASE
-                CASE cTo == 'C'
+            ENDSWITCH
+        CASE 'N'
+            SWITCH cTo
+                CASE 'C'
                     RETURN Str(xVar)
-                CASE cTo == 'D'
+                CASE 'D'
                     RETURN NIL
-                CASE cTo == 'L'
+                CASE 'L'
                     IF xVar == 0
                         RETURN .F.
                     ELSE
                         RETURN .T.
                     ENDIF
-                CASE cTo == 'M'
+                CASE 'M'
                     RETURN Str(xVar)
-                CASE cTo == 'U'
+                CASE 'U'
                     RETURN 0
-                CASE cTo == 'B'
+                CASE 'B'
                     RETURN NIL
-                CASE cTo == 'A'
+                CASE 'A'
                     RETURN {xVar}
-                CASE cTo == 'H'
+                CASE 'H'
                     RETURN {'' => xVar}
-            ENDCASE
-        CASE cType == 'L'
-            DO CASE
-                CASE cTo == 'C'
+            ENDSWITCH
+        CASE 'L'
+            SWITCH cTo
+                CASE 'C'
                     RETURN Transform(xVar, 'L')
-                CASE cTo == 'D'
+                CASE 'D'
                     RETURN NIL
-                CASE cTo == 'N'
+                CASE 'N'
                     IF xVar
                         RETURN 1
                     ELSE
                         RETURN 0
                     ENDIF
-                CASE cTo == 'M'
+                CASE 'M'
                     RETURN Transform(xVar, 'Y')
-                CASE cTo == 'U'
+                CASE 'U'
                     RETURN .F.
-                CASE cTo == 'B'
+                CASE 'B'
                     RETURN NIL
-                CASE cTo == 'A'
+                CASE 'A'
                     RETURN {xVar}
-                CASE cTo == 'H'
+                CASE 'H'
                     RETURN {'' => xVar}
-            ENDCASE
-        CASE cType == 'M'
-            DO CASE
-                CASE cTo == 'C'
+            ENDSWITCH
+        CASE 'M'
+            SWITCH cTo
+                CASE 'C'
                     RETURN xVar
-                CASE cTo == 'D'
-                    IF is_date_string(xVar)
+                CASE 'D'
+                    IF is_date_string(xVar, lAllowSpaces)
                         RETURN SToD(xVar)
                     ELSE
                         RETURN NIL
                     ENDIF
-                CASE cTo == 'N'
-                    IF is_number_string(xVar)
+                CASE 'N'
+                    IF is_number_string(xVar, lAllowSpaces)
                         RETURN Val(xVar)
                     ELSE
                         RETURN NIL
                     ENDIF
-                CASE cTo == 'L'
-                    IF is_logical_string(xVar)
+                CASE 'L'
+                    IF is_logical_string(xVar, lAllowSpaces)
                         RETURN IF(xVar == '.T.' .OR. xVar == 'T' .OR. xVar == 'Y', .T., .F.) 
                     ELSE
                         RETURN NIL
                     ENDIF
-                CASE cTo == 'U'
+                CASE 'U'
                     RETURN ''
-                CASE cTo == 'B'
+                CASE 'B'
                     RETURN NIL
-                CASE cTo == 'A'
+                CASE 'A'
                     RETURN {xVar}
-                CASE cTo == 'H'
+                CASE 'H'
                     RETURN {'' => xVar}
-            ENDCASE
-        CASE cType == 'U'
-            DO CASE
-                CASE cTo == 'C'
+            ENDSWITCH
+        CASE 'U'
+            SWITCH cTo
+                CASE 'C'
                     RETURN ''
-                CASE cTo == 'D'
+                CASE 'D'
                     RETURN d"0000-00-00"
-                CASE cTo == 'N'
+                CASE 'N'
                     RETURN 0
-                CASE cTo == 'L'
+                CASE 'L'
                     RETURN .F.
-                CASE cTo == 'M'
+                CASE 'M'
                     RETURN ''
-                CASE cTo == 'B'
+                CASE 'B'
                     RETURN {|| nothing()}
-                CASE cTo == 'A'
+                CASE 'A'
                     RETURN {}
-                CASE cTo == 'H'
+                CASE 'H'
                     RETURN {=>}
-            ENDCASE
-    ENDCASE
+            ENDSWITCH
+    ENDSWITCH
 
 RETURN xResult
 

@@ -75,7 +75,7 @@ RETURN NIL
 METHOD refresh_border() CLASS Window
 
     LOCAL nOldWindow := WSelect()
-    LOCAL cOldColor// := SetColor(::cBorderColor)
+    LOCAL cOldColor
 
     WSelect(0)
     cOldColor := SetColor(::cBorderColor)

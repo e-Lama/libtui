@@ -675,8 +675,6 @@ RETURN NIL
 
 METHOD refresh() CLASS Row_browse
 
-    //altd()
-
     DO CASE
         CASE ::lSpecialOperationRefresh
             ::oTBrowse:refreshAll()
@@ -891,7 +889,6 @@ METHOD get_print_function() CLASS Row_browse
 
         IF nSpaceLeft > 0 .AND. nIteration != Len(axHowTo) .AND. Len(cFieldSeparator) > 0 .AND. Len(cHeaderSeparator) > 0
             cMethod += '"' + cFieldSeparator + '"+'
-            //::acHeaders[nIteration] += '+"' + cHeaderSeparator + '"'
             ::acSeparators[nIteration] := cHeaderSeparator
             --nSpaceLeft
         ELSEIF nIteration != Len(axHowTo)
@@ -950,7 +947,7 @@ METHOD linear_search(cTarget, lExactly, cPattern) CLASS Row_browse
         DO WHILE !lFound
             IF EoF()
                 EXIT
-            ELSEIF cTarget == &(cPattern)
+            ELSEIF cTarget == cast(&(cPattern), 'C')
                 lFound := .T.
             ELSE
                 SKIP
@@ -960,7 +957,7 @@ METHOD linear_search(cTarget, lExactly, cPattern) CLASS Row_browse
         DO WHILE !lFound
             IF EoF()
                 EXIT
-            ELSEIF cTarget == Left(&(cPattern), nTargetLength)
+            ELSEIF cTarget == Left(cast(&(cPattern), 'C'), nTargetLength)
                 lFound := .T.
             ELSE
                 SKIP

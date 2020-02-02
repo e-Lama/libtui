@@ -4,23 +4,29 @@ REQUEST HB_CODEPAGE_UTF8EX
 
 PROCEDURE main()
 
-    LOCAL lResult
+    LOCAL oError
 
     hb_cdpSelect('UTF8EX') 
 
-    AlertLG():create_centered(.F.)
-    YesNo({''})
-    Dialog('Question?', {':)', ':(', ';/'})
-    Dialog('Long text long text long text long text long text long text ' + hb_OsNewLine() + 'End', {'Ok', 'Nope', 'Long option...'})
-    Inform('Inform')
-    Dialog('Żółć?', {'Ż', 'Żó', 'Żół', 'ół', 'łó'})
+    BEGIN SEQUENCE
 
-    AlertLG():create_centered(.T.)
-    NoYes({'center', 'center', 'center'})
+        ErrorBlock({| oError | standard_error_handler(oError)})
 
-    altd()
-    lResult := YESNO {'te', 'st'} ANWSERS {'a', 'b'} COLOR 'N/B' OPTION 2 ACCEPTFIRST
+        IF Config():init_config()
+            Alert(Str(Alert('', {'a','a','a'})))
+            AlertLG():create_centered(.F.)
+            Alert(Transform(YesNo({''}), 'L'))
+            Alert(Str(Dialog('Question?', {':)', ':(', ';/'})))
+            Alert(Str(Dialog('Long text long text long text long text long text long text ' + hb_OsNewLine() + 'End', {'Ok', 'Nope', 'Long option...'})))
+            Alert(Str(Inform('Inform')))
+            Alert(Str(Dialog('Żółć?', {'Ż', 'Żó', 'Żół', 'ół', 'łó'})))
 
-    Alert(ValType(lResult))
-
+            AlertLG():create_centered(.T.)
+            Alert(Transform(NoYes({'center', 'center', 'center'}), 'L'))
+        ELSE
+            Alert(':(')
+        ENDIF
+    RECOVER USING oError
+        standard_error_handler(oError)
+    END SEQUENCE
 RETURN

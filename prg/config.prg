@@ -261,6 +261,43 @@ HIDDEN:
                                                                              .AND. Len(xArgument) == 1;
                                                                           };
                                                                       };
+                                            ; /*** BASIC COMMUNICATION ***/
+                                            , 'DefaultYesNoAllowMove', {.T., {| xArgument |;
+                                                                             ValType(xArgument) == 'L';
+                                                                          };
+                                                                      };
+                                            , 'DefaultYesNoCyclic', {.T., {| xArgument |;
+                                                                             ValType(xArgument) == 'L';
+                                                                          };
+                                                                      };
+                                            , 'DefaultYesNoAcceptFirst', {.T., {| xArgument |;
+                                                                             ValType(xArgument) == 'L';
+                                                                          };
+                                                                      };
+                                            , 'DefaultDialogAllowMove', {.T., {| xArgument |;
+                                                                             ValType(xArgument) == 'L';
+                                                                          };
+                                                                      };
+                                            , 'DefaultDialogCyclic', {.T., {| xArgument |;
+                                                                             ValType(xArgument) == 'L';
+                                                                          };
+                                                                      };
+                                            , 'DefaultDialogAcceptFirst', {.T., {| xArgument |;
+                                                                             ValType(xArgument) == 'L';
+                                                                          };
+                                                                      };
+                                            , 'DefaultInformAllowMove', {.T., {| xArgument |;
+                                                                             ValType(xArgument) == 'L';
+                                                                          };
+                                                                      };
+                                            , 'DefaultInformCyclic', {.T., {| xArgument |;
+                                                                             ValType(xArgument) == 'L';
+                                                                          };
+                                                                      };
+                                            , 'DefaultInformAcceptFirst', {.T., {| xArgument |;
+                                                                             ValType(xArgument) == 'L';
+                                                                          };
+                                                                      };
                                             )
     CLASSVAR axFormsStructure AS ARRAY INIT {;
                                             {'ID', 'C', 50, 0};
@@ -307,42 +344,56 @@ METHOD is_config(cKey, lLibConfig) CLASS Config
 
     assert_type(cKey, 'C')
 
+    IF PCount() < 1 .OR. PCOunt() > 2
+        throw(ARGUMENTS_NUMBER_EXCEPTION)
+    ENDIF
+
     IF ValType(lLibConfig) == 'L'
         IF lLibConfig
             RETURN hb_hHasKey(::hLibConfig, cKey)
         ELSE
             RETURN hb_hHasKey(::hUserConfig, cKey)
         ENDIF
+    ELSEIF ValType(lLibConfig) != 'U'
+        throw(ARGUMENT_TYPE_EXCEPTION)
     ENDIF
 
 RETURN hb_hHasKey(::hUserConfig, cKey) .OR. hb_hHasKey(::hLibConfig, cKey)
 
 METHOD get_config(cKey, lLibConfig) CLASS Config
 
-    IF ValType(lLibConfig) == 'L'
-        IF lLibConfig
-            IF hb_hHasKey(::hLibConfig, cKey)
-                RETURN ::hLibConfig[cKey][LIBCONFIG_VALUE]
+    assert_type(cKey, 'C')
+
+    IF PCount() < 1 .OR. PCOunt() > 2
+        throw(ARGUMENTS_NUMBER_EXCEPTION)
+    ENDIF
+
+    SWITCH ValType(lLibConfig)
+        CASE 'L'
+            IF lLibConfig
+                IF hb_hHasKey(::hLibConfig, cKey)
+                    RETURN ::hLibConfig[cKey][LIBCONFIG_VALUE]
+                ELSE
+                    throw(RUNTIME_EXCEPTION)
+                ENDIF
             ELSE
-                throw(RUNTIME_EXCEPTION)
+                IF hb_hHasKey(::hUserConfig, cKey)
+                    RETURN ::hUserConfig[cKey]
+                ELSE
+                    throw(RUNTIME_EXCEPTION)
+                ENDIF
             ENDIF
-        ELSE
+        CASE 'U'
             IF hb_hHasKey(::hUserConfig, cKey)
                 RETURN ::hUserConfig[cKey]
+            ELSEIF hb_hHasKey(::hLibConfig, cKey)
+                RETURN ::hLibConfig[cKey][LIBCONFIG_VALUE]
             ELSE
-                throw(RUNTIME_EXCEPTION)
+                throw('Unknown key: ' + cKey)
             ENDIF
-        ENDIF
-    ELSE
-        IF hb_hHasKey(::hUserConfig, cKey)
-            RETURN ::hUserConfig[cKey]
-        ELSEIF hb_hHasKey(::hLibConfig, cKey)
-            RETURN ::hLibConfig[cKey][LIBCONFIG_VALUE]
-        ELSE
-            //Alert(cKey) //debug 
-            throw(ARGUMENT_VALUE_EXCEPTION)
-        ENDIF
-    ENDIF
+        OTHERWISE
+            throw(ARGUMENT_TYPE_EXCEPTION)
+    ENDSWITCH
 
 RETURN NIL
 
@@ -354,6 +405,8 @@ METHOD get_config_hash(lLibConfig) CLASS Config
         ELSE
             RETURN hb_hClone(::hUserConfig)
         ENDIF
+    ELSEIF ValType(lLibConfig) != 'U'
+        throw(ARGUMENT_TYPE_EXCEPTION)
     ENDIF
 
 RETURN hb_hClone(::hUserConfig)
@@ -368,6 +421,12 @@ METHOD init_config(hUserConfig, cNoConfigFileDialog, cNoConfigFileInform) CLASS 
 
     IF cNoConfigFileInform != NIL
         assert_type(cNoConfigFileInform, 'C')
+    ENDIF
+
+    IF hUserConfig == NIL
+        hUserConfig := hb_Hash()
+    ELSE
+        assert_type(hUserConfig, 'H')
     ENDIF
 
     IF !::lSuccess
@@ -422,7 +481,10 @@ METHOD handle_user_config(hUserConfig, cNoConfigFileDialog, cNoConfigFileInform)
     ENDIF
 
     IF lSuccess
-        hb_JsonDecode(MemoRead(CONFIG_PATH), @::hUserConfig)
+        ::hUserConfig := hb_JsonDecode(MemoRead(CONFIG_PATH))
+        IF ValType(::hUserConfig) != 'H'
+            throw('The configuration file is corrupted! Recreate it!')
+        ENDIF
     ENDIF
 
 RETURN lSuccess .AND. ::validate_configs()
@@ -513,9 +575,6 @@ METHOD create_config_file(hConfig, cPath) CLASS Config
         Set(_SET_PRINTER, xWasPrinter)
         Set(_SET_PRINTFILE, xWasPrinterFile)
         Set(_SET_CONSOLE, xWasConsole)
-        //SET PRINTER TO
-        //SET PRINTER OFF 
-        //SET CONSOLE ON
         lSuccess := .T.
     ELSE
         Inform(Config():get_config('CantCreateConfigFile'), , , , .T.)
@@ -527,12 +586,13 @@ RETURN lSuccess
 
 METHOD validate_configs() CLASS Config
 
-    LOCAL acLibKeys := hb_hKeys(::hLibConfig)
-    LOCAL cKey
+    LOCAL axLibKeys := hb_hKeys(::hLibConfig)
+    LOCAL xKey
 
-    FOR EACH cKey IN acLibKeys
-        IF hb_hHasKey(::hUserConfig, cKey)
-            IF !Eval(::hLibConfig[cKey][LIBCONFIG_VALIDATOR], ::hUserConfig[cKey], ::hLibConfig)
+    FOR EACH xKey IN axLibKeys
+        assert_type(xKey, 'C')
+        IF hb_hHasKey(::hUserConfig, xKey)
+            IF !Eval(::hLibConfig[xKey][LIBCONFIG_VALIDATOR], ::hUserConfig[xKey], ::hLibConfig)
                 RETURN .F.
             ENDIF
         ENDIF
