@@ -69,6 +69,7 @@ EXPORTED:
     METHOD refresh_all() INLINE IF(::lActive, (::oTBrowse:refreshAll(), NIL), throw(RUNTIME_EXCEPTION))          // refreshAll() wrapper
     METHOD refresh_current() INLINE IF(::lActive, (::oTBrowse:refreshCurrent(), NIL), throw(RUNTIME_EXCEPTION))  // refreshCurrent() wrapper
     METHOD stabilize() INLINE IF(::lActive, (::oTBrowse:stabilize(), NIL), throw(RUNTIME_EXCEPTION))             // stabilize() wrapper
+    METHOD row_count() INLINE IF(::lActive, ::oTBrowse:rowCount(), throw(RUNTIME_EXCEPTION))                     // rowCount() wrapper
     METHOD color_rectangle(anRows, anColors)                                                                     // colorRect() wrapper
     METHOD hit_test(nRow)                                                                                        // HitTest() wrapper
 

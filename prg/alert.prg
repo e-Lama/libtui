@@ -56,10 +56,10 @@ METHOD AlertLG(xMessage, acOptions, cColorMessage, cColorButtons, nDelay, nRow, 
     IF ValType(xMessage) == 'A'
         cMessage := ''
         FOR i := 1 TO Len(xMessage)
-            cMessage += IF(i == 1, '', Chr(10)) + hb_CStr(xMessage[i])
+            cMessage += IF(i == 1, '', hb_OsNewLine()) + hb_CStr(xMessage[i])
         NEXT
     ELSEIF ValType(xMessage) == 'C'
-        cMessage := StrTran(xMessage, ';', Chr(10))
+        cMessage := StrTran(xMessage, ';', hb_OsNewLine())
     ELSE
         cMessage := hb_CStr(xMessage)
     ENDIF
@@ -359,8 +359,6 @@ METHOD create_message(cTxt, nMaxWidth) CLASS AlertLG
     LOCAL nCurrentWidth := 0
     LOCAL cCharacter
     LOCAL i
-
-    cTxt := StrTran(cTxt, ';', hb_OsNewLine())
 
     FOR i := 1 TO nLength
         cCharacter := SubStr(cTxt, i, 1) 

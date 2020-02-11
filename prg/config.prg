@@ -298,6 +298,11 @@ HIDDEN:
                                                                              ValType(xArgument) == 'L';
                                                                           };
                                                                       };
+                                            ; /*** OTHER ***/
+                                            , 'AppendTimeout', {3000, {| xArgument |;
+                                                                             ValType(xArgument) == 'N' .AND. xArgument >= 0;
+                                                                          };
+                                                                      };
                                             )
     CLASSVAR axFormsStructure AS ARRAY INIT {;
                                             {'ID', 'C', 50, 0};

@@ -2,6 +2,84 @@
 
 #include "functions.ch"
 
+PROCEDURE throw(cDescription)
+
+    LOCAL oError := ErrorNew()
+    LOCAL n := 0
+
+    oError:description := cDescription
+    oError:severity := ES_ERROR
+    oError:cargo := 'EXCEPTION: '
+
+    DO WHILE !Empty(ProcName(++n))
+        oError:cargo += hb_StrFormat('Called from %1$s(%2$d)' + hb_OsNewLine(), ProcName(n), ProcLine(n))
+    ENDDO
+
+BREAK oError //-es2 and -w3 flags makes RETURN impossible here
+
+PROCEDURE assert_type(xValue, xType, cDescription)
+
+    LOCAL nPCount := PCount()
+
+    IF nPCount < 2 .OR. nPCount > 3
+        throw(ARGUMENTS_NUMBER_EXCEPTION)
+    ENDIF
+
+    IF ValType(xType) == 'C'
+        xType := {xType}
+    ELSEIF ValType(xType) != 'A'
+        throw(ARGUMENT_VALUE_EXCEPTION)
+    ENDIF
+
+    AEval(xType, {| cElement | IF(is_data_type(cElement), , throw(ARGUMENT_VALUE_EXCEPTION))})
+
+    IF AScan(xType, ValType(xValue)) == 0
+        IF nPCount == 3
+            assert_type(cDescription, 'C')
+            throw(cDescription)
+        ELSE
+            throw(ARGUMENT_TYPE_EXCEPTION)
+        ENDIF
+    ENDIF
+
+RETURN
+
+PROCEDURE assert_length(xValue, nLength, cDescription)
+
+    LOCAL nPCount := PCount()
+
+    IF nPCount < 2 .OR. nPCount > 3
+        throw(ARGUMENTS_NUMBER_EXCEPTION)
+    ELSEIF !(ValType(xValue) $ 'A;H;C')
+        throw(ARGUMENT_TYPE_EXCEPTION)
+    ELSEIF Len(xValue) != nLength
+        IF nPCount == 3
+            assert_type(cDescription, 'C')
+            throw(cDescription)
+        ELSE
+            throw(ARGUMENT_VALUE_EXCEPTION)
+        ENDIF
+    ENDIF
+
+RETURN
+
+PROCEDURE assert_data_type(cType, cDescription)
+
+    LOCAL nPCount := PCount()
+
+    IF nPCount < 1 .OR. nPCount > 2
+        throw(ARGUMENTS_NUMBER_EXCEPTION)
+    ELSEIF !is_data_type(cType)
+        IF nPCount == 2
+            assert_type(cDescription, 'C')
+            throw(cDescription)
+        ELSE
+            throw(ARGUMENT_VALUE_EXCEPTION)
+        ENDIF
+    ENDIF
+
+RETURN
+
 FUNCTION standard_error_handler(oError)
 
     LOCAL cMessage := IF(ValType(oError:cargo) == 'C' .AND. 'EXCEPTION' $ oError:cargo, 'Exception: ' + oError:description, get_message(oError))

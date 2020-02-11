@@ -46,7 +46,7 @@ FUNCTION search(oRowBrowse, nKey)
         oRowBrowse:search_keys('')
         oRowBrowse:draw_border()
         oRowBrowse:print_title()
-    ELSE
+    ELSEIF !hb_hHasKey(oRowBrowse:keys_map(), nKey) .AND. !Empty(IndexKey())
         IF oRowBrowse:search(cCurrentString + Chr(nKey))
             nReturn := ROWBROWSE_SEARCH
             oRowBrowse:search_keys(cCurrentString + Chr(nKey))
