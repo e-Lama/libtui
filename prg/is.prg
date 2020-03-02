@@ -208,13 +208,21 @@ FUNCTION is_box(cBoxString)
 
 RETURN ValType(cBoxString) == 'C' //.AND. Len(cBoxString) == STD_BOX_STRING_LENGTH TODO Doesn't work with UTF8 and when Len(cBoxString) == 9
 
-FUNCTION is_style(cStyleString)
+FUNCTION is_pushbutton_style(cStyleString)
 
     IF PCount() != 1
         throw(ARGUMENTS_NUMBER_EXCEPTION)
     ENDIF
 
-RETURN ValType(cStyleString) == 'C' .AND. Len(cStyleString) == STD_STYLE_STRING_LENGTH
+RETURN ValType(cStyleString) == 'C' .AND. (Len(cStyleString) == 2 .OR. Len(cStyleString) == 8)
+
+FUNCTION is_checkbox_style(cStyleString)
+
+    IF PCount() != 1
+        throw(ARGUMENTS_NUMBER_EXCEPTION)
+    ENDIF
+
+RETURN ValType(cStyleString) == 'C' .AND. Len(cStyleString) == 4
 
 FUNCTION is_picture(cPicture)
 
@@ -251,7 +259,7 @@ FUNCTION is_function_picture(cFunction)
             lCheckNextIsDigit := .T.
         ELSEIF lScrolling .AND. isDigit(cCharacter)
             CONTINUE
-        ELSEIF cCharacter $ 'A;B;C;D;E;K;R;X;Z(;);!;@'
+        ELSEIF cCharacter $ 'A;B;C;D;E;K;R;X;Z(;);!;@' .AND. cCharacter != ';'
             lScrolling := .F.
             CONTINUE
         ELSE
@@ -274,7 +282,7 @@ FUNCTION is_template_picture(cTemplate)
     ENDIF
 
     FOR EACH cCharacter IN cTemplate
-        IF cCharacter $ 'A;N;X;9;#;L;Y;!;$;*;.;,'
+        IF cCharacter $ 'A;N;X;9;#;L;Y;!;$;*;.;,' .AND. cCharacter != ';'
             CONTINUE
         ELSE
             RETURN .F.

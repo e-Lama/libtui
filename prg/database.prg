@@ -107,31 +107,17 @@ FUNCTION row_to_hash(acOmmit, hAdd, nRecNo, cAlias)
 
 RETURN hHash
 
-FUNCTION hash_to_row(hHash, lAppendBlank, lSubset)
+FUNCTION hash_to_row(hHash, lAppendBlank)
 
     LOCAL axStructure := dbStruct()
     LOCAL axField
 
-    IF PCount() != 2 .AND. PCount() != 3
+    IF PCount() != 1 .AND. PCount() != 2
         throw(ARGUMENTS_NUMBER_EXCEPTION)
     ELSEIF ValType(hHash) != 'H'
         throw(ARGUMENT_TYPE_EXCEPTION)
     ELSEIF ValType(lAppendBlank) != 'L'
         throw(ARGUMENT_TYPE_EXCEPTION)
-    ELSEIF !(ValType(lSubset) $ 'L;U')
-        throw(ARGUMENT_TYPE_EXCEPTION)
-    ENDIF
-
-    IF ValType(lSubset) == 'U'
-        lSubset := .F.
-    ENDIF
-
-    IF !lSubset
-        FOR EACH axField IN axStructure
-            IF !hb_hHasKey(hHash, axField[DBS_NAME])
-                throw(RUNTIME_EXCEPTION)
-            ENDIF
-        NEXT
     ENDIF
 
     IF lAppendBlank
@@ -145,7 +131,9 @@ FUNCTION hash_to_row(hHash, lAppendBlank, lSubset)
     ENDIF
 
     FOR EACH axField IN axStructure
-        field->&(axField[DBS_NAME]) := hHash[axField[DBS_NAME]]
+        IF hb_hHasKey(hHash, axField[DBS_NAME])
+            field->&(axField[DBS_NAME]) := hHash[axField[DBS_NAME]]
+        ENDIF
     NEXT
 
 RETURN .T.

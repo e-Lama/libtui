@@ -94,7 +94,7 @@ METHOD log(cLog) CLASS Parser
 
 RETURN cWasLog
 
-METHOD get_answers() 
+METHOD get_answers() CLASS Parser
 
     LOCAL hAnswers := hb_Hash()
     LOCAL i
@@ -214,6 +214,7 @@ METHOD handle_object(axRow) CLASS Parser
         CASE axRow[OBJECT] == OBJECT_PUSHBUTTON
             RETURN ::make_pushbutton(axRow[N_ROW_PSB];
                                      , axRow[N_COL_PSB];
+                                     , axRow[L_ID_VAR_PSB];
                                      , axRow[C_CAPTION_PSB];
                                      , axRow[C_MESSAGE_PSB];
                                      , axRow[C_WHEN_FNC_PSB];
@@ -675,6 +676,11 @@ METHOD validate_get(axRow, hVariables) CLASS Parser
 
     cType := SubStr(axRow[X_ID_VAR_GET], 2, 1)
 
+    IF AScan({'C', 'D', 'L', 'N'}, cType) == 0
+        ::add_to_debug(Config():get_config('IncorrectDataType'))
+        RETURN .F.
+    ENDIF
+
     IF AScan(::axUsedKeys, axRow[X_ID_VAR_GET]) != 0
         ::add_to_debug(Config():get_config('VariableRepeating'))
         RETURN .F.
@@ -762,6 +768,11 @@ METHOD validate_checkbox(axRow, hVariables) CLASS Parser
 
     cType := SubStr(axRow[L_ID_VAR_CHB], 2, 1)
 
+    IF cType != 'L'
+        ::add_to_debug(Config():get_config('IncorrectDataType'))
+        RETURN .F.
+    ENDIF
+
     IF AScan(::axUsedKeys, axRow[L_ID_VAR_CHB]) != 0
         ::add_to_debug(Config():get_config('VariableRepeating'))
         RETURN .F.
@@ -798,7 +809,7 @@ METHOD validate_checkbox(axRow, hVariables) CLASS Parser
                 ::add_to_debug(Config():get_config('IncorrectValue'))
                 RETURN .F.
             ENDIF
-        ELSEIF i == C_STYLE_CHB .AND. !is_Style(axRow[i])
+        ELSEIF i == C_STYLE_CHB .AND. !is_checkbox_style(axRow[i])
             ::add_to_debug(Config():get_config('IncorrectValue'))
             RETURN .F.
         ENDIF
@@ -1120,11 +1131,18 @@ METHOD validate_pushbutton(axRow, hVariables) CLASS Parser
 
     cType := SubStr(axRow[L_ID_VAR_PSB], 2, 1)
 
+    IF cType != 'L'
+        ::add_to_debug(Config():get_config('IncorrectDataType'))
+        RETURN .F.
+    ENDIF
+
     IF AScan(::axUsedKeys, axRow[L_ID_VAR_PSB]) != 0
         ::add_to_debug(Config():get_config('VariableRepeating'))
         RETURN .F.
     ENDIF
     AAdd(::axUsedKeys, axRow[L_ID_VAR_PSB])
+
+    axRow[L_ID_VAR_PSB] := AllTrim(Right(axRow[L_ID_VAR_PSB], Len(axRow[L_ID_VAR_PSB]) - 2))
 
     nIndex := AScan(::axKeys, axRow[L_ID_VAR_PSB])
 
@@ -1168,7 +1186,7 @@ METHOD validate_pushbutton(axRow, hVariables) CLASS Parser
             RETURN .F.
         ENDIF
 
-        IF i == C_STYLE_PSB .AND. !is_style(axRow[i])
+        IF i == C_STYLE_PSB .AND. !is_pushbutton_style(axRow[i])
             ::add_to_debug(Config():get_config('IncorrectValue'))
             RETURN .F.
         ENDIF

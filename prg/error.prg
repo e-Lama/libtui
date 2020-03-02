@@ -99,6 +99,8 @@ FUNCTION standard_error_handler(oError)
     WSetShadow(-1)
     Alert(cMessage + cOsError)
 
+    WAClose()
+
     SET PRINTER TO log.txt
     SET PRINTER ON
 

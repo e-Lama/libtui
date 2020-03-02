@@ -45,6 +45,7 @@ METHOD AlertLG(xMessage, acOptions, cColorMessage, cColorButtons, nDelay, nRow, 
     LOCAL nKey
     LOCAL nShift
     LOCAL lFound
+    LOCAL xResult
     LOCAL i
 
     WSelect(0)
@@ -225,9 +226,15 @@ METHOD AlertLG(xMessage, acOptions, cColorMessage, cColorButtons, nDelay, nRow, 
             nDelay := 0
         ENDIF
 
+        IF SetKey(nKey) != NIL
+            xResult := EVal(SetKey(nKey))
+
+            IF ValType(xResult) == 'N'
+                nKey := xResult
+            ENDIF
+        ENDIF
+            
         DO CASE
-            CASE SetKey(nKey) != NIL
-                Eval(SetKey(nKey))
             CASE nKey == K_LEFT
                 IF nCurrentOption > 1
                     --nCurrentOption

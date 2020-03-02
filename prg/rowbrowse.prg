@@ -36,6 +36,8 @@ EXPORTED:
     METHOD print_title()
     METHOD draw_border()
 
+    METHOD refresh(nNewRefresh)
+
     //Basic TBrowse 
     //Variables wrappers
     METHOD automatic_highlight(lAutomaticHighlight) SETGET          // autoLite wrapper
@@ -70,6 +72,10 @@ EXPORTED:
     METHOD refresh_current() INLINE IF(::lActive, (::oTBrowse:refreshCurrent(), NIL), throw(RUNTIME_EXCEPTION))  // refreshCurrent() wrapper
     METHOD stabilize() INLINE IF(::lActive, (::oTBrowse:stabilize(), NIL), throw(RUNTIME_EXCEPTION))             // stabilize() wrapper
     METHOD row_count() INLINE IF(::lActive, ::oTBrowse:rowCount(), throw(RUNTIME_EXCEPTION))                     // rowCount() wrapper
+    METHOD get_row_pos() INLINE IF(::lActive, ::oTBrowse:rowPos, throw(RUNTIME_EXCEPTION))                       // getRowPos wrapper
+    METHOD get_top_flag() INLINE IF(::lActive, ::oTBrowse:hitTop, throw(RUNTIME_EXCEPTION))                      // getTopFlag wrapper
+    METHOD get_bottom_flag() INLINE IF(::lActive, ::oTBrowse:hitBottom, throw(RUNTIME_EXCEPTION))                // getBottomFlag wrapper
+    METHOD get_stable_flag() INLINE IF(::lActive, ::oTBrowse:stable, throw(RUNTIME_EXCEPTION))                   // getStableFlag wrapper
     METHOD color_rectangle(anRows, anColors)                                                                     // colorRect() wrapper
     METHOD hit_test(nRow)                                                                                        // HitTest() wrapper
 
@@ -94,8 +100,7 @@ HIDDEN:
     VAR cSearchKeys AS CHARACTER INIT ''
     VAR hKeysMap AS HASH INIT {;
                                     K_ESC => K_ESC, K_DOWN => K_DOWN, K_UP => K_UP, K_PGUP => K_PGUP;
-                                    , K_PGDN => K_PGDN, K_LEFT => K_LEFT, K_RIGHT => K_RIGHT;
-                                    , K_HOME => K_HOME, K_END => K_END, K_CTRL_HOME => K_CTRL_HOME;
+                                    , K_PGDN => K_PGDN, K_HOME => K_HOME, K_END => K_END, K_CTRL_HOME => K_CTRL_HOME;
                                     , K_CTRL_END => K_CTRL_END;
                                }
     VAR cColor AS CHARACTER INIT Config():get_config('DefaultColor')
@@ -125,9 +130,20 @@ HIDDEN:
     METHOD go_first_visible()
     METHOD go_last_visible()
     METHOD print_header()
-    METHOD refresh()
+    METHOD do_refresh()
 
 ENDCLASS LOCK
+
+METHOD refresh(nNewRefresh)
+
+    LOCAL nOldRefresh := ::nRefresh
+
+    IF ValType(nNewRefresh) != 'U'
+        assert_type(nNewRefresh, 'N')
+        ::nRefresh := nNewRefresh
+    ENDIF
+
+RETURN nOldRefresh
 
 METHOD get_separator(nIndex) CLASS Row_browse
 
@@ -643,11 +659,7 @@ METHOD display(lEnd)
 
             nKey := Inkey(0)
 
-            IF hb_HHasKey(::hKeysMap, nKey)
-                nKey := ::hKeysMap[nKey]
-            ENDIF
-
-            nAction := ::handle_move(nKey)
+            nAction := ::handle_move(IF(hb_hHasKey(::hKeysMap, nKey), ::hKeysMap[nKey], nKey))
 
             IF nAction != ROWBROWSE_NO_ACTION .AND. nAction != ROWBROWSE_END
                 nAction := ::handle_action(Eval(::bUserAction, Self, nKey))
@@ -661,7 +673,7 @@ METHOD display(lEnd)
             ENDIF
 
             IF !lEnd
-                ::refresh()
+                ::do_refresh()
             ENDIF
         ENDDO
     ENDIF
@@ -674,7 +686,7 @@ METHOD display(lEnd)
 
 RETURN NIL
 
-METHOD refresh() CLASS Row_browse
+METHOD do_refresh() CLASS Row_browse
 
     DO CASE
         CASE ::lSpecialOperationRefresh
@@ -734,10 +746,6 @@ METHOD handle_move(nKey) CLASS Row_browse
             ::oTBrowse:PageUp()
         CASE nKey == K_PGDN
             ::oTBrowse:PageDown()
-        CASE nKey == K_LEFT
-            ::oTBrowse:Left()
-        CASE nKey == K_RIGHT
-            ::oTBrowse:Right()
         CASE nKey == K_HOME
             ::go_first_visible()
         CASE nKey == K_END
@@ -974,20 +982,24 @@ RETURN lFound
 
 METHOD binary_search(cTarget, lExactly) CLASS Row_browse
 
+    ::oTBrowse:goTop()
+
     IF lExactly
         SEEK cTarget
     ELSE
         SEEK cTarget SOFTSEEK
     ENDIF
 
-    ::lWasBinarySearch := .T.
-
 RETURN Found()
 
 METHOD go_first_visible() CLASS Row_browse
 
-    ::oTBrowse:dehilite()
-    SKIP (-1) * (::oTBrowse:rowPos - 1)
+    LOCAL nCount := ::oTBrowse:rowPos - 1
+
+    DO WHILE nCount > 0
+        ::oTBrowse:Up()
+        --nCount
+    ENDDO
 
 RETURN NIL
 
@@ -1033,4 +1045,4 @@ METHOD search(cTarget, lExactly, cPattern) CLASS Row_browse
         RETURN ::linear_search(cTarget, lExactly, cPattern)
     ENDIF
 
-RETURN ::linear_search(cTarget, lExactly, cPattern)//::binary_search(cTarget, lExactly) TODO: binary search doesn't work with :ForceStable method
+RETURN ::binary_search(cTarget, lExactly)
