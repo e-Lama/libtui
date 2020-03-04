@@ -23,6 +23,7 @@ EXPORTED:
     METHOD refresh_title(lRefreshBorder)
     METHOD refresh_header()
     METHOD refresh_footer()
+    METHOD refresh_header_footer() INLINE DispBegin(), ::refresh_header(), ::refresh_footer(), DispEnd()
 
     METHOD get_top() INLINE IF(Empty(::cBorder), ::nTop, ::nTop + 1)
     METHOD get_bottom() INLINE IF(Empty(::cBorder), ::nBottom, ::nBottom - 1)
@@ -33,6 +34,8 @@ EXPORTED:
     METHOD center_col() INLINE (::get_left() + ::get_right()) / 2
 
     METHOD apply_config()
+
+    METHOD clear_screen(cColor)
 
 HIDDEN:
 
@@ -56,6 +59,25 @@ HIDDEN:
     CLASSVAR cTitleColor AS CHARACTER INIT SetColor()
 
 ENDCLASS LOCKED
+
+METHOD clear_screen(cColor) CLASS Window
+
+    LOCAL cOldColor := SetColor()
+
+    IF cColor != NIL
+        assert_type(cColor, 'C')
+        IF !is_color(cColor)
+            throw(ARGUMENT_VALUE_EXCEPTION)
+        ENDIF
+
+        SET COLOR TO (cColor)
+    ENDIF
+
+    @ ::get_top(), ::get_left() CLEAR TO ::get_bottom(), ::get_right()
+
+    SET COLOR TO (cOldColor)
+
+RETURN NIL
 
 METHOD refresh_window() CLASS Window
 

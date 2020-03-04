@@ -15,7 +15,11 @@ PROCEDURE throw(cDescription)
         oError:cargo += hb_StrFormat('Called from %1$s(%2$d)' + hb_OsNewLine(), ProcName(n), ProcLine(n))
     ENDDO
 
-BREAK oError //-es2 and -w3 flags makes RETURN impossible here
+    BREAK oError
+
+#pragma ENABLEWARNINGS = Off //-es2 and -w3 flags makes RETURN impossible without this pragma
+RETURN
+#pragma ENABLEWARNINGS = On
 
 PROCEDURE assert_type(xValue, xType, cDescription)
 
