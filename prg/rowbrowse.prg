@@ -376,7 +376,7 @@ METHOD border(cBorder) CLASS Row_browse
 
     IF cBorder != NIL
         assert_type(cBorder, 'C')
-        IF is_box(cBorder)
+        IF is_box(hb_Translate(cBorder), 'EN', hb_cdpSelect())
             ::cBorder := cBorder
         ELSE
             throw(ARGUMENT_VALUE_EXCEPTION)
@@ -532,7 +532,7 @@ RETURN lOldStable
     IF cBorder != NIL
         assert_type(cBorder, 'C')
 
-        IF !is_box(cBorder)
+        IF !is_box(hb_Translate(cBorder, 'EN', hb_cdpSelect()))
             throw(ARGUMENT_VALUE_EXCEPTION)
         ENDIF
 

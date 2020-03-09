@@ -98,7 +98,7 @@ FUNCTION display_menu(nTop, nLeft, nBottom, nRight, acMenuItems, xSelectable, cU
         throw(ARGUMENT_VALUE_EXCEPTION)
     ENDIF
 
-    IF ValType(cBorder) == 'C' .AND. !is_box(cBorder)
+    IF ValType(cBorder) == 'C' .AND. !is_box(hb_translate(cBorder, 'EN', hb_cdpSelect()))
         throw(ARGUMENT_VALUE_EXCEPTION)
     ENDIF
 

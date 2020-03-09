@@ -163,7 +163,7 @@ METHOD AlertLG(xMessage, acOptions, cColorMessage, cColorButtons, nDelay, nRow, 
         assert_type(lAcceptFirstFounded, 'L')
     ENDIF
 
-    IF ValType(cBorder) == 'C' .AND. !is_box(cBorder)
+    IF ValType(cBorder) == 'C' .AND. !is_box(hb_Translate(cBorder, 'EN', hb_cdpSelect()))
         throw(ARGUMENT_VALUE_EXCEPTION)
     ELSE
         cBorder := B_SINGLE

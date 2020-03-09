@@ -462,7 +462,7 @@ METHOD validate_window(axRow, hVariables) CLASS Parser
         RETURN .F.
     ENDIF
 
-    IF !is_box(axRow[C_BOX_WN])
+    IF !is_box(hb_Translate(axRow[C_BOX_WN], 'EN', hb_cdpSelect()))
         ::add_to_debug(Config():get_config('IncorrectValue'))
         RETURN .F.
     ENDIF
@@ -552,7 +552,7 @@ METHOD validate_box(axRow, hVariables) CLASS Parser
         RETURN .F.
     ENDIF
 
-    IF !is_box(axRow[C_BOX_BOX])
+    IF !is_box(hb_Translate(axRow[C_BOX_BOX], 'EN', hb_cdpSelect()))
         ::add_to_debug(Config():get_config('IncorrectValue'))
         RETURN .F.
     ENDIF

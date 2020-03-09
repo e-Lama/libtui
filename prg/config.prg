@@ -92,19 +92,19 @@ HIDDEN:
                                                                       };
                                             ; /*** BOXES ***/
                                             , 'RowBrowseDefaultBox', {HB_B_SINGLE_DOUBLE_UNI, {| xArgument |;
-                                                                             is_box(xArgument);
+                                                                             is_box(hb_Translate(xArgument, 'EN', hb_cdpSelect()));
                                                                           };
                                                                       };
                                             , 'ProgressBarDefaultBox', {HB_B_SINGLE_UNI, {| xArgument |;
-                                                                             is_box(xArgument);
+                                                                             is_box(hb_Translate(xArgument, 'EN', hb_cdpSelect()));
                                                                           };
                                                                       };
                                             , 'DefaultBox', {HB_B_DOUBLE_UNI, {| xArgument |;
-                                                                             is_box(xArgument);
+                                                                             is_box(hb_Translate(xArgument, 'EN', hb_cdpSelect()));
                                                                           };
                                                                       };    
                                             , 'WindowBorder', {HB_B_SINGLE_UNI, {| xArgument |;
-                                                                             is_box(xArgument);
+                                                                             is_box(hb_Translate(xArgument, 'EN', hb_cdpSelect()));
                                                                           };
                                                                       };
                                             ; /*** COLORS ***/

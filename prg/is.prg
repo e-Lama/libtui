@@ -206,7 +206,7 @@ FUNCTION is_box(cBoxString)
         throw(ARGUMENTS_NUMBER_EXCEPTION)
     ENDIF
 
-RETURN ValType(cBoxString) == 'C' //.AND. Len(cBoxString) == STD_BOX_STRING_LENGTH TODO Doesn't work with UTF8 and when Len(cBoxString) == 9
+RETURN ValType(cBoxString) == 'C' .AND. (Len(cBoxString) == 8 .OR. Len(cBoxString) == 9)
 
 FUNCTION is_pushbutton_style(cStyleString)
 

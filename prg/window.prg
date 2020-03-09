@@ -185,7 +185,7 @@ METHOD border(cBorder) CLASS Window
 
     IF cBorder != NIL
         assert_type(cBorder, 'C')
-        IF !is_box(cBorder)
+        IF !is_box(hb_Translate(cBorder, 'EN', hb_cdpSelect()))
             throw(ARGUMENT_VALUE_EXCEPTION)
         ENDIF
         ::cBorder := cBorder
