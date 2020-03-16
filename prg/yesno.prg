@@ -19,13 +19,13 @@ FUNCTION YesNo(xMessage, acAnwsers, cColor, lSafe, lAllowMove, nCurrentOption, l
     hb_Default(@lSafe, .F.)
 
     IF lSafe
-        IF print_message(xMessage, IF(ValType(acAnwsers) == 'A', acAnwsers, {SAFE_YES, SAFE_NO}), IF(ValType(cColor) == 'C', cColor, YESNO_SAFE_COLOR), lSafe, NIL, .T., IF(ValType(lAllowMove) == 'L', lAllowMove, .T.), IF(ValType(nCurrentOption) == 'N', nCurrentOption, 1), IF(ValType(lCyclic) == 'L', lCyclic, .T.), IF(ValType(lAcceptFirstFounded) == 'L', lAcceptFirstFounded, .F.), IF(ValType(cBorder) == 'C', cBorder, NIL)) == 1
+        IF __print_message(xMessage, IF(ValType(acAnwsers) == 'A', acAnwsers, {SAFE_YES, SAFE_NO}), IF(ValType(cColor) == 'C', cColor, YESNO_SAFE_COLOR), lSafe, NIL, .T., IF(ValType(lAllowMove) == 'L', lAllowMove, .T.), IF(ValType(nCurrentOption) == 'N', nCurrentOption, 1), IF(ValType(lCyclic) == 'L', lCyclic, .T.), IF(ValType(lAcceptFirstFounded) == 'L', lAcceptFirstFounded, .F.), IF(ValType(cBorder) == 'C', cBorder, NIL)) == 1
             lResult := .T.
         ELSE
             lResult := .F.
         ENDIF
     ELSE
-        IF print_message(xMessage, IF(ValType(acAnwsers) == 'A', acAnwsers, {YES, NO}), IF(ValType(cColor) == 'C', cColor, YESNO_COLOR), .F., NIL, lSafe, IF(ValType(lAllowMove) == 'L', lAllowMove, YESNO_MOVE), IF(ValType(nCurrentOption) == 'N', nCurrentOption, 1), IF(ValType(lCyclic) == 'L', lCyclic, YESNO_CYCLIC), IF(ValType(lAcceptFirstFounded) == 'L', lAcceptFirstFounded, YESNO_ACCEPT_FIRST), IF(ValType(cBorder) == 'C', cBorder, NIL)) == 1
+        IF __print_message(xMessage, IF(ValType(acAnwsers) == 'A', acAnwsers, {YES, NO}), IF(ValType(cColor) == 'C', cColor, YESNO_COLOR), .F., NIL, lSafe, IF(ValType(lAllowMove) == 'L', lAllowMove, YESNO_MOVE), IF(ValType(nCurrentOption) == 'N', nCurrentOption, 1), IF(ValType(lCyclic) == 'L', lCyclic, YESNO_CYCLIC), IF(ValType(lAcceptFirstFounded) == 'L', lAcceptFirstFounded, YESNO_ACCEPT_FIRST), IF(ValType(cBorder) == 'C', cBorder, NIL)) == 1
             lResult := .T.
         ELSE
             lResult := .F.
@@ -49,13 +49,13 @@ FUNCTION NoYes(xMessage, acAnwsers, cColor, lSafe, lAllowMove, nCurrentOption, l
     hb_Default(@lSafe, .F.)
 
     IF lSafe
-        IF print_message(xMessage, IF(ValType(acAnwsers) == 'A', acAnwsers, {SAFE_NO, SAFE_YES}), IF(ValType(cColor) == 'C', cColor, YESNO_SAFE_COLOR), .F., NIL, lSafe, IF(ValType(lAllowMove) == 'L', lAllowMove, .T.), IF(ValType(nCurrentOption) == 'N', nCurrentOption, 1), IF(ValType(lCyclic) == 'L', lCyclic, .T.), IF(ValType(lAcceptFirstFounded) == 'L', lAcceptFirstFounded, .F.), IF(ValType(cBorder) == 'C', cBorder, NIL)) == 1
+        IF __print_message(xMessage, IF(ValType(acAnwsers) == 'A', acAnwsers, {SAFE_NO, SAFE_YES}), IF(ValType(cColor) == 'C', cColor, YESNO_SAFE_COLOR), .F., NIL, lSafe, IF(ValType(lAllowMove) == 'L', lAllowMove, .T.), IF(ValType(nCurrentOption) == 'N', nCurrentOption, 1), IF(ValType(lCyclic) == 'L', lCyclic, .T.), IF(ValType(lAcceptFirstFounded) == 'L', lAcceptFirstFounded, .F.), IF(ValType(cBorder) == 'C', cBorder, NIL)) == 1
             lResult := .F.
         ELSE
             lResult := .T.
         ENDIF
     ELSE
-        IF print_message(xMessage, IF(ValType(acAnwsers) == 'A', acAnwsers, {NO, YES}), IF(ValType(cColor) == 'C', cColor, YESNO_COLOR), .F., NIL, lSafe, IF(ValType(lAllowMove) == 'L', lAllowMove, YESNO_MOVE), IF(ValType(nCurrentOption) == 'N', nCurrentOption, 1), IF(ValType(lCyclic) == 'L', lCyclic, YESNO_CYCLIC), IF(ValType(lAcceptFirstFounded) == 'L', lAcceptFirstFounded, YESNO_ACCEPT_FIRST), IF(ValType(cBorder) == 'C', cBorder, NIL)) == 1
+        IF __print_message(xMessage, IF(ValType(acAnwsers) == 'A', acAnwsers, {NO, YES}), IF(ValType(cColor) == 'C', cColor, YESNO_COLOR), .F., NIL, lSafe, IF(ValType(lAllowMove) == 'L', lAllowMove, YESNO_MOVE), IF(ValType(nCurrentOption) == 'N', nCurrentOption, 1), IF(ValType(lCyclic) == 'L', lCyclic, YESNO_CYCLIC), IF(ValType(lAcceptFirstFounded) == 'L', lAcceptFirstFounded, YESNO_ACCEPT_FIRST), IF(ValType(cBorder) == 'C', cBorder, NIL)) == 1
             lResult := .F.
         ELSE
             lResult := .T.
@@ -75,9 +75,9 @@ FUNCTION Dialog(xMessage, acOptions, cColor, lAllowEscape, nDelay, lSafe, lAllow
     hb_Default(@lSafe, .F.)
 
     IF lSafe
-        nResult := print_message(xMessage, acOptions, IF(ValType(cColor) == 'C', cColor, DIALOG_SAFE_COLOR), IF(ValType(lAllowEscape) == 'L', lAllowEscape, .F.), nDelay, lSafe, IF(ValType(lAllowMove) == 'L', lAllowMove, .T.), IF(ValType(nCurrentOption) == 'N', nCurrentOption, 1), IF(ValType(lCyclic) == 'L', lCyclic, .T.), IF(ValType(lAcceptFirstFounded) == 'L', lAcceptFirstFounded, .F.), IF(ValType(cBorder) == 'C', cBorder, NIL))
+        nResult := __print_message(xMessage, acOptions, IF(ValType(cColor) == 'C', cColor, DIALOG_SAFE_COLOR), IF(ValType(lAllowEscape) == 'L', lAllowEscape, .F.), nDelay, lSafe, IF(ValType(lAllowMove) == 'L', lAllowMove, .T.), IF(ValType(nCurrentOption) == 'N', nCurrentOption, 1), IF(ValType(lCyclic) == 'L', lCyclic, .T.), IF(ValType(lAcceptFirstFounded) == 'L', lAcceptFirstFounded, .F.), IF(ValType(cBorder) == 'C', cBorder, NIL))
     ELSE
-        nResult := print_message(xMessage, acOptions, IF(ValType(cColor) == 'C', cColor, DIALOG_COLOR), IF(ValType(lAllowEscape) == 'L', lAllowEscape, .F.), nDelay, lSafe, IF(ValType(lAllowMove) == 'L', lAllowMove, DIALOG_MOVE), IF(ValType(nCurrentOption) == 'N', nCurrentOption, 1), IF(ValType(lCyclic) == 'L', lCyclic, DIALOG_CYCLIC), IF(ValType(lAcceptFirstFounded) == 'L', lAcceptFirstFounded, DIALOG_ACCEPT_FIRST), IF(ValType(cBorder) == 'C', cBorder, NIL))
+        nResult := __print_message(xMessage, acOptions, IF(ValType(cColor) == 'C', cColor, DIALOG_COLOR), IF(ValType(lAllowEscape) == 'L', lAllowEscape, .F.), nDelay, lSafe, IF(ValType(lAllowMove) == 'L', lAllowMove, DIALOG_MOVE), IF(ValType(nCurrentOption) == 'N', nCurrentOption, 1), IF(ValType(lCyclic) == 'L', lCyclic, DIALOG_CYCLIC), IF(ValType(lAcceptFirstFounded) == 'L', lAcceptFirstFounded, DIALOG_ACCEPT_FIRST), IF(ValType(cBorder) == 'C', cBorder, NIL))
     ENDIF
 
 RETURN nResult
@@ -93,14 +93,14 @@ FUNCTION Inform(xMessage, cColor, lAllowEscape, nDelay, lSafe, lAllowMove, nCurr
     hb_Default(@lSafe, .F.)
     
     IF lSafe
-        nResult := print_message(xMessage, {SAFE_OK}, IF(ValType(cColor) == 'C', cColor, INFORM_SAFE_COLOR), IF(ValType(lAllowEscape) == 'L', lAllowEscape, .T.), nDelay, lSafe, IF(ValType(lAllowMove) == 'L', lAllowMove, .T.), IF(ValType(nCurrentOption) == 'N', nCurrentOption, 1), IF(ValType(lCyclic) == 'L', lCyclic, .T.), IF(ValType(lAcceptFirstFounded) == 'L', lAcceptFirstFounded, .F.), IF(ValType(cBorder) == 'C', cBorder, NIL))
+        nResult := __print_message(xMessage, {SAFE_OK}, IF(ValType(cColor) == 'C', cColor, INFORM_SAFE_COLOR), IF(ValType(lAllowEscape) == 'L', lAllowEscape, .T.), nDelay, lSafe, IF(ValType(lAllowMove) == 'L', lAllowMove, .T.), IF(ValType(nCurrentOption) == 'N', nCurrentOption, 1), IF(ValType(lCyclic) == 'L', lCyclic, .T.), IF(ValType(lAcceptFirstFounded) == 'L', lAcceptFirstFounded, .F.), IF(ValType(cBorder) == 'C', cBorder, NIL))
     ELSE
-        nResult := print_message(xMessage, {OK}, IF(ValType(cColor) == 'C', cColor, INFORM_COLOR), IF(ValType(lAllowEscape) == 'L', lAllowEscape, .T.), nDelay, lSafe, IF(ValType(lAllowMove) == 'L', lAllowMove, INFORM_MOVE), IF(ValType(nCurrentOption) == 'N', nCurrentOption, 1), IF(ValType(lCyclic) == 'L', INFORM_CYCLIC, .T.), IF(ValType(lAcceptFirstFounded) == 'L', lAcceptFirstFounded, INFORM_ACCEPT_FIRST), IF(ValType(cBorder) == 'C', cBorder, NIL))
+        nResult := __print_message(xMessage, {OK}, IF(ValType(cColor) == 'C', cColor, INFORM_COLOR), IF(ValType(lAllowEscape) == 'L', lAllowEscape, .T.), nDelay, lSafe, IF(ValType(lAllowMove) == 'L', lAllowMove, INFORM_MOVE), IF(ValType(nCurrentOption) == 'N', nCurrentOption, 1), IF(ValType(lCyclic) == 'L', INFORM_CYCLIC, .T.), IF(ValType(lAcceptFirstFounded) == 'L', lAcceptFirstFounded, INFORM_ACCEPT_FIRST), IF(ValType(cBorder) == 'C', cBorder, NIL))
     ENDIF
 
 RETURN nResult
 
-STATIC FUNCTION print_message(xMessage, acOptions, cColor, lAllowEscape, nDelay, lSafe, lAllowMove, nCurrentOption, lCyclic, lAcceptFirstFounded, cBorder)
+STATIC FUNCTION __print_message(xMessage, acOptions, cColor, lAllowEscape, nDelay, lSafe, lAllowMove, nCurrentOption, lCyclic, lAcceptFirstFounded, cBorder)
 
     LOCAL acOptionsOk := Array(0)
     LOCAL nOldShadow := WSetShadow(-1)

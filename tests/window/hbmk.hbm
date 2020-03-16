@@ -8,3 +8,4 @@
 -lgui
 -i../../include/
 -L../../
+-owindow_test.bin

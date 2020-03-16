@@ -86,7 +86,7 @@ RETURN
 
 FUNCTION standard_error_handler(oError)
 
-    LOCAL cMessage := IF(ValType(oError:cargo) == 'C' .AND. 'EXCEPTION' $ oError:cargo, 'Exception: ' + oError:description, get_message(oError))
+    LOCAL cMessage := IF(ValType(oError:cargo) == 'C' .AND. 'EXCEPTION' $ oError:cargo, 'Exception: ' + oError:description, __get_message(oError))
     LOCAL cOsError := IF(Empty(oError:osCode), '', ';' + hb_StrFormat('(DOS Error %1$d)', oError:osCode))
     LOCAL n := 0
     LOCAL xHandler
@@ -94,7 +94,7 @@ FUNCTION standard_error_handler(oError)
     LOCAL cCall
     LOCAL xKey
 
-    xHandler := handle_harbour_errors(oError)
+    xHandler := __handle_harbour_errors(oError)
 
     IF xHandler != NIL
         RETURN xHandler
@@ -174,7 +174,7 @@ FUNCTION standard_error_handler(oError)
 RETURN NIL
 
 //errsys.prg
-STATIC FUNCTION get_message(oError)
+STATIC FUNCTION __get_message(oError)
 
    LOCAL cMessage := IF(oError:severity > ES_WARNING, 'Error', 'Warning') + ' '
 
@@ -204,7 +204,7 @@ STATIC FUNCTION get_message(oError)
 RETURN cMessage
 
 //Because of a compatibility some errors are allowed
-STATIC FUNCTION handle_harbour_errors(oError)
+STATIC FUNCTION __handle_harbour_errors(oError)
 
     LOCAL n := 0
 

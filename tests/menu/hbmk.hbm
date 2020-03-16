@@ -8,3 +8,4 @@
 -lgui
 -i../../include/
 -L../../
+-omenu_test.bin

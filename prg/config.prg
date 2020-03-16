@@ -21,24 +21,27 @@ EXPORTED:
     METHOD get_config_hash(lLibConfig)
     METHOD get_config(cKey, lLibConfig) 
 
-    METHOD save_config(cPath) INLINE ::create_config_file(::hUserConfig, cPath)
+    METHOD save_config(cPath) INLINE ::__create_config_file(::__hUserConfig, cPath)
     METHOD set_config(cKey, xValue)
+
+    METHOD get_forms_structure() INLINE AClone(::__axFormsStructure)
+    METHOD get_row_browse_structure() INLINE AClone(::__axRowBrowseStructure)
 
 HIDDEN:
 
-    METHOD handle_settings() INLINE ::handle_forms() .AND. ::handle_browse()
-    METHOD create_forms_file()
-    METHOD create_config_file(hConfig, cPath)
-    METHOD create_browse_file()
-    METHOD handle_user_config(hUserConfig, cNoConfigFileDialog, cNoConfigFileInform)
-    METHOD handle_browse()
-    METHOD handle_forms()
-    METHOD validate_structure(axStructure, axPattern)
-    METHOD validate_configs()
+    METHOD __handle_settings() INLINE ::__handle_forms() .AND. ::__handle_browse()
+    METHOD __create_forms_file()
+    METHOD __create_config_file(hConfig, cPath)
+    METHOD __create_browse_file()
+    METHOD __handle_user_config(hUserConfig, cNoConfigFileDialog, cNoConfigFileInform)
+    METHOD __handle_browse()
+    METHOD __handle_forms()
+    METHOD __validate_structure(axStructure, axPattern)
+    METHOD __validate_configs()
 
-    CLASSVAR hUserConfig AS HASH INIT hb_Hash()
-    CLASSVAR lSuccess AS LOGICAL INIT .F.
-    CLASSVAR hLibConfig AS HASH INIT hb_Hash(;
+    CLASSVAR __hUserConfig AS HASH INIT hb_Hash()
+    CLASSVAR __lSuccess AS LOGICAL INIT .F.
+    CLASSVAR __hLibConfig AS HASH INIT hb_Hash(;
                                             ; /*** WINDOW ***/
                                             'WindowUpperLeftCornerX', {0, {| xArgument |;
                                                                              ValType(xArgument) == 'N';
@@ -304,12 +307,12 @@ HIDDEN:
                                                                           };
                                                                       };
                                             )
-    CLASSVAR axFormsStructure AS ARRAY INIT {;
+    CLASSVAR __axFormsStructure AS ARRAY INIT {;
                                             {'ID', 'C', 50, 0};
                                             , {'LANGUAGE', 'C', 30, 0};
                                             , {'CODE', 'M', 10, 0};
                                             }
-    CLASSVAR axRowBrowseStructure AS ARRAY INIT {;
+    CLASSVAR __axRowBrowseStructure AS ARRAY INIT {;
                                             {'ID', 'C', 100, 0};
                                             , {'COL_NR', 'N', 3, 0};
                                             , {'WIDTH', 'N', 3, 0};
@@ -332,13 +335,13 @@ METHOD set_config(cKey, xValue) CLASS Config
         throw(RUNTIME_EXCEPTION)
     ENDIF
 
-    IF hb_hHasKey(::hUserConfig, cKey)
-        IF hb_hHasKey(::hLibConfig, cKey)
-            IF !Eval(::hLibConfig[cKey][LIBCONFIG_VALIDATOR], xValue)
+    IF hb_hHasKey(::__hUserConfig, cKey)
+        IF hb_hHasKey(::__hLibConfig, cKey)
+            IF !Eval(::__hLibConfig[cKey][LIBCONFIG_VALIDATOR], xValue)
                 throw(RUNTIME_EXCEPTION)
             ENDIF
         ENDIF
-        ::hUserConfig[cKey] := xValue
+        ::__hUserConfig[cKey] := xValue
     ELSE
         throw(RUNTIME_EXCEPTION)
     ENDIF
@@ -355,15 +358,15 @@ METHOD is_config(cKey, lLibConfig) CLASS Config
 
     IF ValType(lLibConfig) == 'L'
         IF lLibConfig
-            RETURN hb_hHasKey(::hLibConfig, cKey)
+            RETURN hb_hHasKey(::__hLibConfig, cKey)
         ELSE
-            RETURN hb_hHasKey(::hUserConfig, cKey)
+            RETURN hb_hHasKey(::__hUserConfig, cKey)
         ENDIF
     ELSEIF ValType(lLibConfig) != 'U'
         throw(ARGUMENT_TYPE_EXCEPTION)
     ENDIF
 
-RETURN hb_hHasKey(::hUserConfig, cKey) .OR. hb_hHasKey(::hLibConfig, cKey)
+RETURN hb_hHasKey(::__hUserConfig, cKey) .OR. hb_hHasKey(::__hLibConfig, cKey)
 
 METHOD get_config(cKey, lLibConfig) CLASS Config
 
@@ -376,23 +379,23 @@ METHOD get_config(cKey, lLibConfig) CLASS Config
     SWITCH ValType(lLibConfig)
         CASE 'L'
             IF lLibConfig
-                IF hb_hHasKey(::hLibConfig, cKey)
-                    RETURN ::hLibConfig[cKey][LIBCONFIG_VALUE]
+                IF hb_hHasKey(::__hLibConfig, cKey)
+                    RETURN ::__hLibConfig[cKey][LIBCONFIG_VALUE]
                 ELSE
                     throw(RUNTIME_EXCEPTION)
                 ENDIF
             ELSE
-                IF hb_hHasKey(::hUserConfig, cKey)
-                    RETURN ::hUserConfig[cKey]
+                IF hb_hHasKey(::__hUserConfig, cKey)
+                    RETURN ::__hUserConfig[cKey]
                 ELSE
                     throw(RUNTIME_EXCEPTION)
                 ENDIF
             ENDIF
         CASE 'U'
-            IF hb_hHasKey(::hUserConfig, cKey)
-                RETURN ::hUserConfig[cKey]
-            ELSEIF hb_hHasKey(::hLibConfig, cKey)
-                RETURN ::hLibConfig[cKey][LIBCONFIG_VALUE]
+            IF hb_hHasKey(::__hUserConfig, cKey)
+                RETURN ::__hUserConfig[cKey]
+            ELSEIF hb_hHasKey(::__hLibConfig, cKey)
+                RETURN ::__hLibConfig[cKey][LIBCONFIG_VALUE]
             ELSE
                 throw('Unknown key: ' + cKey)
             ENDIF
@@ -406,15 +409,15 @@ METHOD get_config_hash(lLibConfig) CLASS Config
 
     IF ValType(lLibConfig) == 'L'
         IF lLibConfig
-            RETURN hb_hClone(::hLibConfig)
+            RETURN hb_hClone(::__hLibConfig)
         ELSE
-            RETURN hb_hClone(::hUserConfig)
+            RETURN hb_hClone(::__hUserConfig)
         ENDIF
     ELSEIF ValType(lLibConfig) != 'U'
         throw(ARGUMENT_TYPE_EXCEPTION)
     ENDIF
 
-RETURN hb_hClone(::hUserConfig)
+RETURN hb_hClone(::__hUserConfig)
 
 METHOD init_config(hUserConfig, cNoConfigFileDialog, cNoConfigFileInform) CLASS Config
 
@@ -434,15 +437,15 @@ METHOD init_config(hUserConfig, cNoConfigFileDialog, cNoConfigFileInform) CLASS 
         assert_type(hUserConfig, 'H')
     ENDIF
 
-    IF !::lSuccess
-        ::lSuccess := ::handle_user_config(hUserConfig, cNoConfigFileDialog, cNoConfigFileInform) .AND. ::handle_settings() 
+    IF !::__lSuccess
+        ::__lSuccess := ::__handle_user_config(hUserConfig, cNoConfigFileDialog, cNoConfigFileInform) .AND. ::__handle_settings() 
     ENDIF
 
     SELECT (nOldSelect)
 
-RETURN ::lSuccess
+RETURN ::__lSuccess
 
-METHOD handle_browse() CLASS Config
+METHOD __handle_browse() CLASS Config
 
     LOCAL cNoBrowseFileDialog := Config():get_config('NoBrowseFileDialog')
     LOCAL cNoBrowseFileInform := Config():get_config('NoBrowseFileInform')
@@ -450,10 +453,10 @@ METHOD handle_browse() CLASS Config
 
     IF File(::get_config('dbfPath') + ::get_config('RowBrowseDefinitions'))
         USE (::get_config('dbfPath') + ::get_config('RowBrowseDefinitions')) VIA 'DBFNTX' ALIAS dbRowBrowse NEW EXCLUSIVE
-        lSuccess := (Alias() == 'DBROWBROWSE') .AND. ::validate_structure(dbStruct(), ::axRowBrowseStructure)
+        lSuccess := (Alias() == 'DBROWBROWSE') .AND. ::__validate_structure(dbStruct(), ::__axRowBrowseStructure)
     ELSE
         IF YesNo(cNoBrowseFileDialog)
-            lSuccess := ::create_browse_file()
+            lSuccess := ::__create_browse_file()
         ELSE
             Inform(cNoBrowseFileInform)
             lSuccess := .F.
@@ -466,7 +469,7 @@ METHOD handle_browse() CLASS Config
 
 RETURN lSuccess
 
-METHOD handle_user_config(hUserConfig, cNoConfigFileDialog, cNoConfigFileInform) CLASS Config
+METHOD __handle_user_config(hUserConfig, cNoConfigFileDialog, cNoConfigFileInform) CLASS Config
 
     LOCAL lSuccess := .T.
 
@@ -475,7 +478,7 @@ METHOD handle_user_config(hUserConfig, cNoConfigFileDialog, cNoConfigFileInform)
 
     IF !File(CONFIG_PATH)
         IF YesNo(cNoConfigFileDialog, , , .T.)
-            lSuccess := ::create_config_file(hUserConfig)
+            lSuccess := ::__create_config_file(hUserConfig)
             IF !lSuccess
                 Inform(cNoConfigFileInform, , , , .T.)
             ENDIF
@@ -486,15 +489,15 @@ METHOD handle_user_config(hUserConfig, cNoConfigFileDialog, cNoConfigFileInform)
     ENDIF
 
     IF lSuccess
-        ::hUserConfig := hb_JsonDecode(MemoRead(CONFIG_PATH))
-        IF ValType(::hUserConfig) != 'H'
+        ::__hUserConfig := hb_JsonDecode(MemoRead(CONFIG_PATH))
+        IF ValType(::__hUserConfig) != 'H'
             throw('The configuration file is corrupted! Recreate it!')
         ENDIF
     ENDIF
 
-RETURN lSuccess .AND. ::validate_configs()
+RETURN lSuccess .AND. ::__validate_configs()
 
-METHOD handle_forms()
+METHOD __handle_forms()
 
     LOCAL cNoFormsFileDialog := Config():get_config('NoFormsFileDialog')
     LOCAL cNoFormsFileInform := Config():get_config('NoFormsFileInform')
@@ -502,10 +505,10 @@ METHOD handle_forms()
 
     IF File(::get_config('dbfPath') + ::get_config('FormsDefinitions'))
         USE (::get_config('dbfPath') + ::get_config('FormsDefinitions')) VIA 'DBFNTX' ALIAS dbForms NEW EXCLUSIVE 
-        lSuccess := (Alias() == 'DBFORMS') .AND. ::validate_structure(dbStruct(), ::axFormsStructure)
+        lSuccess := (Alias() == 'DBFORMS') .AND. ::__validate_structure(dbStruct(), ::__axFormsStructure)
     ELSE
         IF YesNo(cNoFormsFileDialog)
-            lSuccess := ::create_forms_file()
+            lSuccess := ::__create_forms_file()
             IF !lSuccess
                 Inform(cNoFormsFileInform)
             ENDIF
@@ -522,7 +525,7 @@ METHOD handle_forms()
 RETURN lSuccess
 
 
-METHOD validate_structure(axStructure, axPattern) CLASS Config
+METHOD __validate_structure(axStructure, axPattern) CLASS Config
 
     LOCAL i, j
 
@@ -544,19 +547,19 @@ METHOD validate_structure(axStructure, axPattern) CLASS Config
 
 RETURN .T.
 
-METHOD create_browse_file() CLASS Config
+METHOD __create_browse_file() CLASS Config
 
-    dbCreate(::get_config('dbfPath') + ::get_config('RowBrowseDefinitions'), ::axRowBrowseStructure, 'DBFNTX', .T., 'dbRowBrowse')
+    dbCreate(::get_config('dbfPath') + ::get_config('RowBrowseDefinitions'), ::__axRowBrowseStructure, 'DBFNTX', .T., 'dbRowBrowse')
 
 RETURN Alias() == 'DBROWBROWSE'
 
-METHOD create_forms_file() CLASS Config
+METHOD __create_forms_file() CLASS Config
 
-    dbCreate(::get_config('dbfPath') + ::get_config('FormsDefinitions'), ::axFormsStructure, 'DBFNTX', .T., 'dbForms')
+    dbCreate(::get_config('dbfPath') + ::get_config('FormsDefinitions'), ::__axFormsStructure, 'DBFNTX', .T., 'dbForms')
 
 RETURN Alias() == 'DBFORMS'
 
-METHOD create_config_file(hConfig, cPath) CLASS Config
+METHOD __create_config_file(hConfig, cPath) CLASS Config
 
     LOCAL lSuccess := .F.
     LOCAL xWasPrinter := Set(_SET_PRINTER)
@@ -589,15 +592,15 @@ METHOD create_config_file(hConfig, cPath) CLASS Config
 
 RETURN lSuccess
 
-METHOD validate_configs() CLASS Config
+METHOD __validate_configs() CLASS Config
 
-    LOCAL axLibKeys := hb_hKeys(::hLibConfig)
+    LOCAL axLibKeys := hb_hKeys(::__hLibConfig)
     LOCAL xKey
 
     FOR EACH xKey IN axLibKeys
         assert_type(xKey, 'C')
-        IF hb_hHasKey(::hUserConfig, xKey)
-            IF !Eval(::hLibConfig[xKey][LIBCONFIG_VALIDATOR], ::hUserConfig[xKey], ::hLibConfig)
+        IF hb_hHasKey(::__hUserConfig, xKey)
+            IF !Eval(::__hLibConfig[xKey][LIBCONFIG_VALIDATOR], ::__hUserConfig[xKey], ::__hLibConfig)
                 RETURN .F.
             ENDIF
         ENDIF

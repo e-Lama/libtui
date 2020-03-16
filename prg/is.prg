@@ -152,9 +152,9 @@ FUNCTION is_color(cColorString, lAllowSpaces, cPattern)
     ENDIF
 
     IF PCount() == 3
-        pRegEx := create_color_regexp(cPattern)
+        pRegEx := __create_color_regexp(cPattern)
     ELSE
-        pRegEx := create_color_regexp(REGEXP_COLOR_PART + REGEXP_INTENSITY_PART + REGEXP_BLINKING_PART)
+        pRegEx := __create_color_regexp(REGEXP_COLOR_PART + REGEXP_INTENSITY_PART + REGEXP_BLINKING_PART)
     ENDIF
 
     acColors := hb_ATokens(cColorString, ',')
@@ -177,7 +177,7 @@ FUNCTION is_color(cColorString, lAllowSpaces, cPattern)
 
 RETURN .T.
 
-STATIC FUNCTION create_color_regexp(cPattern)
+STATIC FUNCTION __create_color_regexp(cPattern)
     
     LOCAL nLength := Len(cPattern)
     LOCAL cRegEx := ''

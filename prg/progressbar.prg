@@ -53,29 +53,29 @@ EXPORTED:
 
 HIDDEN:
 
-    VAR nRow AS NUMERIC
-    VAR nLeft AS NUMERIC
-    VAR nRight AS NUMERIC
-    VAR nActualValue AS NUMERIC INIT 0
-    VAR nTargetValue AS NUMERIC INIT 100
-    VAR nDisplayPosition AS NUMERIC INIT N_POSITION_RIGHT
-    VAR nFormat AS NUMERIC INIT N_FORMAT_PERCENT
-    VAR lReverse AS LOGICAL INIT .F.
-    VAR cDescriptionColor AS CHARACTER INIT Config():get_config('DefaultColor')
-    VAR nAccuracy AS NUMERIC INIT 0
-    VAR cSlash AS CHARACTER INIT '/'
-    VAR aoElements AS ARRAY INIT {Element():new(Config():get_config('ProgressBarFirstCharacter'));
+    VAR __nRow AS NUMERIC
+    VAR __nLeft AS NUMERIC
+    VAR __nRight AS NUMERIC
+    VAR __nActualValue AS NUMERIC INIT 0
+    VAR __nTargetValue AS NUMERIC INIT 100
+    VAR __nDisplayPosition AS NUMERIC INIT N_POSITION_RIGHT
+    VAR __nFormat AS NUMERIC INIT N_FORMAT_PERCENT
+    VAR __lReverse AS LOGICAL INIT .F.
+    VAR __cDescriptionColor AS CHARACTER INIT Config():get_config('DefaultColor')
+    VAR __nAccuracy AS NUMERIC INIT 0
+    VAR __cSlash AS CHARACTER INIT '/'
+    VAR __aoElements AS ARRAY INIT {Element():new(Config():get_config('ProgressBarFirstCharacter'));
                                   , Element():new(Config():get_config('ProgressBarFilledCharacter'));
                                   , Element():new(Config():get_config('ProgressBarEmptyCharacter'));
                                   , Element():new(Config():get_config('ProgressBarLastCharacter'));
                                   , Element():new(Config():get_config('ProgressBarFinishedCharacter'));
                                  }
 
-    METHOD print_bar(cDescription)
-    METHOD print_description(cDescription)
-    METHOD create_description()
-    METHOD last_filled(nStart, nEnd) INLINE Round((nEnd - nStart - 1);
-                                            * IF(::lReverse, ::nTargetValue - ::nActualValue, ::nActualValue) / ::nTargetValue, 0)
+    METHOD __print_bar(cDescription)
+    METHOD __print_description(cDescription)
+    METHOD __create_description()
+    METHOD __last_filled(nStart, nEnd) INLINE Round((nEnd - nStart - 1);
+                                            * IF(::__lReverse, ::__nTargetValue - ::__nActualValue, ::__nActualValue) / ::__nTargetValue, 0)
 
 ENDCLASS LOCK
 
@@ -89,7 +89,7 @@ METHOD color(nIndex, cColor) CLASS Progress_bar
         throw(ARGUMENT_VALUE_EXCEPTION)
     ENDIF
 
-    cOldColor := ::aoElements[nIndex]
+    cOldColor := ::__aoElements[nIndex]:cColor
 
     IF cColor != NIL
         assert_type(cColor, 'C')
@@ -97,7 +97,7 @@ METHOD color(nIndex, cColor) CLASS Progress_bar
             throw(ARGUMENT_VALUE_EXCEPTION)
         ENDIF
         
-        ::aoElements[nIndex]:cColor := cColor
+        ::__aoElements[nIndex]:cColor := cColor
     ENDIF
 
 RETURN cOldColor
@@ -112,7 +112,7 @@ METHOD pattern(nIndex, cPattern) CLASS Progress_bar
         throw(ARGUMENT_VALUE_EXCEPTION)
     ENDIF
 
-    cOldPattern := ::aoElements[nIndex]
+    cOldPattern := ::__aoElements[nIndex]
 
     IF cPattern != NIL
         assert_type(cPattern, 'C')
@@ -120,74 +120,74 @@ METHOD pattern(nIndex, cPattern) CLASS Progress_bar
             throw(ARGUMENT_VALUE_EXCEPTION)
         ENDIF
         
-        ::aoElements[nIndex]:cPattern := cPattern
+        ::__aoElements[nIndex]:cPattern := cPattern
     ENDIF
 
 RETURN cOldPattern
 
 METHOD slash(cSlash) CLASS Progress_bar
 
-    LOCAL cOldSlash := ::cSlash
+    LOCAL cOldSlash := ::__cSlash
 
     IF cSlash != NIL
         assert_type(cSlash, 'C')
         IF Len(cSlash) != 1
             throw(ARGUMENT_VALUE_EXCEPTION)
         ENDIF
-        ::cSlash := cSlash
+        ::__cSlash := cSlash
     ENDIF
 
 RETURN cOldSlash
 
 METHOD description_color(cDescriptionColor) CLASS Progress_bar
 
-    LOCAL cOldDescriptionColor := ::cDescriptionColor
+    LOCAL cOldDescriptionColor := ::__cDescriptionColor
 
     IF cDescriptionColor != NIL
         assert_type(cDescriptionColor, 'C')
         IF !is_color(cDescriptionColor)
             throw(ARGUMENT_VALUE_EXCEPTION)
         ENDIF
-        ::cDescriptionColor := cDescriptionColor
+        ::__cDescriptionColor := cDescriptionColor
     ENDIF
 
 RETURN cOldDescriptionColor
 
 METHOD actual_value(nActualValue) CLASS Progress_bar
 
-    LOCAL nOldActualValue := ::nActualValue
+    LOCAL nOldActualValue := ::__nActualValue
 
     IF nActualValue != NIL
         assert_type(nActualValue, 'N')
         IF nActualValue < 0
             throw(ARGUMENT_VALUE_EXCEPTION)
         ENDIF
-        ::nActualValue := Min(nActualValue, ::nTargetValue)
+        ::__nActualValue := Min(nActualValue, ::__nTargetValue)
     ENDIF
 
 RETURN nOldActualValue
 
 METHOD target_value(nTargetValue) CLASS Progress_bar
     
-    LOCAL nOldTargetValue := ::nTargetValue
+    LOCAL nOldTargetValue := ::__nTargetValue
 
     IF nTargetValue != NIL
         assert_type(nTargetValue, 'N')
-        IF nTargetValue < 0 .OR. nTargetValue < ::nActualValue
+        IF nTargetValue < 0 .OR. nTargetValue < ::__nActualValue
             throw(ARGUMENT_VALUE_EXCEPTION)
         ENDIF
-        ::nTargetValue := nTargetValue
+        ::__nTargetValue := nTargetValue
     ENDIF
 
 RETURN nOldTargetValue
 
 METHOD reverse(lReverse) CLASS Progress_bar
 
-    LOCAL lOldReverse := ::lReverse
+    LOCAL lOldReverse := ::__lReverse
 
     IF lReverse != NIL
         assert_type(lReverse, 'L')
-        ::lReverse := lReverse
+        ::__lReverse := lReverse
     ENDIF
 
 RETURN lOldReverse
@@ -205,16 +205,16 @@ METHOD new(nRow, nLeft, nRight, nActualValue, nTargetValue, nDisplayPosition, nF
         throw(ARGUMENT_VALUE_EXCEPTION)
     ENDIF
 
-    ::nRow := nRow
-    ::nLeft := nLeft
-    ::nRight := nRight
+    ::__nRow := nRow
+    ::__nLeft := nLeft
+    ::__nRight := nRight
 
     IF nActualValue != NIL
         assert_type(nActualValue, 'N')
         IF nActualValue < 0
             throw(ARGUMENT_VALUE_EXCEPTION)
         ENDIF
-        ::nActualValue := nActualValue
+        ::__nActualValue := nActualValue
     ENDIF
 
     IF nTargetValue != NIL
@@ -222,10 +222,10 @@ METHOD new(nRow, nLeft, nRight, nActualValue, nTargetValue, nDisplayPosition, nF
         IF nTargetValue < 0
             throw(ARGUMENT_VALUE_EXCEPTION)
         ENDIF
-        ::nTargetValue := nTargetValue
+        ::__nTargetValue := nTargetValue
     ENDIF
     
-    IF ::nActualValue > ::nTargetValue
+    IF ::__nActualValue > ::__nTargetValue
         throw(ARGUMENT_VALUE_EXCEPTION)
     ENDIF
 
@@ -234,7 +234,7 @@ METHOD new(nRow, nLeft, nRight, nActualValue, nTargetValue, nDisplayPosition, nF
         IF AScan(AN_ALL_POSITIONS, nDisplayPosition) == 0
             throw(ARGUMENT_VALUE_EXCEPTION)
         ENDIF
-        ::nDisplayPosition := nDisplayPosition
+        ::__nDisplayPosition := nDisplayPosition
     ENDIF
 
     IF nFormat != NIL
@@ -242,7 +242,7 @@ METHOD new(nRow, nLeft, nRight, nActualValue, nTargetValue, nDisplayPosition, nF
         IF AScan({N_FORMAT_SLASH, N_FORMAT_PERCENT}, nFormat) == 0
             throw(ARGUMENT_VALUE_EXCEPTION)
         ENDIF
-        ::nFormat := nFormat
+        ::__nFormat := nFormat
     ENDIF
 
     IF nAccuracy != NIL
@@ -250,12 +250,12 @@ METHOD new(nRow, nLeft, nRight, nActualValue, nTargetValue, nDisplayPosition, nF
         IF AScan({0, 1, 2}, nAccuracy) == 0
             throw(ARGUMENT_VALUE_EXCEPTION)
         ENDIF
-        ::nAccuracy := nAccuracy
+        ::__nAccuracy := nAccuracy
     ENDIF
 
     IF lReverse != NIL
         assert_type(lReverse, 'L')
-        ::lReverse := lReverse
+        ::__lReverse := lReverse
     ENDIF
 
     IF cDescriptionColor != NIL
@@ -263,7 +263,7 @@ METHOD new(nRow, nLeft, nRight, nActualValue, nTargetValue, nDisplayPosition, nF
         IF !is_color(cDescriptionColor)
             throw(ARGUMENT_VALUE_EXCEPTION)
         ENDIF
-        ::cDescriptionColor := cDescriptionColor
+        ::__cDescriptionColor := cDescriptionColor
     ENDIF
 
     IF cSlash != NIL
@@ -271,7 +271,7 @@ METHOD new(nRow, nLeft, nRight, nActualValue, nTargetValue, nDisplayPosition, nF
         IF Len(cSlash) != 1
             throw(ARGUMENT_VALUE_EXCEPTION)
         ENDIF
-        ::cSlash := cSlash
+        ::__cSlash := cSlash
     ENDIF
 
     IF acPatterns != NIL
@@ -279,7 +279,7 @@ METHOD new(nRow, nLeft, nRight, nActualValue, nTargetValue, nDisplayPosition, nF
         AEval(acPatterns, {| cPattern | IF(cPattern == NIL, , (assert_type(cPattern, 'C'), IF(Len(cPattern) == 1, , throw(ARGUMENT_VALUE_EXCEPTION))))})
         FOR i := 1 TO Len(acPatterns)
             IF acPatterns[i] != NIL
-                ::aoElements[i]:cPattern := acPatterns[i]
+                ::__aoElements[i]:cPattern := acPatterns[i]
             ENDIF
         NEXT
     ENDIF
@@ -289,12 +289,12 @@ METHOD new(nRow, nLeft, nRight, nActualValue, nTargetValue, nDisplayPosition, nF
         AEval(acColors, {| cColor | IF(cColor == NIL, , (assert_type(cColor, 'C'), IF(is_color(cColor), , throw(ARGUMENT_VALUE_EXCEPTION))))})
         FOR i := 1 TO Len(acColors)
             IF acColors[i] != NIL
-                ::aoElements[i]:cColor := acColors[i]
+                ::__aoElements[i]:cColor := acColors[i]
             ENDIF
         NEXT
     ENDIF
 
-    cDescription := ::create_description()
+    cDescription := ::__create_description()
     IF nLeft + Len(cDescription) >= nRight
         throw(ARGUMENT_VALUE_EXCEPTION)
     ENDIF
@@ -304,10 +304,10 @@ RETURN Self
 METHOD increment(nHowMany) CLASS Progress_bar
 
     IF nHowMany == NIL
-        ::nActualValue := Min(::nActualValue + 1, ::nTargetValue)
+        ::__nActualValue := Min(::__nActualValue + 1, ::__nTargetValue)
     ELSE
         assert_type(nHowMany, 'N')
-        ::nActualValue := Min(Max(::nActualValue + nHowMany, 0), ::nTargetValue)
+        ::__nActualValue := Min(Max(::__nActualValue + nHowMany, 0), ::__nTargetValue)
     ENDIF
 
 RETURN NIL
@@ -324,96 +324,96 @@ RETURN NIL
 
 METHOD display() CLASS Progress_bar
 
-    LOCAL cDescription := ::create_description()
+    LOCAL cDescription := ::__create_description()
 
     DispBegin()
-    ::print_bar(cDescription)
-    ::print_description(cDescription)
+    ::__print_bar(cDescription)
+    ::__print_description(cDescription)
     DispEnd()
 
 RETURN NIL
 
-METHOD print_description(cDescription) CLASS Progress_bar
+METHOD __print_description(cDescription) CLASS Progress_bar
 
     LOCAL nLastFilled
 
     DO CASE
-        CASE ::nDisplayPosition == N_POSITION_NONE
-        CASE ::nDisplayPosition == N_POSITION_RIGHT
-            @ ::nRow, ::nRight - Len(cDescription) + 1 SAY cDescription COLOR ::cDescriptionColor
-        CASE ::nDisplayPosition == N_POSITION_CENTER
-            @ ::nRow, Int((::nRight + ::nLeft - Len(cDescription)) / 2) SAY cDescription COLOR ::cDescriptionColor
-        CASE ::nDisplayPosition == N_POSITION_LEFT
-            @ ::nRow, ::nLeft SAY cDescription COLOR ::cDescriptionColor
-        CASE ::nDisplayPosition == N_POSITION_BOTTOM
-            @ ::nRow + 1, Int((::nRight + ::nLeft - Len(cDescription)) / 2) SAY cDescription COLOR ::cDescriptionColor
-        CASE ::nDisplayPosition == N_POSITION_TOP
-            @ ::nRow - 1, Int((::nRight + ::nLeft - Len(cDescription)) / 2) SAY cDescription COLOR ::cDescriptionColor
-        CASE ::nDisplayPosition == N_POSITION_CHASE
-            nLastFilled := ::nLeft + ::last_filled(::nLeft, ::nRight - Len(cDescription) - 1)
-            IF nLastFilled + Len(cDescription) + 1 < ::nRight - Len(cDescription)
-                @ ::nRow, nLastFilled + 1 SAY cDescription COLOR ::cDescriptionColor
+        CASE ::__nDisplayPosition == N_POSITION_NONE
+        CASE ::__nDisplayPosition == N_POSITION_RIGHT
+            @ ::__nRow, ::__nRight - Len(cDescription) + 1 SAY cDescription COLOR ::__cDescriptionColor
+        CASE ::__nDisplayPosition == N_POSITION_CENTER
+            @ ::__nRow, Int((::__nRight + ::__nLeft - Len(cDescription)) / 2) SAY cDescription COLOR ::__cDescriptionColor
+        CASE ::__nDisplayPosition == N_POSITION_LEFT
+            @ ::__nRow, ::__nLeft SAY cDescription COLOR ::__cDescriptionColor
+        CASE ::__nDisplayPosition == N_POSITION_BOTTOM
+            @ ::__nRow + 1, Int((::__nRight + ::__nLeft - Len(cDescription)) / 2) SAY cDescription COLOR ::__cDescriptionColor
+        CASE ::__nDisplayPosition == N_POSITION_TOP
+            @ ::__nRow - 1, Int((::__nRight + ::__nLeft - Len(cDescription)) / 2) SAY cDescription COLOR ::__cDescriptionColor
+        CASE ::__nDisplayPosition == N_POSITION_CHASE
+            nLastFilled := ::__nLeft + ::__last_filled(::__nLeft, ::__nRight - Len(cDescription) - 1)
+            IF nLastFilled + Len(cDescription) + 1 < ::__nRight - Len(cDescription)
+                @ ::__nRow, nLastFilled + 1 SAY cDescription COLOR ::__cDescriptionColor
             ELSE
-                @ ::nRow, ::nRight - Len(cDescription) + 1 SAY cDescription COLOR ::cDescriptionColor
+                @ ::__nRow, ::__nRight - Len(cDescription) + 1 SAY cDescription COLOR ::__cDescriptionColor
             ENDIF
     ENDCASE
 
 RETURN NIL
 
-METHOD create_description() CLASS Progress_bar
+METHOD __create_description() CLASS Progress_bar
 
     LOCAL cString
 
     DO CASE
-        CASE ::nFormat == N_FORMAT_SLASH
-            cString := Transform(::nActualValue, Replicate('9', Len(LTrim(Str(::nTargetValue)))));
-                       + ::cSlash;
-                       + Transform(::nTargetValue, Replicate('9', Len(LTrim(Str(::nTargetValue)))))
-        CASE ::nFormat == N_FORMAT_PERCENT
-            cString := Transform(Round(100 * ::nActualValue / ::nTargetValue, ::nAccuracy);
-                       , '999' + IF(::nAccuracy > 0, '.' + Replicate('9', ::nAccuracy), '')) + '%'
+        CASE ::__nFormat == N_FORMAT_SLASH
+            cString := Transform(::__nActualValue, Replicate('9', Len(LTrim(Str(::__nTargetValue)))));
+                       + ::__cSlash;
+                       + Transform(::__nTargetValue, Replicate('9', Len(LTrim(Str(::__nTargetValue)))))
+        CASE ::__nFormat == N_FORMAT_PERCENT
+            cString := Transform(Round(100 * ::__nActualValue / ::__nTargetValue, ::__nAccuracy);
+                       , '999' + IF(::__nAccuracy > 0, '.' + Replicate('9', ::__nAccuracy), '')) + '%'
     ENDCASE
 
 RETURN cString
 
-METHOD print_bar(cDescription) CLASS Progress_bar
+METHOD __print_bar(cDescription) CLASS Progress_bar
 
-    LOCAL nStart := ::nLeft
-    LOCAL nEnd := ::nRight
+    LOCAL nStart := ::__nLeft
+    LOCAL nEnd := ::__nRight
     LOCAL nLastFilled
     LOCAL nCurrentCol 
 
-    @ ::nRow, ::nLeft CLEAR TO ::nRow, ::nRight
+    @ ::__nRow, ::__nLeft CLEAR TO ::__nRow, ::__nRight
 
-    IF ::nDisplayPosition == N_POSITION_LEFT
+    IF ::__nDisplayPosition == N_POSITION_LEFT
         nStart += Len(cDescription) + 1
-    ELSEIF ::nDisplayPosition == N_POSITION_RIGHT .OR. ::nDisplayPosition == N_POSITION_CHASE
+    ELSEIF ::__nDisplayPosition == N_POSITION_RIGHT .OR. ::__nDisplayPosition == N_POSITION_CHASE
         nEnd -= Len(cDescription) + 1
     ENDIF
 
     nCurrentCol := nStart
-    ::aoElements[N_START]:print(::nRow, nCurrentCol)
+    ::__aoElements[N_START]:print(::__nRow, nCurrentCol)
 
-    nLastFilled := nStart + ::last_filled(nStart, nEnd)
+    nLastFilled := nStart + ::__last_filled(nStart, nEnd)
 
     ++nCurrentCol
-    IF (::lReverse .AND. ::nActualValue == 0) .OR. (!::lReverse .AND. ::nActualValue == ::nTargetValue)
+    IF (::__lReverse .AND. ::__nActualValue == 0) .OR. (!::__lReverse .AND. ::__nActualValue == ::__nTargetValue)
         DO WHILE nCurrentCol <= nLastFilled
-            ::aoElements[N_FINISHED]:print(::nRow, nCurrentCol)
+            ::__aoElements[N_FINISHED]:print(::__nRow, nCurrentCol)
             ++nCurrentCol
         ENDDO
     ELSE
         DO WHILE nCurrentCol <= nLastFilled
-            ::aoElements[N_FILLED]:print(::nRow, nCurrentCol)
+            ::__aoElements[N_FILLED]:print(::__nRow, nCurrentCol)
             ++nCurrentCol
         ENDDO
     ENDIF
 
     DO WHILE nCurrentCol < nEnd
-        ::aoElements[N_EMPTY]:print(::nRow, nCurrentCol)
+        ::__aoElements[N_EMPTY]:print(::__nRow, nCurrentCol)
         ++nCurrentCol
     ENDDO
 
-    ::aoElements[N_END]:print(::nRow, nEnd)
+    ::__aoElements[N_END]:print(::__nRow, nEnd)
 
 RETURN NIL

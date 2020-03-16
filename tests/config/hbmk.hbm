@@ -8,3 +8,4 @@
 -lgui
 -i../../include/
 -L../../
+-oconfig_test.bin

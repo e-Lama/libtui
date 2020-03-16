@@ -15,19 +15,19 @@ EXPORTED:
 
 HIDDEN:
 
-    CLASSVAR lCreateCentered AS LOGICAL INIT .T.
-    CLASSVAR hKeysMap AS HASH INIT {;
+    CLASSVAR __lCreateCentered AS LOGICAL INIT .T.
+    CLASSVAR __hKeysMap AS HASH INIT {;
                                     K_ALT_UP => K_ALT_UP, K_ALT_DOWN => K_ALT_DOWN;
                                     , K_ALT_RIGHT => K_ALT_RIGHT, K_ALT_LEFT => K_ALT_LEFT;
                                     , K_ALT_ENTER => K_ALT_ENTER, K_LEFT => K_LEFT;
                                     , K_RIGHT => K_RIGHT, K_ENTER => K_ENTER;
                               }
 
-    METHOD merged_options_length(acOptions)
-    METHOD word_length_from(cTxt, nFrom)
-    METHOD create_message(cTxt, nMaxWidth)
-    METHOD keys_map_asserts(hKeysMap)
-    METHOD find_letter(nKey, nCurrentOption, acOptions, lAcceptFirstFounded, lFound)
+    METHOD __merged_options_length(acOptions)
+    METHOD __word_length_from(cTxt, nFrom)
+    METHOD __create_message(cTxt, nMaxWidth)
+    METHOD __keys_map_asserts(hKeysMap)
+    METHOD __find_letter(nKey, nCurrentOption, acOptions, lAcceptFirstFounded, lFound)
 
 ENDCLASS LOCK
 
@@ -172,8 +172,8 @@ METHOD AlertLG(xMessage, acOptions, cColorMessage, cColorButtons, nDelay, nRow, 
     nOldCursor := SetCursor(SC_NONE)
     cOldColor := SetColor(cColorMessage)
 
-    nOptionsLength := ::merged_options_length(acOptionsTrimmed)
-    acMessage := ::create_message(cMessage, Max(Min(nRight - nLeft - 4, Len(cMessage)), nOptionsLength))
+    nOptionsLength := ::__merged_options_length(acOptionsTrimmed)
+    acMessage := ::__create_message(cMessage, Max(Min(nRight - nLeft - 4, Len(cMessage)), nOptionsLength))
     nMessageHeight := Len(acMessage)
 
     IF nRow == NIL
@@ -185,7 +185,7 @@ METHOD AlertLG(xMessage, acOptions, cColorMessage, cColorButtons, nDelay, nRow, 
     WOpen(nRow, nLeft, nRow + nMessageHeight + 3, nLeft + nWidth + 4, .T.)
     WBox(cBorder)
 
-    IF ::lCreateCentered
+    IF ::__lCreateCentered
         WCenter(.T.)
     ENDIF
 
@@ -218,8 +218,8 @@ METHOD AlertLG(xMessage, acOptions, cColorMessage, cColorButtons, nDelay, nRow, 
 
         nKey := Inkey(nDelay)
 
-        IF nKey > 0 .AND. hb_HHasKey(::hKeysMap, nKey)
-            nKey := ::hKeysMap[nKey]
+        IF nKey > 0 .AND. hb_HHasKey(::__hKeysMap, nKey)
+            nKey := ::__hKeysMap[nKey]
         ENDIF
 
         IF nDelay > 0
@@ -265,7 +265,7 @@ METHOD AlertLG(xMessage, acOptions, cColorMessage, cColorButtons, nDelay, nRow, 
             OTHERWISE
                 lFound := .F.
 
-                nCurrentOption := ::find_letter(nKey, nCurrentOption, acOptionsTrimmed, lAcceptFirstFounded, @lFound)
+                nCurrentOption := ::__find_letter(nKey, nCurrentOption, acOptionsTrimmed, lAcceptFirstFounded, @lFound)
 
                 IF lFound .AND. lAcceptFirstFounded
                     EXIT
@@ -281,7 +281,7 @@ METHOD AlertLG(xMessage, acOptions, cColorMessage, cColorButtons, nDelay, nRow, 
 
 RETURN nCurrentOption
 
-METHOD find_letter(nKey, nCurrentOption, acOptions, lAcceptFirstFounded, lFound) CLASS AlertLG
+METHOD __find_letter(nKey, nCurrentOption, acOptions, lAcceptFirstFounded, lFound) CLASS AlertLG
 
     LOCAL cKey := Upper(Chr(nKey))
     LOCAL i
@@ -306,32 +306,32 @@ RETURN nCurrentOption
 
 METHOD keys_map(hKeysMap) CLASS AlertLG
 
-    LOCAL hOldKeysMap := hb_hClone(::hKeysMap)
+    LOCAL hOldKeysMap := hb_hClone(::__hKeysMap)
 
     IF hKeysMap != NIL
-        ::keys_map_asserts(hKeysMap)
-        ::hKeysMap := hKeysMap
+        ::__keys_map_asserts(hKeysMap)
+        ::__hKeysMap := hKeysMap
     ENDIF
 
 RETURN hOldKeysMap
 
 METHOD create_centered(lCreateCentered) CLASS AlertLG
 
-    LOCAL lOldCreateCentered := ::lCreateCentered
+    LOCAL lOldCreateCentered := ::__lCreateCentered
 
     IF lCreateCentered != NIL
         assert_type(lCreateCentered, 'L')
-        ::lCreateCentered := lCreateCentered
+        ::__lCreateCentered := lCreateCentered
     ENDIF
 
 RETURN lOldCreateCentered
 
-METHOD keys_map_asserts(hKeysMap) CLASS AlertLG
+METHOD __keys_map_asserts(hKeysMap) CLASS AlertLG
 
     LOCAL nKey
 
     assert_type(hKeysMap, 'H')
-    assert_length(hKeysMap, Len(::hKeysMap))
+    assert_length(hKeysMap, Len(::__hKeysMap))
 
     FOR EACH nKey IN hb_hKeys(hKeysMap)
         assert_type(nKey, 'N')
@@ -344,7 +344,7 @@ METHOD keys_map_asserts(hKeysMap) CLASS AlertLG
 
 RETURN NIL
 
-METHOD word_length_from(cTxt, nFrom) CLASS AlertLG
+METHOD __word_length_from(cTxt, nFrom) CLASS AlertLG
 
     LOCAL nLength := 0
 
@@ -358,7 +358,7 @@ METHOD word_length_from(cTxt, nFrom) CLASS AlertLG
 
 RETURN nLength
 
-METHOD create_message(cTxt, nMaxWidth) CLASS AlertLG
+METHOD __create_message(cTxt, nMaxWidth) CLASS AlertLG
 
     LOCAL nLength := Len(cTxt)
     LOCAL acRows := {''}
@@ -382,7 +382,7 @@ METHOD create_message(cTxt, nMaxWidth) CLASS AlertLG
             ++nCurrentRow
             nCurrentWidth := 1
             LOOP
-        ELSEIF SubStr(acRows[nCurrentRow], Len(acRows[nCurrentRow]), 1) == ' ' .AND. ::word_length_from(cTxt, i) + nCurrentWidth > nMaxWidth
+        ELSEIF SubStr(acRows[nCurrentRow], Len(acRows[nCurrentRow]), 1) == ' ' .AND. ::__word_length_from(cTxt, i) + nCurrentWidth > nMaxWidth
             nMaxWidth := Max(nMaxWidth, nCurrentWidth)
             AAdd(acRows, cCharacter)
             ++nCurrentRow
@@ -396,7 +396,7 @@ METHOD create_message(cTxt, nMaxWidth) CLASS AlertLG
 
 RETURN acRows
 
-METHOD merged_options_length(acOptions) CLASS AlertLG
+METHOD __merged_options_length(acOptions) CLASS AlertLG
 
     LOCAL nLength := 0
     LOCAL cOption

@@ -8,3 +8,4 @@
 -lgui
 -i../../include/
 -L../../
+-oyesno_test.bin
