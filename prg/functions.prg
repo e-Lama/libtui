@@ -2,6 +2,8 @@
 
 #include "functions.ch"
 
+#include "setup.ch"
+
 FUNCTION max_of_array(axArray)
 
 #ifdef USE_VALIDATORS

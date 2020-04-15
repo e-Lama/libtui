@@ -3,6 +3,8 @@
 
 #include "parser.ch"
 
+#include "setup.ch"
+
 CREATE CLASS Parser
 
 EXPORTED:

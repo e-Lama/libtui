@@ -2,6 +2,8 @@
 
 #include "functions.ch"
 
+#include "setup.ch"
+
 PROCEDURE throw(cDescription)
 
     LOCAL oError := ErrorNew()

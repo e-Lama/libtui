@@ -6,6 +6,8 @@
 #include "functions.ch"
 #include "menu.ch"
 
+#include "setup.ch"
+
 CREATE CLASS Menu MODULE FRIENDLY
 
 EXPORTED:

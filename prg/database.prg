@@ -2,6 +2,8 @@
 
 #include "functions.ch"
 
+#include "setup.ch"
+
 FUNCTION append(xValue, xTimeout)
 
     LOCAL nStarted := hb_MilliSeconds()

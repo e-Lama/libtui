@@ -4,6 +4,8 @@
 
 #include "functions.ch"
 
+#include "setup.ch"
+
 #define CONFIG_PATH 'config.cnf'
 
 #define LIBCONFIG_VALUE 1
@@ -515,7 +517,11 @@ METHOD __handle_user_config(hUserConfig, cNoConfigFileDialog, cNoConfigFileInfor
 #endif
     ENDIF
 
+#ifdef USE_VALIDATORS
 RETURN lSuccess .AND. ::__validate_configs()
+#else
+RETURN lSuccess
+#endif
 
 METHOD __handle_forms()
 

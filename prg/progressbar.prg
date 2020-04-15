@@ -1,8 +1,9 @@
 #include "hbclass.ch"
 
 #include "functions.ch"
-
 #include "progressbar.ch"
+
+#include "setup.ch"
 
 #define AN_ALL_POSITIONS {N_POSITION_NONE, N_POSITION_RIGHT, N_POSITION_CENTER,;
                           N_POSITION_LEFT, N_POSITION_BOTTOM, N_POSITION_TOP, N_POSITION_CHASE;

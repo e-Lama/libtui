@@ -5,6 +5,8 @@
 #include "align.ch"
 #include "functions.ch"
 
+#include "setup.ch"
+
 CREATE CLASS Row_browse
 
 EXPORTED:

@@ -2,6 +2,8 @@
 
 #include "functions.ch"
 
+#include "setup.ch"
+
 #define BLINKING_PART '\*?'
 #define INTENSITY_PART '\+?'
 #define COLOR_PART '((RB)|(GR)|(BG)|([UIXWNRGB]))'

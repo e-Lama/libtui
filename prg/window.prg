@@ -3,6 +3,8 @@
 
 #include "functions.ch"
 
+#include "setup.ch"
+
 CREATE CLASS Window
 
 EXPORTED:

@@ -4,6 +4,8 @@
 #include "functions.ch"
 #include "yesno.ch"
 
+#include "setup.ch"
+
 FUNCTION YesNo(xMessage, acAnwsers, cColor, lSafe, lAllowMove, nCurrentOption, lCyclic, lAcceptFirstFounded, cBorder)
     
     LOCAL lResult
