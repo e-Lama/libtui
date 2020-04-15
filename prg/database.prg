@@ -7,16 +7,21 @@ FUNCTION append(xValue, xTimeout)
     LOCAL nStarted := hb_MilliSeconds()
     LOCAL lNetErr := .T.
 
+#ifdef USE_VALIDATORS
     IF PCount() > 2
         throw(ARGUMENTS_NUMBER_EXCEPTION)
     ENDIF
+#endif
 
-    IF !(ValType(xValue) $ 'L;U')
-        throw(ARGUMENT_TYPE_EXCEPTION)
-    ELSE
+    IF ValType(xValue) $ 'L,U'
         hb_Default(@xValue, .F.)
+#ifdef USE_VALIDATORS
+    ELSE
+        throw(ARGUMENT_TYPE_EXCEPTION)
+#endif
     ENDIF
 
+#ifdef USE_VALIDATORS
     IF ValType(xTimeout) == 'N'
         IF xTimeout <= 0
             throw(ARGUMENT_VALUE_EXCEPTION)
@@ -26,6 +31,9 @@ FUNCTION append(xValue, xTimeout)
     ELSE
         hb_Default(@xTimeout, Config():get_config('AppendTimeout'))
     ENDIF
+#else
+    hb_Default(@xTimeout, Config():get_config('AppendTimeout'))
+#endif
 
     DO WHILE lNetErr .AND. hb_MilliSeconds() - nStarted < xTimeout
         dbAppend(xValue)
@@ -47,6 +55,7 @@ FUNCTION row_to_hash(acOmmit, hAdd, nRecNo, cAlias)
     LOCAL cKey
     LOCAL axRow
 
+#ifdef USE_VALIDATORS
     IF Alias(Select(nOldSelect)) == ''
         throw(RUNTIME_EXCEPTION)
     ELSEIF PCount() > 4
@@ -69,6 +78,7 @@ FUNCTION row_to_hash(acOmmit, hAdd, nRecNo, cAlias)
             ENDIF
         NEXT
     ENDIF
+#endif
 
     IF ValType(cAlias) == 'C'
         SELECT (cAlias)
@@ -94,9 +104,11 @@ FUNCTION row_to_hash(acOmmit, hAdd, nRecNo, cAlias)
 
     IF ValType(hAdd) == 'H'
         FOR EACH cKey IN hb_hKeys(hAdd)
+#ifdef USE_VALIDATORS
             IF hb_hHasKey(hHash, cKey)
                 throw(RUNTIME_EXCEPTION)
             ENDIF
+#endif
 
             hHash[cKey] := hAdd[cKey]
         NEXT
@@ -112,6 +124,7 @@ FUNCTION hash_to_row(hHash, lAppendBlank)
     LOCAL axStructure := dbStruct()
     LOCAL axField
 
+#ifdef USE_VALIDATORS
     IF PCount() != 1 .AND. PCount() != 2
         throw(ARGUMENTS_NUMBER_EXCEPTION)
     ELSEIF ValType(hHash) != 'H'
@@ -119,6 +132,7 @@ FUNCTION hash_to_row(hHash, lAppendBlank)
     ELSEIF ValType(lAppendBlank) != 'L'
         throw(ARGUMENT_TYPE_EXCEPTION)
     ENDIF
+#endif
 
     IF lAppendBlank
         IF !append(.F.)

@@ -36,8 +36,11 @@ HIDDEN:
     METHOD __handle_user_config(hUserConfig, cNoConfigFileDialog, cNoConfigFileInform)
     METHOD __handle_browse()
     METHOD __handle_forms()
+
+#ifdef USE_VALIDATORS
     METHOD __validate_structure(axStructure, axPattern)
     METHOD __validate_configs()
+#endif
 
     CLASSVAR __hUserConfig AS HASH INIT hb_Hash()
     CLASSVAR __lSuccess AS LOGICAL INIT .F.
@@ -329,11 +332,13 @@ ENDCLASS LOCK
 
 METHOD set_config(cKey, xValue) CLASS Config
 
+#ifdef USE_VALIDATORS
     assert_type(cKey, 'C')
 
     IF PCount() != 2
         throw(RUNTIME_EXCEPTION)
     ENDIF
+#endif
 
     IF hb_hHasKey(::__hUserConfig, cKey)
         IF hb_hHasKey(::__hLibConfig, cKey)
@@ -350,11 +355,13 @@ RETURN NIL
 
 METHOD is_config(cKey, lLibConfig) CLASS Config
 
+#ifdef USE_VALIDATORS
     assert_type(cKey, 'C')
 
     IF PCount() < 1 .OR. PCOunt() > 2
         throw(ARGUMENTS_NUMBER_EXCEPTION)
     ENDIF
+#endif
 
     IF ValType(lLibConfig) == 'L'
         IF lLibConfig
@@ -370,11 +377,13 @@ RETURN hb_hHasKey(::__hUserConfig, cKey) .OR. hb_hHasKey(::__hLibConfig, cKey)
 
 METHOD get_config(cKey, lLibConfig) CLASS Config
 
+#ifdef USE_VALIDATORS
     assert_type(cKey, 'C')
 
     IF PCount() < 1 .OR. PCOunt() > 2
         throw(ARGUMENTS_NUMBER_EXCEPTION)
     ENDIF
+#endif
 
     SWITCH ValType(lLibConfig)
         CASE 'L'
@@ -413,8 +422,10 @@ METHOD get_config_hash(lLibConfig) CLASS Config
         ELSE
             RETURN hb_hClone(::__hUserConfig)
         ENDIF
+#ifdef USE_VALIDATORS
     ELSEIF ValType(lLibConfig) != 'U'
         throw(ARGUMENT_TYPE_EXCEPTION)
+#endif
     ENDIF
 
 RETURN hb_hClone(::__hUserConfig)
@@ -423,6 +434,7 @@ METHOD init_config(hUserConfig, cNoConfigFileDialog, cNoConfigFileInform) CLASS 
 
     LOCAL nOldSelect := Select()
 
+#ifdef USE_VALIDATORS
     IF cNoConfigFileDialog != NIL
         assert_type(cNoConfigFileDialog, 'C')
     ENDIF
@@ -430,11 +442,14 @@ METHOD init_config(hUserConfig, cNoConfigFileDialog, cNoConfigFileInform) CLASS 
     IF cNoConfigFileInform != NIL
         assert_type(cNoConfigFileInform, 'C')
     ENDIF
+#endif
 
     IF hUserConfig == NIL
         hUserConfig := hb_Hash()
+#ifdef USE_VALIDATORS
     ELSE
         assert_type(hUserConfig, 'H')
+#endif
     ENDIF
 
     IF !::__lSuccess
@@ -453,7 +468,10 @@ METHOD __handle_browse() CLASS Config
 
     IF File(::get_config('dbfPath') + ::get_config('RowBrowseDefinitions'))
         USE (::get_config('dbfPath') + ::get_config('RowBrowseDefinitions')) VIA 'DBFNTX' ALIAS dbRowBrowse NEW EXCLUSIVE
-        lSuccess := (Alias() == 'DBROWBROWSE') .AND. ::__validate_structure(dbStruct(), ::__axRowBrowseStructure)
+        lSuccess := (Alias() == 'DBROWBROWSE')
+#ifdef USE_VALIDATORS 
+        lSuccess := lSuccess .AND. ::__validate_structure(dbStruct(), ::__axRowBrowseStructure)
+#endif
     ELSE
         IF YesNo(cNoBrowseFileDialog)
             lSuccess := ::__create_browse_file()
@@ -490,9 +508,11 @@ METHOD __handle_user_config(hUserConfig, cNoConfigFileDialog, cNoConfigFileInfor
 
     IF lSuccess
         ::__hUserConfig := hb_JsonDecode(MemoRead(CONFIG_PATH))
+#ifdef USE_VALIDATORS
         IF ValType(::__hUserConfig) != 'H'
-            throw('The configuration file is corrupted! Recreate it!')
+            throw('The configuration file is corrupted! Try recreate it!')
         ENDIF
+#endif
     ENDIF
 
 RETURN lSuccess .AND. ::__validate_configs()
@@ -505,7 +525,10 @@ METHOD __handle_forms()
 
     IF File(::get_config('dbfPath') + ::get_config('FormsDefinitions'))
         USE (::get_config('dbfPath') + ::get_config('FormsDefinitions')) VIA 'DBFNTX' ALIAS dbForms NEW EXCLUSIVE 
-        lSuccess := (Alias() == 'DBFORMS') .AND. ::__validate_structure(dbStruct(), ::__axFormsStructure)
+        lSuccess := (Alias() == 'DBFORMS')
+#ifdef USE_VALIDATORS        
+        lSuccess := lSuccess .AND. ::__validate_structure(dbStruct(), ::__axFormsStructure)
+#endif
     ELSE
         IF YesNo(cNoFormsFileDialog)
             lSuccess := ::__create_forms_file()
@@ -524,7 +547,7 @@ METHOD __handle_forms()
 
 RETURN lSuccess
 
-
+#ifdef USE_VALIDATORS
 METHOD __validate_structure(axStructure, axPattern) CLASS Config
 
     LOCAL i, j
@@ -546,6 +569,7 @@ METHOD __validate_structure(axStructure, axPattern) CLASS Config
     NEXT
 
 RETURN .T.
+#endif
 
 METHOD __create_browse_file() CLASS Config
 
@@ -567,10 +591,12 @@ METHOD __create_config_file(hConfig, cPath) CLASS Config
     LOCAL xWasConsole := Set(_SET_CONSOLE)
     LOCAL nHandler
 
-    IF cPath != NIL
-        assert_type(cPath, 'C')
-    ELSE
+    IF cPath == NIL
         cPath = CONFIG_PATH
+#ifdef USE_VALIDATORS
+    ELSE
+        assert_type(cPath, 'C')
+#endif
     ENDIF
 
     nHandler := FCreate(cPath, FC_NORMAL)
@@ -592,6 +618,7 @@ METHOD __create_config_file(hConfig, cPath) CLASS Config
 
 RETURN lSuccess
 
+#ifdef USE_VALIDATORS
 METHOD __validate_configs() CLASS Config
 
     LOCAL axLibKeys := hb_hKeys(::__hLibConfig)
@@ -607,3 +634,4 @@ METHOD __validate_configs() CLASS Config
     NEXT
 
 RETURN .T.
+#endif

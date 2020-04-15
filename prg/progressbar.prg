@@ -83,19 +83,23 @@ METHOD color(nIndex, cColor) CLASS Progress_bar
 
     LOCAL cOldColor
 
+#ifdef USE_VALIDATORS
     assert_type(nIndex, 'N')
 
     IF nIndex < 1 .OR. nIndex > N_FINISHED .OR. Int(nIndex) != nIndex
         throw(ARGUMENT_VALUE_EXCEPTION)
     ENDIF
+#endif
 
     cOldColor := ::__aoElements[nIndex]:cColor
 
     IF cColor != NIL
+#ifdef USE_VALIDATORS
         assert_type(cColor, 'C')
         IF !Empty(cColor) .AND. !is_color(cColor)
             throw(ARGUMENT_VALUE_EXCEPTION)
         ENDIF
+#endif
         
         ::__aoElements[nIndex]:cColor := cColor
     ENDIF
@@ -106,19 +110,23 @@ METHOD pattern(nIndex, cPattern) CLASS Progress_bar
 
     LOCAL cOldPattern
 
+#ifdef USE_VALIDATORS
     assert_type(nIndex, 'N')
 
     IF nIndex < 1 .OR. nIndex > N_FINISHED .OR. Int(nIndex) != nIndex
         throw(ARGUMENT_VALUE_EXCEPTION)
     ENDIF
+#endif
 
     cOldPattern := ::__aoElements[nIndex]
 
     IF cPattern != NIL
+#ifdef USE_VALIDATORS
         assert_type(cPattern, 'C')
         IF !Empty(cPattern) .AND. !is_color(cPattern)
             throw(ARGUMENT_VALUE_EXCEPTION)
         ENDIF
+#endif
         
         ::__aoElements[nIndex]:cPattern := cPattern
     ENDIF
@@ -130,10 +138,13 @@ METHOD slash(cSlash) CLASS Progress_bar
     LOCAL cOldSlash := ::__cSlash
 
     IF cSlash != NIL
+#ifdef USE_VALIDATORS
         assert_type(cSlash, 'C')
         IF Len(cSlash) != 1
             throw(ARGUMENT_VALUE_EXCEPTION)
         ENDIF
+#endif
+
         ::__cSlash := cSlash
     ENDIF
 
@@ -144,10 +155,13 @@ METHOD description_color(cDescriptionColor) CLASS Progress_bar
     LOCAL cOldDescriptionColor := ::__cDescriptionColor
 
     IF cDescriptionColor != NIL
+#ifdef USE_VALIDATORS
         assert_type(cDescriptionColor, 'C')
         IF !is_color(cDescriptionColor)
             throw(ARGUMENT_VALUE_EXCEPTION)
         ENDIF
+#endif
+
         ::__cDescriptionColor := cDescriptionColor
     ENDIF
 
@@ -158,10 +172,13 @@ METHOD actual_value(nActualValue) CLASS Progress_bar
     LOCAL nOldActualValue := ::__nActualValue
 
     IF nActualValue != NIL
+#ifdef USE_VALIDATORS
         assert_type(nActualValue, 'N')
         IF nActualValue < 0
             throw(ARGUMENT_VALUE_EXCEPTION)
         ENDIF
+#endif
+
         ::__nActualValue := Min(nActualValue, ::__nTargetValue)
     ENDIF
 
@@ -172,10 +189,13 @@ METHOD target_value(nTargetValue) CLASS Progress_bar
     LOCAL nOldTargetValue := ::__nTargetValue
 
     IF nTargetValue != NIL
+#ifdef USE_VALIDATORS
         assert_type(nTargetValue, 'N')
         IF nTargetValue < 0 .OR. nTargetValue < ::__nActualValue
             throw(ARGUMENT_VALUE_EXCEPTION)
         ENDIF
+#endif
+
         ::__nTargetValue := nTargetValue
     ENDIF
 
@@ -186,7 +206,10 @@ METHOD reverse(lReverse) CLASS Progress_bar
     LOCAL lOldReverse := ::__lReverse
 
     IF lReverse != NIL
+#ifdef USE_VALIDATORS
         assert_type(lReverse, 'L')
+#endif
+
         ::__lReverse := lReverse
     ENDIF
 
@@ -194,9 +217,12 @@ RETURN lOldReverse
 
 METHOD new(nRow, nLeft, nRight, nActualValue, nTargetValue, nDisplayPosition, nFormat, nAccuracy, lReverse, cDescriptionColor, cSlash, acPatterns, acColors) CLASS Progress_bar
 
+#ifdef USE_VALIDATORS
     LOCAL cDescription
+#endif
     LOCAL i
 
+#ifdef USE_VALIDATORS
     assert_type(nRow, 'N')
     assert_type(nLeft, 'N')
     assert_type(nRight, 'N')
@@ -204,79 +230,109 @@ METHOD new(nRow, nLeft, nRight, nActualValue, nTargetValue, nDisplayPosition, nF
     IF nRight <= nLeft
         throw(ARGUMENT_VALUE_EXCEPTION)
     ENDIF
+#endif
 
     ::__nRow := nRow
     ::__nLeft := nLeft
     ::__nRight := nRight
 
     IF nActualValue != NIL
+#ifdef USE_VALIDATORS
         assert_type(nActualValue, 'N')
         IF nActualValue < 0
             throw(ARGUMENT_VALUE_EXCEPTION)
         ENDIF
+#endif
+
         ::__nActualValue := nActualValue
     ENDIF
 
     IF nTargetValue != NIL
+#ifdef USE_VALIDATORS
         assert_type(nTargetValue, 'N')
         IF nTargetValue < 0
             throw(ARGUMENT_VALUE_EXCEPTION)
         ENDIF
+#endif
+
         ::__nTargetValue := nTargetValue
     ENDIF
     
+#ifdef USE_VALIDATORS
     IF ::__nActualValue > ::__nTargetValue
         throw(ARGUMENT_VALUE_EXCEPTION)
     ENDIF
+#endif
 
     IF nDisplayPosition != NIL
+#ifdef USE_VALIDATORS
         assert_type(nDisplayPosition, 'N')
         IF AScan(AN_ALL_POSITIONS, nDisplayPosition) == 0
             throw(ARGUMENT_VALUE_EXCEPTION)
         ENDIF
+#endif
+
         ::__nDisplayPosition := nDisplayPosition
     ENDIF
 
     IF nFormat != NIL
+#ifdef USE_VALIDATORS
         assert_type(nFormat, 'N')
         IF AScan({N_FORMAT_SLASH, N_FORMAT_PERCENT}, nFormat) == 0
             throw(ARGUMENT_VALUE_EXCEPTION)
         ENDIF
+#endif
+
         ::__nFormat := nFormat
     ENDIF
 
     IF nAccuracy != NIL
+#ifdef USE_VALIDATORS
         assert_type(nAccuracy, 'N')
         IF AScan({0, 1, 2}, nAccuracy) == 0
             throw(ARGUMENT_VALUE_EXCEPTION)
         ENDIF
+#endif
+
         ::__nAccuracy := nAccuracy
     ENDIF
 
     IF lReverse != NIL
+#ifdef USE_VALIDATORS
         assert_type(lReverse, 'L')
+#endif
+
         ::__lReverse := lReverse
     ENDIF
 
     IF cDescriptionColor != NIL
+#ifdef USE_VALIDATORS
         assert_type(cDescriptionColor, 'C')
         IF !is_color(cDescriptionColor)
             throw(ARGUMENT_VALUE_EXCEPTION)
         ENDIF
+#endif
+
         ::__cDescriptionColor := cDescriptionColor
     ENDIF
 
     IF cSlash != NIL
+#ifdef USE_VALIDATORS
         assert_type(cSlash, 'C')
         IF Len(cSlash) != 1
             throw(ARGUMENT_VALUE_EXCEPTION)
         ENDIF
+#endif
+
         ::__cSlash := cSlash
     ENDIF
 
     IF acPatterns != NIL
+#ifdef USE_VALIDATORS
         assert_type(acPatterns, 'A')
         AEval(acPatterns, {| cPattern | IF(cPattern == NIL, , (assert_type(cPattern, 'C'), IF(Len(cPattern) == 1, , throw(ARGUMENT_VALUE_EXCEPTION))))})
+#endif
+
         FOR i := 1 TO Len(acPatterns)
             IF acPatterns[i] != NIL
                 ::__aoElements[i]:cPattern := acPatterns[i]
@@ -285,8 +341,11 @@ METHOD new(nRow, nLeft, nRight, nActualValue, nTargetValue, nDisplayPosition, nF
     ENDIF
 
     IF acColors != NIL
+#ifdef USE_VALIDATORS
         assert_type(acColors, 'A')
         AEval(acColors, {| cColor | IF(cColor == NIL, , (assert_type(cColor, 'C'), IF(is_color(cColor), , throw(ARGUMENT_VALUE_EXCEPTION))))})
+#endif
+
         FOR i := 1 TO Len(acColors)
             IF acColors[i] != NIL
                 ::__aoElements[i]:cColor := acColors[i]
@@ -294,10 +353,13 @@ METHOD new(nRow, nLeft, nRight, nActualValue, nTargetValue, nDisplayPosition, nF
         NEXT
     ENDIF
 
+#ifdef USE_VALIDATORS
     cDescription := ::__create_description()
+
     IF nLeft + Len(cDescription) >= nRight
         throw(ARGUMENT_VALUE_EXCEPTION)
     ENDIF
+#endif
 
 RETURN Self
 
@@ -306,7 +368,9 @@ METHOD increment(nHowMany) CLASS Progress_bar
     IF nHowMany == NIL
         ::__nActualValue := Min(::__nActualValue + 1, ::__nTargetValue)
     ELSE
+#ifdef USE_VALIDATORS
         assert_type(nHowMany, 'N')
+#endif
         ::__nActualValue := Min(Max(::__nActualValue + nHowMany, 0), ::__nTargetValue)
     ENDIF
 

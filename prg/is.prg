@@ -8,9 +8,13 @@
 
 FUNCTION is_data_type(cType)
 
+#ifdef USE_VALIDATORS
     IF PCount() != 1
         throw(ARGUMENTS_NUMBER_EXCEPTION)
     ELSEIF ValType(cType) != 'C' .OR. Len(cType) != 1
+#else
+    IF ValType(cType) != 'C' .OR. Len(cType) != 1
+#endif
         RETURN .F.
     ENDIF
 
@@ -23,6 +27,7 @@ FUNCTION is_number_string(cVariable, lAllowSpaces)
     LOCAL lWasDigit := .F.
     LOCAL cDigit
 
+#ifdef USE_VALIDATORS
     IF PCount() != 2 .AND. PCount() != 1 
         throw(ARGUMENTS_NUMBER_EXCEPTION)
     ELSEIF PCount() == 2 .AND. ValType(lAllowSpaces) != 'L'
@@ -32,6 +37,7 @@ FUNCTION is_number_string(cVariable, lAllowSpaces)
     IF hb_PIsByRef(1)
         throw(PASS_BY_REFERENCE_EXCEPTION)
     ENDIF
+#endif
 
     IF ValType(cVariable) != 'C'
         RETURN .F.
@@ -67,17 +73,21 @@ RETURN .T.
 
 FUNCTION is_date_string(cVariable, lAllowSpaces)
 
+#ifdef USE_VALIDATORS
     IF PCount() == 2
         assert_type(lAllowSpaces, 'L')
     ENDIF
+#endif
 
     IF ValType(cVariable) != 'C'
         RETURN .F.
     ENDIF
 
+#ifdef USE_VALIDATORS
     IF hb_PIsByRef(1)
         throw(PASS_BY_REFERENCE_EXCEPTION)
     ENDIF
+#endif
 
     IF PCount() == 2 .AND. lAllowSpaces
         cVariable := AllTrim(cVariable)
@@ -95,17 +105,21 @@ RETURN .T.
 
 FUNCTION is_logical_string(cVariable, lAllowSpaces)
 
+#ifdef USE_VALIDATORS
     IF PCount() == 2
         assert_type(lAllowSpaces, 'L')
     ENDIF
+#endif
 
     IF ValType(cVariable) != 'C'
         RETURN .F.
     ENDIF
 
+#ifdef USE_VALIDATORS
     IF hb_PIsByRef(1)
         throw(PASS_BY_REFERENCE_EXCEPTION)
     ENDIF
+#endif
 
     IF PCount() == 2 .AND. lAllowSpaces
         cVariable := AllTrim(cVariable)
@@ -126,6 +140,7 @@ FUNCTION is_color(cColorString, lAllowSpaces, cPattern)
     LOCAL cColor
     LOCAL pRegEx
 
+#ifdef USE_VALIDATORS
     IF PCount() != 1 .AND. PCount() != 2 .AND. PCount() != 3
         throw(ARGUMENTS_NUMBER_EXCEPTION)
     ENDIF
@@ -138,14 +153,17 @@ FUNCTION is_color(cColorString, lAllowSpaces, cPattern)
         assert_type(cPattern, 'C')
         assert_length(cPattern, 3)
     ENDIF
+#endif
 
     IF ValType(cColorString) != 'C'
         RETURN .F.
     ENDIF
 
+#ifdef USE_VALIDATORS
     IF hb_PIsByRef(1)
         throw(PASS_BY_REFERENCE_EXCEPTION)
     ENDIF
+#endif
 
     IF PCount() >= 2 .AND. lAllowSpaces
         cColorString := AllTrim(cColorString)
@@ -202,33 +220,41 @@ RETURN hb_RegExComp(cRegEx)
 
 FUNCTION is_box(cBoxString)
 
+#ifdef USE_VALIDATORS
     IF PCount() != 1
         throw(ARGUMENTS_NUMBER_EXCEPTION)
     ENDIF
+#endif
 
 RETURN ValType(cBoxString) == 'C' .AND. (Len(cBoxString) == 8 .OR. Len(cBoxString) == 9)
 
 FUNCTION is_pushbutton_style(cStyleString)
 
+#ifdef USE_VALIDATORS
     IF PCount() != 1
         throw(ARGUMENTS_NUMBER_EXCEPTION)
     ENDIF
+#endif
 
 RETURN ValType(cStyleString) == 'C' .AND. (Len(cStyleString) == 2 .OR. Len(cStyleString) == 8)
 
 FUNCTION is_checkbox_style(cStyleString)
 
+#ifdef USE_VALIDATORS
     IF PCount() != 1
         throw(ARGUMENTS_NUMBER_EXCEPTION)
     ENDIF
+#endif
 
 RETURN ValType(cStyleString) == 'C' .AND. Len(cStyleString) == 4
 
 FUNCTION is_picture(cPicture)
 
+#ifdef USE_VALIDATORS
     IF PCount() != 1
         throw(ARGUMENTS_NUMBER_EXCEPTION)
     ENDIF
+#endif
 
 RETURN ValType(cPicture) == 'C' .AND. is_function_picture(get_function_from_picture(cPicture)) .AND. is_template_picture(get_template_from_picture(cPicture))
 
@@ -238,9 +264,11 @@ FUNCTION is_function_picture(cFunction)
     LOCAL lCheckNextIsDigit := .F.
     LOCAL cCharacter
 
+#ifdef USE_VALIDATORS
     IF PCount() != 1
         throw(ARGUMENTS_NUMBER_EXCEPTION)
     ENDIF
+#endif
 
     IF ValType(cFunction) != 'C'
         RETURN .F.
@@ -273,9 +301,11 @@ FUNCTION is_template_picture(cTemplate)
 
     LOCAL cCharacter
 
+#ifdef USE_VALIDATORS
     IF PCount() != 1
         throw(ARGUMENTS_NUMBER_EXCEPTION)
     ENDIF
+#endif
 
     IF ValType(cTemplate) != 'C'
         RETURN .F.

@@ -24,9 +24,11 @@ METHOD keys(anKeys) CLASS Menu
     LOCAL anOldKeys := AClone(anKeys)
 
     IF anKeys != NIL
+#ifdef USE_VALIDATORS
         assert_type(anKeys, 'A')
         assert_length(anKeys, Len(::__anKeys))
         AEval(anKeys, {| nKey | assert_type(nKey, 'N')})
+#endif
         ::__anKeys := anKeys
     ENDIF
 
@@ -36,15 +38,21 @@ METHOD key(nPosition, nKey) CLASS Menu
 
     LOCAL nOldKey
 
+#ifdef USE_VALIDATORS
     assert_type(nPosition, 'N')
     IF nPosition < 0 .OR. nPosition > Len(::__anKeys) .OR. Int(nPosition) != nPosition
         throw(ARGUMENT_VALUE_EXCEPTION)
     ELSE
         nOldKey := ::__anKeys[nPosition]
     ENDIF
+#else
+    nOldKey := ::__anKeys[nPosition]
+#endif
 
     IF ValType(nKey) != 'U'
+#ifdef USE_VALIDATORS
         assert_type(nKey, 'N')
+#endif
         ::__anKeys[nPosition] := nKey
     ENDIF
 
@@ -57,15 +65,18 @@ FUNCTION display_menu(nTop, nLeft, nBottom, nRight, acMenuItems, xSelectable, cU
     LOCAL cOldColor
     LOCAL nSelectedItem
 
+#ifdef USE_VALIDATORS
     assert_type(nTop, 'N')
     assert_type(nLeft, 'N')
     assert_type(nBottom, 'N')
     assert_type(nRight, 'N')
     assert_type(acMenuItems, 'A')
+#endif
 
     WSelect(0)
     nOldShadow := WSetShadow(-1)
 
+#ifdef USE_VALIDATORS
     IF nTop < 0 .OR. nTop >= MaxRow()
         throw(ARGUMENT_VALUE_EXCEPTION)
     ELSEIF nBottom < 0 .OR. nBottom > MaxRow()
@@ -107,11 +118,14 @@ FUNCTION display_menu(nTop, nLeft, nBottom, nRight, acMenuItems, xSelectable, cU
     ELSEIF ValType(cTitle) == 'U' .AND. (ValType(cTitleColor) != 'U' .OR. ValType(cTitleAlign) != 'U')
         throw(ARGUMENT_VALUE_EXCEPTION)
     ENDIF
+#endif
 
     IF ValType(cTitleAlign) != 'C'
         cTitleAlign := ALIGN_LEFT
+#ifdef USE_VALIDATORS
     ELSEIF AScan({ALIGN_LEFT, ALIGN_CENTER, ALIGN_RIGHT}, cTitleAlign) == 0
         throw(ARGUMENT_VALUE_EXCEPTION)
+#endif
     ENDIF
 
     cOldColor := SetColor(cColor)
@@ -158,11 +172,13 @@ FUNCTION display_menu_autosize(nTop, nLeft, acMenuItems, xSelectable, cUserFunct
     LOCAL nBottom
     LOCAL nRight
 
+#ifdef USE_VALIDATORS
     assert_type(nTop, 'N')
     assert_type(nLeft, 'N')
     assert_type(acMenuItems, 'C')
 
     AEval(acMenuItems, {| cElement | assert_type(cElement, 'C')})
+#endif
 
     nBottom := nTop + Len(acMenuItems) + 1
     nRight := nLeft + max_of_array(length_array(acMenuItems)) + 1
@@ -180,10 +196,12 @@ FUNCTION display_menu_center(nCenterRow, nCenterCol, nHeight, nWidth, acMenuItem
     LOCAL nBottom
     LOCAL nRight
 
+#ifdef USE_VALIDATORS
     assert_type(nCenterRow, 'N')
     assert_type(nCenterCol, 'N')
     assert_type(nHeight, 'N')
     assert_type(nWidth, 'N')
+#endif
 
     nTop := nCenterRow - Int(nHeight / 2)
     nLeft := nCenterCol - Int(nWidth / 2)
@@ -197,8 +215,10 @@ FUNCTION display_menu_center_autosize(nCenterRow, nCenterCol, acMenuItems, xSele
     LOCAL nHeight
     LOCAL nWidth
 
+#ifdef USE_VALIDATORS
     assert_type(acMenuItems, 'A')
     AEval(acMenuItems, {| cElement | assert_type(cElement, 'C')})
+#endif
 
     nHeight := Len(acMenuItems) + 1
     nWidth := max_of_array(length_array(acMenuItems)) + 1

@@ -65,11 +65,12 @@ METHOD clear_screen(cColor) CLASS Window
     LOCAL cOldColor := SetColor()
 
     IF cColor != NIL
+#ifdef USE_VALIDATORS
         assert_type(cColor, 'C')
         IF !is_color(cColor)
             throw(ARGUMENT_VALUE_EXCEPTION)
         ENDIF
-
+#endif
         SET COLOR TO (cColor)
     ENDIF
 
@@ -114,9 +115,11 @@ METHOD refresh_title(lRefreshBorder) CLASS Window
     LOCAL nCol := Max(Int((::__nLeft + ::__nRight - Len(::__cTitle)) / 2), ::__nLeft)
     LOCAL cOldColor
 
+#ifdef USE_VALIDATORS
     IF ValType(lRefreshBorder) != 'U' .AND. ValType(lRefreshBorder) != 'L'
         throw(ARGUMENT_TYPE_EXCEPTION)
     ENDIF
+#endif
     
     IF (ValType(lRefreshBorder) == 'U' .AND. !Empty(::__cBorder)) .OR. lRefreshBorder
         ::refresh_border()
@@ -184,10 +187,12 @@ METHOD border(cBorder) CLASS Window
     LOCAL cWasBorder := ::__cBorder
 
     IF cBorder != NIL
+#ifdef USE_VALIDATORS
         assert_type(cBorder, 'C')
         IF !is_box(hb_Translate(cBorder, 'EN', hb_cdpSelect()))
             throw(ARGUMENT_VALUE_EXCEPTION)
         ENDIF
+#endif
         ::__cBorder := cBorder
     ENDIF
 
@@ -198,7 +203,9 @@ METHOD title(cTitle) CLASS Window
     LOCAL cWasTitle := ::__cTitle
 
     IF cTitle != NIL
+#ifdef USE_VALIDATORS
         assert_type(cTitle, 'C')
+#endif
         ::__cTitle := cTitle
     ENDIF
 
@@ -209,7 +216,9 @@ METHOD header(cHeader) CLASS Window
     LOCAL cWasHeader := ::__cHeader
 
     IF cHeader != NIL
+#ifdef USE_VALIDATORS
         assert_type(cHeader, 'C')
+#endif
         ::__cHeader := cHeader
     ENDIF
 
@@ -220,7 +229,9 @@ METHOD footer(cFooter) CLASS Window
     LOCAL cWasFooter := ::__cFooter
 
     IF cFooter != NIL
+#ifdef USE_VALIDATORS
         assert_type(cFooter, 'C')
+#endif
         ::__cFooter := cFooter
     ENDIF
 
@@ -231,10 +242,12 @@ METHOD border_color(cColor) CLASS Window
     LOCAL cWasColor := ::__cBorderColor
 
     IF cColor != NIL
+#ifdef USE_VALIDATORS
         assert_type(cColor, 'C')
         IF !is_color(cColor)
             throw(ARGUMENT_VALUE_EXCEPTION)
         ENDIF
+#endif
         ::__cBorderColor := cColor
     ENDIF
 
@@ -245,10 +258,12 @@ METHOD title_color(cColor) CLASS Window
     LOCAL cWasColor := ::__cTitleColor
 
     IF cColor != NIL
+#ifdef USE_VALIDATORS
         assert_type(cColor, 'C')
         IF !is_color(cColor)
             throw(ARGUMENT_VALUE_EXCEPTION)
         ENDIF
+#endif
         ::__cTitleColor := cColor
     ENDIF
 
@@ -259,10 +274,12 @@ METHOD header_color(cColor) CLASS Window
     LOCAL cWasColor := ::__cHeaderColor
 
     IF cColor != NIL
+#ifdef USE_VALIDATOR
         assert_type(cColor, 'C')
         IF !is_color(cColor)
             throw(ARGUMENT_VALUE_EXCEPTION)
         ENDIF
+#endif
         ::__cHeaderColor := cColor
     ENDIF
 
@@ -273,10 +290,12 @@ METHOD footer_color(cColor) CLASS Window
     LOCAL cWasColor := ::__cFooterColor
 
     IF cColor != NIL
+#ifdef USE_VALIDATORS
         assert_type(cColor, 'C')
         IF !is_color(cColor)
             throw(ARGUMENT_VALUE_EXCEPTION)
         ENDIF
+#endif
         ::__cFooterColor := cColor
     ENDIF
 

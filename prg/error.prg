@@ -25,17 +25,23 @@ PROCEDURE assert_type(xValue, xType, cDescription)
 
     LOCAL nPCount := PCount()
 
+#ifdef USE_VALIDATORS
     IF nPCount < 2 .OR. nPCount > 3
         throw(ARGUMENTS_NUMBER_EXCEPTION)
     ENDIF
+#endif
 
     IF ValType(xType) == 'C'
         xType := {xType}
+#ifdef USE_VALIDATORS
     ELSEIF ValType(xType) != 'A'
         throw(ARGUMENT_VALUE_EXCEPTION)
+#endif
     ENDIF
 
+#ifdef USE_VALIDATORS
     AEval(xType, {| cElement | IF(is_data_type(cElement), , throw(ARGUMENT_VALUE_EXCEPTION))})
+#endif
 
     IF AScan(xType, ValType(xValue)) == 0
         IF nPCount == 3
@@ -52,11 +58,15 @@ PROCEDURE assert_length(xValue, nLength, cDescription)
 
     LOCAL nPCount := PCount()
 
+#ifdef USE_VALIDATORS
     IF nPCount < 2 .OR. nPCount > 3
         throw(ARGUMENTS_NUMBER_EXCEPTION)
     ELSEIF !(ValType(xValue) $ 'A;H;C')
         throw(ARGUMENT_TYPE_EXCEPTION)
     ELSEIF Len(xValue) != nLength
+#else
+    IF Len(xValue) != nLength
+#endif
         IF nPCount == 3
             assert_type(cDescription, 'C')
             throw(cDescription)
@@ -71,9 +81,13 @@ PROCEDURE assert_data_type(cType, cDescription)
 
     LOCAL nPCount := PCount()
 
+#ifdef USE_VALIDATORS
     IF nPCount < 1 .OR. nPCount > 2
         throw(ARGUMENTS_NUMBER_EXCEPTION)
     ELSEIF !is_data_type(cType)
+#else
+    IF !is_data_type(cType)
+#endif
         IF nPCount == 2
             assert_type(cDescription, 'C')
             throw(cDescription)

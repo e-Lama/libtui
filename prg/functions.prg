@@ -4,26 +4,35 @@
 
 FUNCTION max_of_array(axArray)
 
+#ifdef USE_VALIDATORS
     LOCAL cType
+#endif
     LOCAL xMax
     LOCAL nLength
     LOCAL i
 
+#ifdef USE_VALIDATORS
     assert_type(axArray, 'A')
+#endif
 
     nLength := Len(axArray)
 
     IF nLength > 0
         xMax := axArray[1]
+#ifdef USE_VALIDATORS
         cType := ValType(axArray[1])
+#endif
     ELSE
         throw(RUNTIME_EXCEPTION)
     ENDIF
 
     FOR i := 2 TO nLength
+#ifdef USE_VALIDATORS
         IF ValType(axArray[i]) != cType
             throw(RUNTIME_EXCEPTION)
         ENDIF
+#endif
+
         xMax := Max(axArray[i], xMax)
     NEXT
 
@@ -31,26 +40,35 @@ RETURN xMax
 
 FUNCTION min_of_array(axArray)
 
+#ifdef USE_VALIDATORS
     LOCAL cType
+#endif
     LOCAL xMin
     LOCAL nLength
     LOCAL i
 
+#ifdef USE_VALIDATORS 
     assert_type(axArray, 'A')
+#endif
 
     nLength := Len(axArray)
 
     IF nLength > 0
         xMin := axArray[1]
+#ifdef USE_VALIDATORS
         cType := ValType(axArray[1])
+#endif
     ELSE
         throw(RUNTIME_EXCEPTION)
     ENDIF
 
     FOR i := 2 TO nLength
+#ifdef USE_VALIDATORS
         IF ValType(axArray[i]) != cType
             throw(RUNTIME_EXCEPTION)
         ENDIF
+#endif
+
         xMin := Min(axArray[i], xMin)
     NEXT
 
@@ -59,23 +77,32 @@ RETURN xMin
 FUNCTION max_of_array_index(axArray)
 
     LOCAL nMaxInd := 1
+#ifdef USE_VALIDATORS
     LOCAL cType
+#endif
     LOCAL nLength
     LOCAL i
 
+#ifdef USE_VALIDATORS
     assert_type(axArray, 'A')
+#endif
 
     nLength := Len(axArray)
 
     IF nLength == 0
-        RETURN nLength
+        RETURN 0
     ENDIF
 
+#ifdef USE_VALIDATORS
     cType := ValType(axArray[nMaxInd])
+#endif
+
     FOR i := 2 TO nLength
+#ifdef USE_VALIDATORS
         IF ValType(axArray[i]) != cType
             throw(RUNTIME_EXCEPTION)
         ENDIF
+#endif
 
         IF axArray[i] > axArray[nMaxInd]
             nMaxInd := i
@@ -87,23 +114,32 @@ RETURN nMaxInd
 FUNCTION min_of_array_index(axArray)
 
     LOCAL nMinInd := 1
+#ifdef USE_VALIDATORS
     LOCAL cType
+#endif
     LOCAL nLength
     LOCAL i
 
+#ifdef USE_VALIDATORS 
     assert_type(axArray, 'A')
+#endif
 
     nLength := Len(axArray)
 
     IF nLength == 0
-        RETURN nLength
+        RETURN 0
     ENDIF
 
+#ifdef USE_VALIDATORS
     cType := ValType(axArray[nMinInd])
+#endif
+
     FOR i := 2 TO nLength
+#ifdef USE_VALIDATORS
         IF ValType(axArray[i]) != cType
             throw(RUNTIME_EXCEPTION)
         ENDIF
+#endif
 
         IF axArray[i] > axArray[nMinInd]
             nMinInd := i
@@ -118,17 +154,23 @@ FUNCTION length_array(axArray)
     LOCAL nLength
     LOCAL i
 
+#ifdef USE_VALIDATORS
     assert_type(axArray, 'A')
+#endif
 
     nLength := Len(axArray)
     anArrayOfLengths := Array(nLength)
 
     FOR i := 1 TO nLength
+#ifdef USE_VALIDATORS
         IF ValType(axArray[i]) $ 'C;A;H'
             anArrayOfLengths[i] := Len(axArray[i])
         ELSE
             throw(RUNTIME_EXCEPTION)
         ENDIF
+#else
+        anArrayOfLengths[i] := Len(axArray[i])
+#endif
     NEXT
 
 RETURN anArrayOfLengths
@@ -138,13 +180,18 @@ FUNCTION clone_objects_array(aoArray)
     LOCAL aoNewArray
     LOCAL i
 
+#ifdef USE_VALIDATORS
     assert_type(aoArray, 'A')
+#endif
+
     aoNewArray := Array(Len(aoArray))
 
     FOR i := 1 TO Len(aoArray)
+#ifdef USE_VALIDATORS
         IF ValType(aoArray[i]) != 'O'
             throw(RUNTIME_EXCEPTION)
         ENDIF
+#endif
         aoNewArray[i] := __objClone(aoArray[i])
     NEXT
 
@@ -155,11 +202,13 @@ FUNCTION get_function_from_picture(cPicture)
     LOCAL cFunction := ''
     LOCAL cCharacter
 
+#ifdef USE_VALIDATORS
     IF PCount() != 1
         throw(ARGUMENTS_NUMBER_EXCEPTION)
     ENDIF
 
     assert_type(cPicture, 'C')
+#endif
 
     IF Left(cPicture, 1) == '@'
 
@@ -179,11 +228,13 @@ FUNCTION get_template_from_picture(cPicture)
     LOCAL cTemplate := ''
     LOCAL i := 1
 
+#ifdef USE_VALIDATORS
     IF PCount() != 1
         throw(ARGUMENTS_NUMBER_EXCEPTION)
     ENDIF
 
     assert_type(cPicture, 'C')
+#endif
 
     IF Empty(cPicture)
         RETURN cTemplate
@@ -206,17 +257,23 @@ FUNCTION cast(xVar, cTo, lAllowSpaces)
     LOCAL xResult := NIL
     LOCAL cType
 
+#ifdef USE_VALIDATORS
     IF PCount() < 2 .OR. PCount() > 3
         throw(ARGUMENTS_NUMBER_EXCEPTION)
     ENDIF
+#endif
 
     IF ValType(lAllowSpaces) == 'U'
         lAllowSpaces := .T.
+#ifdef USE_VALIDATORS
     ELSE
         assert_type(lAllowSpaces, 'L')
+#endif
     ENDIF
 
+#ifdef USE_VALIDATORS
     assert_data_type(cTo)
+#endif
 
     cType := ValType(xVar)
 
@@ -397,11 +454,13 @@ FUNCTION array_equals(axFirst, axSecond)
     LOCAL nLength
     LOCAL i
 
+#ifdef USE_VALIDATORS
     IF PCount() != 2
         throw(ARGUMENTS_NUMBER_EXCEPTION)
     ELSEIF ValType(axFirst) != 'A' .OR. ValType(axSecond) != 'A'
         throw(ARGUMENT_TYPE_EXCEPTION)
     ENDIF
+#endif
 
     nLength := Len(axFirst)
 
@@ -431,11 +490,13 @@ FUNCTION hash_equals(hFirst, hSecond)
     LOCAL axKeys
     LOCAL xKey
 
+#ifdef USE_VALIDATORS
     IF PCount() != 2
         throw(ARGUMENTS_NUMBER_EXCEPTION)
     ELSEIF ValType(hFirst) != 'H' .OR. ValType(hSecond) != 'H'
         throw(ARGUMENT_TYPE_EXCEPTION)
     ENDIF
+#endif
 
     axKeys := hb_hKeys(hFirst)
 
@@ -462,11 +523,13 @@ RETURN .T.
 
 FUNCTION objects_have_same_messages(oFirst, oSecond)
 
+#ifdef USE_VALIDATORS
     IF PCount() != 2
         throw(ARGUMENTS_NUMBER_EXCEPTION)
     ELSEIF ValType(oFirst) != 'O' .OR. ValType(oSecond) != 'O'
         throw(ARGUMENT_TYPE_EXCEPTION)
     ENDIF
+#endif
 
 RETURN array_equals(__objGetMsgList(oFirst), __objGetMsgList(oSecond))
 
@@ -475,18 +538,24 @@ FUNCTION AMerge(axTarget, axAdd, lDistinct)
     LOCAL xItem
     LOCAL nLength
 
+#ifdef USE_VALIDATORS
     assert_type(axTarget, 'A')
     assert_type(axAdd, 'A')
+#endif
 
     IF ValType(lDistinct) == 'U'
         lDistinct := .F.
+#ifdef USE_VALIDATORS
     ELSEIF ValType(lDistinct) != 'L'
         throw(ARGUMENT_TYPE_EXCEPTION)
+#endif
     ENDIF
 
+#ifdef USE_VALIDATORS
     IF PCount() > 3 .OR. PCount() < 2
         throw(ARGUMENTS_NUMBER_EXCEPTION)
     ENDIF
+#endif
 
     IF lDistinct
         FOR EACH xItem IN axAdd

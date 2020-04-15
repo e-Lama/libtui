@@ -8,6 +8,7 @@ FUNCTION YesNo(xMessage, acAnwsers, cColor, lSafe, lAllowMove, nCurrentOption, l
     
     LOCAL lResult
 
+#ifdef USE_VALIDATORS
     IF PCount() < 1 .OR. PCount() > 9
         throw(ARGUMENTS_NUMBER_EXCEPTION)
     ENDIF
@@ -15,6 +16,7 @@ FUNCTION YesNo(xMessage, acAnwsers, cColor, lSafe, lAllowMove, nCurrentOption, l
     IF ValType(acAnwsers) == 'A'
         assert_length(acAnwsers, 2)
     ENDIF
+#endif
 
     hb_Default(@lSafe, .F.)
 
@@ -38,6 +40,7 @@ FUNCTION NoYes(xMessage, acAnwsers, cColor, lSafe, lAllowMove, nCurrentOption, l
 
     LOCAL lResult
 
+#ifdef USE_VALIDATORS
     IF PCount() < 1 .OR. PCount() > 9
         throw(ARGUMENTS_NUMBER_EXCEPTION)
     ENDIF
@@ -45,6 +48,7 @@ FUNCTION NoYes(xMessage, acAnwsers, cColor, lSafe, lAllowMove, nCurrentOption, l
     IF ValType(acAnwsers) == 'A'
         assert_length(acAnwsers, 2)
     ENDIF
+#endif
 
     hb_Default(@lSafe, .F.)
 
@@ -68,9 +72,11 @@ FUNCTION Dialog(xMessage, acOptions, cColor, lAllowEscape, nDelay, lSafe, lAllow
 
     LOCAL nResult
 
+#ifdef USE_VALIDATORS
     IF PCount() < 1 .OR. PCount() > 11
         throw(ARGUMENTS_NUMBER_EXCEPTION)
     ENDIF
+#endif
 
     hb_Default(@lSafe, .F.)
 
@@ -86,9 +92,11 @@ FUNCTION Inform(xMessage, cColor, lAllowEscape, nDelay, lSafe, lAllowMove, nCurr
 
     LOCAL nResult
 
+#ifdef USE_VALIDATORS
     IF PCount() < 1 .OR. PCount() > 10
         throw(ARGUMENTS_NUMBER_EXCEPTION)
     ENDIF
+#endif
 
     hb_Default(@lSafe, .F.)
     
@@ -107,6 +115,7 @@ STATIC FUNCTION __print_message(xMessage, acOptions, cColor, lAllowEscape, nDela
     LOCAL nEval
     LOCAL nReturn
 
+#ifdef USE_VALIDATORS
     assert_type(acOptions, 'A')
     assert_type(lSafe, 'L')
 
@@ -119,6 +128,7 @@ STATIC FUNCTION __print_message(xMessage, acOptions, cColor, lAllowEscape, nDela
     ELSEIF ValType(nDelay) == 'N' .AND. Int(nDelay) != nDelay
         throw(RUNTIME_EXCEPTION)
     ENDIF
+#endif
 
     FOR nEval := 1 TO Len(acOptions)
         IF ValType(acOptions[nEval]) == 'C' .AND. !Empty(acOptions[nEval])

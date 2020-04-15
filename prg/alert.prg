@@ -26,8 +26,11 @@ HIDDEN:
     METHOD __merged_options_length(acOptions)
     METHOD __word_length_from(cTxt, nFrom)
     METHOD __create_message(cTxt, nMaxWidth)
-    METHOD __keys_map_asserts(hKeysMap)
     METHOD __find_letter(nKey, nCurrentOption, acOptions, lAcceptFirstFounded, lFound)
+
+#ifdef USE_VALIDATORS
+    METHOD __keys_map_asserts(hKeysMap)
+#endif
 
 ENDCLASS LOCK
 
@@ -50,9 +53,11 @@ METHOD AlertLG(xMessage, acOptions, cColorMessage, cColorButtons, nDelay, nRow, 
 
     WSelect(0)
 
+#ifdef USE_VALIDATORS
     IF PCount() < 2 .OR. PCount() > 14
         throw(ARGUMENTS_NUMBER_EXCEPTION)
     ENDIF
+#endif
 
     IF ValType(xMessage) == 'A'
         cMessage := ''
@@ -66,61 +71,74 @@ METHOD AlertLG(xMessage, acOptions, cColorMessage, cColorButtons, nDelay, nRow, 
     ENDIF
 
     IF acOptions != NIL
+#ifdef USE_VALIDATORS
         assert_type(acOptions, 'A')
         AEval(acOptions, {| cOption | assert_type(cOption, 'C')})
+#endif
         
         FOR i := 1 TO Len(acOptions)
             acOptionsTrimmed[i] := AllTrim(acOptions[i])
         NEXT
     ENDIF
 
-    IF cColorMessage != NIL
+    IF cColorMessage == NIL
+        cColorMessage := 'W+/R'
+#ifdef USE_VALIDATORS
+    ELSE
         assert_type(cColorMessage, 'C')
 
         IF !is_color(cColorMessage)
             throw(ARGUMENT_VALUE_EXCEPTION)
         ENDIF
-    ELSE
-        cColorMessage := 'W+/R'
+#endif
     ENDIF
 
-    IF cColorButtons != NIL
+    IF cColorButtons == NIL
+        cColorMessage := 'W+/B'
+#ifdef USE_VALIDATORS
+    ELSE
         assert_type(cColorButtons, 'C')
 
         IF !is_color(cColorButtons)
             throw(ARGUMENT_VALUE_EXCEPTION)
         ENDIF
-    ELSE
-        cColorMessage := 'W+/B'
+#endif
     ENDIF
 
     IF nDelay == NIL
         nDelay := 0
+#ifdef USE_VALIDATORS
     ELSE
         assert_type(nDelay, 'N')
         IF nDelay < 0
             throw(ARGUMENT_VALUE_EXCEPTION)
         ENDIF
+#endif
     ENDIF
 
+#ifdef USE_VALIDATORS
     IF nRow != NIL
         assert_type(nRow, 'N')
         IF nRow < 0 .OR. nRow > MaxRow()
             throw(ARGUMENT_VALUE_EXCEPTION)
         ENDIF
     ENDIF
+#endif
 
     IF nLeft == NIL
         nLeft := Int(MaxCol() / 3)
+#ifdef USE_VALIDATORS
     ELSE
         assert_type(nLeft, 'N')
         IF nLeft < 0 .OR. nLeft > MaxCol()
             throw(ARGUMENT_VALUE_EXCEPTION)
         ENDIF
+#endif
     ENDIF
 
     IF nRight == NIL
         nRight := Int(2 * MaxCol() / 3)
+#ifdef USE_VALIDATORS
     ELSE
         assert_type(nLeft, 'N')
         IF nRight < 0 .OR. nRight > MaxCol()
@@ -128,45 +146,58 @@ METHOD AlertLG(xMessage, acOptions, cColorMessage, cColorButtons, nDelay, nRow, 
         ELSEIF nRight <= nLeft + 5
             throw(ARGUMENT_VALUE_EXCEPTION)
         ENDIF
+#endif
     ENDIF
 
     IF nCurrentOption == NIL
         nCurrentOption := 1
+#ifdef USE_VALIDATORS
     ELSE
         assert_type(nCurrentOption, 'N')
         IF nCurrentOption < 0 .OR. nCurrentOption > Len(acOptionsTrimmed) + 1
             throw(ARGUMENT_VALUE_EXCEPTION)
         ENDIF
+#endif
     ENDIF
 
     IF lAllowEscape == NIL
         lAllowEscape := .T.
+#ifdef USE_VALIDATORS
     ELSE
         assert_type(lAllowEscape, 'L')
+#endif
     ENDIF
 
     IF lAllowMove == NIL
         lAllowMove := .T.
+#ifdef USE_VALIDATORS
     ELSE
         assert_type(lAllowMove, 'L')
+#endif
     ENDIF
 
     IF lCyclic == NIL
         lCyclic := .T.
+#ifdef USE_VALIDATORS
     ELSE
         assert_type(lCyclic, 'L')
+#endif
     ENDIF
 
     IF lAcceptFirstFounded == NIL
         lAcceptFirstFounded := .F.
+#ifdef USE_VALIDATORS
     ELSE
         assert_type(lAcceptFirstFounded, 'L')
+#endif
     ENDIF
 
-    IF ValType(cBorder) == 'C' .AND. !is_box(hb_Translate(cBorder, 'EN', hb_cdpSelect()))
-        throw(ARGUMENT_VALUE_EXCEPTION)
-    ELSE
+    IF cBorder == NIL
         cBorder := B_SINGLE
+#ifdef USE_VALIDATORS
+    ELSEIF ValType(cBorder) != 'C' .OR. !is_box(hb_Translate(cBorder, 'EN', hb_cdpSelect()))
+        throw(ARGUMENT_VALUE_EXCEPTION)
+#endif
     ENDIF
 
     nOldCursor := SetCursor(SC_NONE)
@@ -309,7 +340,9 @@ METHOD keys_map(hKeysMap) CLASS AlertLG
     LOCAL hOldKeysMap := hb_hClone(::__hKeysMap)
 
     IF hKeysMap != NIL
+#ifdef USE_VALIDATORS
         ::__keys_map_asserts(hKeysMap)
+#endif
         ::__hKeysMap := hKeysMap
     ENDIF
 
@@ -320,12 +353,15 @@ METHOD create_centered(lCreateCentered) CLASS AlertLG
     LOCAL lOldCreateCentered := ::__lCreateCentered
 
     IF lCreateCentered != NIL
+#ifdef USE_VALIDATORS
         assert_type(lCreateCentered, 'L')
+#endif
         ::__lCreateCentered := lCreateCentered
     ENDIF
 
 RETURN lOldCreateCentered
 
+#ifdef USE_VALIDATORS
 METHOD __keys_map_asserts(hKeysMap) CLASS AlertLG
 
     LOCAL nKey
@@ -343,6 +379,7 @@ METHOD __keys_map_asserts(hKeysMap) CLASS AlertLG
     NEXT
 
 RETURN NIL
+#endif
 
 METHOD __word_length_from(cTxt, nFrom) CLASS AlertLG
 

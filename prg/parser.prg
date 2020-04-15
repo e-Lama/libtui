@@ -1,5 +1,3 @@
-//#define VALIDATE_DIMENSIONS
-
 #include "hbclass.ch"
 #include "color.ch"
 
@@ -31,6 +29,7 @@ HIDDEN:
     CLASSVAR __aoGetList AS ARRAY INIT Array(0)
     CLASSVAR __lUseMemVar AS LOGICAL INIT .T.
 
+    METHOD __add_to_log(cTxt) INLINE ::__cLog += cTxt
     METHOD __validate_window(axRow, hVariables)
     METHOD __validate_box(axRow, hVariables)
     METHOD __validate_say(axRow, hVariables)
@@ -39,7 +38,6 @@ HIDDEN:
     METHOD __validate_listbox(axRow, hVariables)
     METHOD __validate_radiogroup(axRow, hVariables)
     METHOD __validate_pushbutton(axRow, hVariables)
-    METHOD __add_to_debug(cTxt) INLINE ::__cLog += cTxt
     METHOD __validate(axRow, hVariables)
 
     METHOD __make_window(nTop, nLeft, nBottom, nRight, cBox, cColor, xShadow)
@@ -53,7 +51,9 @@ HIDDEN:
 
     METHOD __make_buttons(acPar)
 
+#ifdef USE_VALIDATORS
     METHOD __corrupted_row(cRow)
+#endif
     METHOD __basic_parse(xRow, cType, hVariables)
     METHOD __handle_hash(hVariables)
     METHOD __handle_object(axRow)
@@ -65,8 +65,10 @@ METHOD getlist(aoGetList) CLASS Parser
     LOCAL aoWasGetList := clone_objects_array(::__aoGetList)
 
     IF aoGetList != NIL
+#ifdef USE_VALIDATORS
         assert_type(aoGetList, 'A')
         AEval(aoGetList, {| oElement | assert_type(oElement, 'O')})
+#endif
         ::__aoGetList := aoGetList
     ENDIF
 
@@ -77,7 +79,9 @@ METHOD use_memvar(lUseMemVar) CLASS Parser
     LOCAL lWasUseMemvar := ::__lUseMemVar
 
     IF lUseMemVar != NIL
+#ifdef USE_VALIDATORS
         assert_type(lUseMemVar, 'L')
+#endif
         ::__lUseMemVar := lUseMemVar
     ENDIF
 
@@ -88,7 +92,9 @@ METHOD log(cLog) CLASS Parser
     LOCAL cWasLog := ::__cLog
 
     IF cLog != NIL
+#ifdef USE_VALIDATORS
         assert_type(cLog, 'C')
+#endif
         ::__cLog := cLog
     ENDIF
 
@@ -234,10 +240,12 @@ METHOD check_correctness(acRows, hVariables) CLASS Parser
     LOCAL acRowsCopy
     LOCAL acRow
 
+#ifdef USE_VALIDATORS
     assert_type(acRows, 'A')
     assert_type(hVariables, 'H')
 
     AEval(acRows, {| cElement | assert_type(cElement, 'C')})
+#endif
 
     ::__handle_hash(hVariables)
     ::__nWindow := -1
@@ -253,7 +261,7 @@ METHOD check_correctness(acRows, hVariables) CLASS Parser
             ENDIF
             lWasWindow := .T.
             IF acRow:__enumIndex() != 1
-                ::__add_to_debug(Config():get_config('WindowMustBeFirst'))
+                ::__add_to_log(Config():get_config('WindowMustBeFirst'))
                 RETURN .F.
             ENDIF
         ENDIF
@@ -271,10 +279,12 @@ METHOD prepare_form_from_record(acRows, hVariables) CLASS Parser
     LOCAL acRowsCopy
     LOCAL acRow
 
+#ifdef USE_VALIDATORS
     assert_type(acRows, 'A')
     assert_type(hVariables, 'H')
 
     AEval(acRows, {| cElement | assert_type(cElement, 'C')})
+#endif
 
     ::__handle_hash(hVariables)
     ::__nWindow := -1
@@ -292,7 +302,7 @@ METHOD prepare_form_from_record(acRows, hVariables) CLASS Parser
             lWasWindow := .T.
 
             IF acRow:__enumIndex() != 1
-                ::__add_to_debug(Config():get_config('WindowMustBeFirst'))
+                ::__add_to_log(Config():get_config('WindowMustBeFirst'))
                 RETURN .F.
             ENDIF
         ENDIF
@@ -315,9 +325,11 @@ METHOD prepare_form_from_database(cLanguage, cId, hVariables, cDatabase) CLASS P
     LOCAL nOldRecNo
     LOCAL lResult
 
+#ifdef USE_VALIDATORS
     assert_type(cLanguage, 'C')
     assert_type(cId, 'C')
     assert_type(hVariables, 'H')
+#endif
 
     IF ValType(cDatabase) == 'C'
         SELECT (cDatabase)
@@ -333,7 +345,9 @@ METHOD prepare_form_from_database(cLanguage, cId, hVariables, cDatabase) CLASS P
         RETURN .F.
     ENDIF
 
+#ifdef USE_VALIDATORS
     assert_type(field->code, 'M')
+#endif
 
     lResult := ::prepare_form_from_record(hb_ATokens(field->code, OBJECT_SEPARATOR), hVariables)
 
@@ -342,6 +356,7 @@ METHOD prepare_form_from_database(cLanguage, cId, hVariables, cDatabase) CLASS P
 
 RETURN lResult
 
+#ifdef USE_VALIDATORS
 METHOD __corrupted_row(cRow) CLASS Parser
 
     IF Len(cRow) < 2
@@ -353,15 +368,18 @@ METHOD __corrupted_row(cRow) CLASS Parser
     ENDIF
 
 RETURN .F.
+#endif
 
 METHOD __basic_parse(xRow, cType, hVariables) CLASS Parser
 
     LOCAL lInHash := .F.
 
+#ifdef USE_VALIDATORS
     IF ::__corrupted_row(xRow)
-        ::__add_to_debug(Config():get_config('CorruptionDetected'))
+        ::__add_to_log(Config():get_config('CorruptionDetected'))
         RETURN .F.
     ENDIF
+#endif
    
     IF Left(xRow, 1) == VARIABLE
         lInHash := .T.
@@ -374,13 +392,17 @@ METHOD __basic_parse(xRow, cType, hVariables) CLASS Parser
         xRow := AllTrim(xRow)
         IF hb_hHasKey(hVariables, xRow)
             IF AScan(::__axUsedKeys, xRow) != 0
-                ::__add_to_debug(Config():get_config('VariableRepeating'))
+#ifdef USE_VALIDATORS
+                ::__add_to_log(Config():get_config('VariableRepeating'))
+#endif
                 RETURN .F.
             ENDIF
             AAdd(::__axUsedKeys, xRow)
             xRow := hVariables[xRow] 
         ELSE
-            ::__add_to_debug(Config():get_config('CorruptionDetected'))
+#ifdef USE_VALIDATORS
+            ::__add_to_log(Config():get_config('CorruptionDetected'))
+#endif
             RETURN .F.
         ENDIF
     ENDIF
@@ -407,9 +429,9 @@ METHOD __validate(axRow, hVariables) CLASS Parser
         CASE axRow[OBJECT] == OBJECT_PUSHBUTTON
             RETURN ::__validate_pushbutton(@axRow, hVariables)
         CASE Empty(axRow[OBJECT])
-            ::__add_to_debug(Config():get_config('EmptyObject'))
+            ::__add_to_log(Config():get_config('EmptyObject'))
         OTHERWISE
-            ::__add_to_debug(Config():get_config('UnknownObject'))
+            ::__add_to_log(Config():get_config('UnknownObject'))
     ENDCASE
 
 RETURN .F.
@@ -419,10 +441,12 @@ METHOD __validate_window(axRow, hVariables) CLASS Parser
     LOCAL cType
     LOCAL i
 
+#ifdef USE_VALIDATORS
     IF Len(axRow) != NC_SHADOW_WN
-        ::__add_to_debug(Config():get_config('CorruptionDetected'))
+        ::__add_to_log(Config():get_config('CorruptionDetected'))
         RETURN .F.
     ENDIF
+#endif
 
     FOR i := N_TOP_WN TO N_RIGHT_WN
 
@@ -430,51 +454,63 @@ METHOD __validate_window(axRow, hVariables) CLASS Parser
             RETURN .F.
         ENDIF
 
+#ifdef USE_VALIDATORS
         IF cType != 'N'
-            ::__add_to_debug(Config():get_config('IncorrectDataType'))
+            ::__add_to_log(Config():get_config('IncorrectDataType'))
             RETURN .F.
         ENDIF
+#endif
 
         axRow[i] := cast(axRow[i], cType)
 
+#ifdef USE_VALIDATORS
         IF ValType(axRow[i]) != cType
-            ::__add_to_debug(Config():get_config('IncorrectValue'))
+            ::__add_to_log(Config():get_config('IncorrectValue'))
             RETURN .F.
-#ifdef VALIDATE_DIMENSIONS
-        ELSEIF axRow[i] < 0
-            ::__add_to_debug(Config():get_config('IncorrectValue'))
-            RETURN .F.
-#endif
         ENDIF
+#endif
+#ifdef VALIDATE_DIMENSIONS
+        IF axRow[i] < 0
+            ::__add_to_log(Config():get_config('IncorrectValue'))
+            RETURN .F.
+        ENDIF
+#endif
     NEXT
 
+#ifdef USE_VALIDATORS
     IF axRow[N_BOTTOM_WN] < axRow[N_TOP_WN] .OR. axRow[N_RIGHT_WN] < axRow[N_LEFT_WN]
-        ::__add_to_debug(Config():get_config('IncorrectDimensions'))
+        ::__add_to_log(Config():get_config('IncorrectDimensions'))
         RETURN .F.
-#ifdef VALIDATE_DIMENSIONS
-    ELSEIF axRow[N_BOTTOM_WN] > MaxRow() .OR. axRow[N_TOP_WN] > MaxRow() .OR. axRow[N_RIGHT_WN] > MaxCol() .OR. axRow[N_LEFT_WN] > MaxCol()
-        ::__add_to_debug(Config():get_config('IncorrectValue'))
-        RETURN .F.
-#endif
     ENDIF
+#endif
+#ifdef VALIDATE_DIMENSIONS
+    IF axRow[N_BOTTOM_WN] > MaxRow() .OR. axRow[N_TOP_WN] > MaxRow() .OR. axRow[N_RIGHT_WN] > MaxCol() .OR. axRow[N_LEFT_WN] > MaxCol()
+        ::__add_to_log(Config():get_config('IncorrectValue'))
+        RETURN .F.
+    ENDIF
+#endif
 
     IF !::__basic_parse(@axRow[C_BOX_WN], @cType, hVariables)
         RETURN .F.
     ENDIF
 
+#ifdef USE_VALIDATORS
     IF !is_box(hb_Translate(axRow[C_BOX_WN], 'EN', hb_cdpSelect()))
-        ::__add_to_debug(Config():get_config('IncorrectValue'))
+        ::__add_to_log(Config():get_config('IncorrectValue'))
         RETURN .F.
     ENDIF
+#endif
 
     IF !::__basic_parse(@axRow[C_COLOR_WN], @cType, hVariables)
         RETURN .F.
     ENDIF
 
+#ifdef USE_VALIDATORS
     IF !is_color(axRow[C_COLOR_WN])
-        ::__add_to_debug(Config():get_config('IncorrectValue'))
+        ::__add_to_log(Config():get_config('IncorrectValue'))
         RETURN .F.
     ENDIF
+#endif
 
     IF !::__basic_parse(@axRow[NC_SHADOW_WN], @cType, hVariables)
         RETURN .F.
@@ -482,25 +518,29 @@ METHOD __validate_window(axRow, hVariables) CLASS Parser
 
     axRow[NC_SHADOW_WN] := cast(axRow[NC_SHADOW_WN], cType)
 
+#ifdef USE_VALIDATORS
     IF ValType(axRow[NC_SHADOW_WN]) != cType
-        ::__add_to_debug(Config():get_config('IncorrectValue'))
+        ::__add_to_log(Config():get_config('IncorrectValue'))
         RETURN .F.
     ENDIF
+#endif
 
+#ifdef USE_VALIDATORS
     IF cType == 'C'
         IF AScan({'N', 'B', 'G', 'BG', 'R', 'RB', 'GR', 'W', 'N+', 'B+', 'G+', 'BG+', 'R+', 'RB+', 'GR+', 'W+'}, axRow[NC_SHADOW_WN]) == 0
-            ::__add_to_debug(Config():get_config('IncorrectValue'))
+            ::__add_to_log(Config():get_config('IncorrectValue'))
             RETURN .F.
         ENDIF
     ELSEIF cType == 'N'
         IF axRow[NC_SHADOW_WN] != -1
-            ::__add_to_debug(Config():get_config('IncorrectValue'))
+            ::__add_to_log(Config():get_config('IncorrectValue'))
             RETURN .F.
         ENDIF
     ELSE
-        ::__add_to_debug(Config():get_config('IncorrectDataType'))
+        ::__add_to_log(Config():get_config('IncorrectDataType'))
         RETURN .F.
     ENDIF
+#endif
 
 RETURN .T.
 
@@ -509,10 +549,12 @@ METHOD __validate_box(axRow, hVariables) CLASS Parser
     LOCAL cType
     LOCAL i
 
+#ifdef USE_VALIDATORS
     IF Len(axRow) != C_COLOR_BOX
-        ::__add_to_debug(Config():get_config('CorruptionDetected'))
+        ::__add_to_log(Config():get_config('CorruptionDetected'))
         RETURN .F.
     ENDIF
+#endif
 
     FOR i := N_TOP_BOX TO N_RIGHT_BOX
 
@@ -520,51 +562,63 @@ METHOD __validate_box(axRow, hVariables) CLASS Parser
             RETURN .F.
         ENDIF
 
+#ifdef USE_VALIDATORS
         IF cType != 'N'
-            ::__add_to_debug(Config():get_config('IncorrectDataType'))
+            ::__add_to_log(Config():get_config('IncorrectDataType'))
             RETURN .F.
         ENDIF
+#endif
 
         axRow[i] := cast(axRow[i], cType)
 
+#ifdef USE_VALIDATORS
         IF ValType(axRow[i]) != cType
-            ::__add_to_debug(Config():get_config('IncorrectValue'))
+            ::__add_to_log(Config():get_config('IncorrectValue'))
             RETURN .F.
-#ifdef VALIDATE_DIMENSIONS
-        ELSEIF axRow[i] < 0
-            ::__add_to_debug(Config():get_config('IncorrectValue'))
-            RETURN .F.
-#endif
         ENDIF
+#endif
+#ifdef VALIDATE_DIMENSIONS
+        IF axRow[i] < 0
+            ::__add_to_log(Config():get_config('IncorrectValue'))
+            RETURN .F.
+        ENDIF
+#endif
     NEXT
 
+#ifdef USE_VALIDATORS
     IF axRow[N_BOTTOM_BOX] < axRow[N_TOP_BOX] .OR. axRow[N_RIGHT_BOX] < axRow[N_LEFT_BOX]
-        ::__add_to_debug(Config():get_config('IncorrectDimensions'))
+        ::__add_to_log(Config():get_config('IncorrectDimensions'))
         RETURN .F.
-#ifdef VALIDATE_DIMENSIONS
-    ELSEIF axRow[N_BOTTOM_BOX] > MaxRow() .OR. axRow[N_TOP_BOX] > MaxRow() .OR. axRow[N_RIGHT_BOX] > MaxCol() .OR. axRow[N_LEFT_BOX] > MaxCol()
-        ::__add_to_debug(Config():get_config('IncorrectValue'))
-        RETURN .F.
-#endif
     ENDIF
+#endif
+#ifdef VALIDATE_DIMENSIONS
+    IF axRow[N_BOTTOM_BOX] > MaxRow() .OR. axRow[N_TOP_BOX] > MaxRow() .OR. axRow[N_RIGHT_BOX] > MaxCol() .OR. axRow[N_LEFT_BOX] > MaxCol()
+        ::__add_to_log(Config():get_config('IncorrectValue'))
+        RETURN .F.
+    ENDIF
+#endif
 
     IF !::__basic_parse(@axRow[C_BOX_BOX], @cType, hVariables)
         RETURN .F.
     ENDIF
 
+#ifdef USE_VALIDATORS
     IF !is_box(hb_Translate(axRow[C_BOX_BOX], 'EN', hb_cdpSelect()))
-        ::__add_to_debug(Config():get_config('IncorrectValue'))
+        ::__add_to_log(Config():get_config('IncorrectValue'))
         RETURN .F.
     ENDIF
+#endif
 
     IF !::__basic_parse(@axRow[C_COLOR_BOX], @cType, hVariables)
         RETURN .F.
     ENDIF
 
+#ifdef USE_VALIDATORS
     IF !is_color(axRow[C_COLOR_BOX])
-        ::__add_to_debug(Config():get_config('IncorrectValue'))
+        ::__add_to_log(Config():get_config('IncorrectValue'))
         RETURN .F.
     ENDIF
+#endif
  
 RETURN .T.
 
@@ -573,10 +627,12 @@ METHOD __validate_say(axRow, hVariables) CLASS Parser
     LOCAL cType
     LOCAL i
 
+#ifdef USE_VALIDATORS
     IF Len(axRow) != C_COLOR_SAY
-        ::__add_to_debug(Config():get_config('CorruptionDetected'))
+        ::__add_to_log(Config():get_config('CorruptionDetected'))
         RETURN .F.
     ENDIF
+#endif
 
     FOR i := N_ROW_SAY TO N_COL_SAY
 
@@ -584,27 +640,32 @@ METHOD __validate_say(axRow, hVariables) CLASS Parser
             RETURN .F.
         ENDIF
 
+#ifdef USE_VALIDATORS
         IF cType != 'N'
-            ::__add_to_debug(Config():get_config('IncorrectDataType'))
+            ::__add_to_log(Config():get_config('IncorrectDataType'))
             RETURN .F.
         ENDIF
+#endif
 
         axRow[i] := cast(axRow[i], cType)
 
+#ifdef USE_VALIDATORS
         IF ValType(axRow[i]) != cType
-            ::__add_to_debug(Config():get_config('IncorrectValue'))
+            ::__add_to_log(Config():get_config('IncorrectValue'))
             RETURN .F.
-#ifdef VALIDATE_DIMENSIONS
-        ELSEIF axRow[i] < 0
-            ::__add_to_debug(Config():get_config('IncorrectValue'))
-            RETURN .F.
-#endif
         ENDIF
+#endif
+#ifdef VALIDATE_DIMENSIONS
+        IF axRow[i] < 0
+            ::__add_to_log(Config():get_config('IncorrectValue'))
+            RETURN .F.
+        ENDIF
+#endif
     NEXT
 
 #ifdef VALIDATE_DIMENSIONS
     IF axRow[N_ROW_SAY] > MaxRow() .OR. axRow[N_COL_SAY] > MaxCol()
-        ::__add_to_debug(Config():get_config('IncorrectValue'))
+        ::__add_to_log(Config():get_config('IncorrectValue'))
         RETURN .F.
     ENDIF
 #endif
@@ -613,17 +674,21 @@ METHOD __validate_say(axRow, hVariables) CLASS Parser
         RETURN .F.
     ENDIF
 
+#ifdef USE_VALIDATORS
     IF !(cType $ 'N;L;C;D')
-        ::__add_to_debug(Config():get_config('IncorrectDataType'))
+        ::__add_to_log(Config():get_config('IncorrectDataType'))
         RETURN .F.
     ENDIF
+#endif
 
     axRow[C_EXPRESSION_SAY] := cast(axRow[C_EXPRESSION_SAY], cType)
 
+#ifdef USE_VALIDATORS
     IF ValType(axRow[C_EXPRESSION_SAY]) != cType
-        ::__add_to_debug(Config():get_config('IncorrectValue'))
+        ::__add_to_log(Config():get_config('IncorrectValue'))
         RETURN .F.
     ENDIF
+#endif
 
     FOR i := C_PICTURE_SAY TO C_COLOR_SAY
 
@@ -631,18 +696,20 @@ METHOD __validate_say(axRow, hVariables) CLASS Parser
             RETURN .F.
         ENDIF
 
+#ifdef USE_VALIDATORS
         IF cType != 'C'
-            ::__add_to_debug(Config():get_config('IncorrectDataType'))
+            ::__add_to_log(Config():get_config('IncorrectDataType'))
             RETURN .F.
         ENDIF
 
         IF i == C_PICTURE_SAY .AND. !is_picture(axRow[i])
-            ::__add_to_debug(Config():get_config('IncorrectValue'))
+            ::__add_to_log(Config():get_config('IncorrectValue'))
             RETURN .F.
         ELSEIF i == C_COLOR_SAY .AND. !is_color(axRow[i])
-            ::__add_to_debug(Config():get_config('IncorrectValue'))
+            ::__add_to_log(Config():get_config('IncorrectValue'))
             RETURN .F.
         ENDIF
+#endif
     NEXT
 
 RETURN .T.
@@ -654,10 +721,12 @@ METHOD __validate_get(axRow, hVariables) CLASS Parser
     LOCAL cType
     LOCAL i
 
+#ifdef USE_VALIDATORS
     IF Len(axRow) != C_VALID_FNC_GET
-        ::__add_to_debug(Config():get_config('CorruptionDetected'))
+        ::__add_to_log(Config():get_config('CorruptionDetected'))
         RETURN .F.
     ENDIF
+#endif
     
     ACopy(axRow, axSayPart, N_ROW_GET, C_SAY_COLOR_GET, N_ROW_SAY)
 
@@ -669,34 +738,42 @@ METHOD __validate_get(axRow, hVariables) CLASS Parser
         axRow[i] := axSayPart[i]
     NEXT
 
+#ifdef USE_VALIDATORS
     IF Left(axRow[X_ID_VAR_GET], 1) != VARIABLE
-        ::__add_to_debug(Config():get_config('CorruptionDetected'))
+        ::__add_to_log(Config():get_config('CorruptionDetected'))
         RETURN .F.
     ENDIF
+#endif
 
     cType := SubStr(axRow[X_ID_VAR_GET], 2, 1)
 
+#ifdef USE_VALIDATORS
     IF AScan({'C', 'D', 'L', 'N'}, cType) == 0
-        ::__add_to_debug(Config():get_config('IncorrectDataType'))
+        ::__add_to_log(Config():get_config('IncorrectDataType'))
         RETURN .F.
     ENDIF
 
     IF AScan(::__axUsedKeys, axRow[X_ID_VAR_GET]) != 0
-        ::__add_to_debug(Config():get_config('VariableRepeating'))
+        ::__add_to_log(Config():get_config('VariableRepeating'))
         RETURN .F.
     ENDIF
+#endif
     AAdd(::__axUsedKeys, axRow[X_ID_VAR_GET])
 
     axRow[X_ID_VAR_GET] := AllTrim(Right(axRow[X_ID_VAR_GET], Len(axRow[X_ID_VAR_GET]) - 2))
 
     nIndex := AScan(::__axKeys, axRow[X_ID_VAR_GET])
 
+#ifdef USE_VALIDATORS
     IF nIndex == 0
-        ::__add_to_debug(Config():get_config('UnknownVariable'))
+        ::__add_to_log(Config():get_config('UnknownVariable'))
         RETURN .F.
     ELSE
+#endif
         ::__axValues[nIndex] := cast(::__axValues[nIndex], cType)
+#ifdef USE_VALIDATORS
     ENDIF
+#endif
 
     FOR i := C_GET_PICTURE_GET TO C_VALID_FNC_GET
 
@@ -704,18 +781,20 @@ METHOD __validate_get(axRow, hVariables) CLASS Parser
             RETURN .F.
         ENDIF
 
+#ifdef USE_VALIDATORS
         IF cType != 'C'
-            ::__add_to_debug(Config():get_config('IncorrectDataType'))
+            ::__add_to_log(Config():get_config('IncorrectDataType'))
             RETURN .F.
         ENDIF
 
         IF i == C_GET_PICTURE_GET .AND. !is_picture(axRow[i])
-            ::__add_to_debug(Config():get_config('IncorrectValue'))
+            ::__add_to_log(Config():get_config('IncorrectValue'))
             RETURN .F.
         ELSEIF i == C_GET_COLOR_GET .AND. !is_color(axRow[i])
-            ::__add_to_debug(Config():get_config('IncorrectValue'))
+            ::__add_to_log(Config():get_config('IncorrectValue'))
             RETURN .F.
         ENDIF
+#endif
     NEXT
 
 RETURN .T.
@@ -726,10 +805,12 @@ METHOD __validate_checkbox(axRow, hVariables) CLASS Parser
     LOCAL nIndex
     LOCAL i
 
+#ifdef USE_VALIDATORS
     IF Len(axRow) != C_STYLE_CHB
-        ::__add_to_debug(Config():get_config('CorruptionDetected'))
+        ::__add_to_log(Config():get_config('CorruptionDetected'))
         RETURN .F.
     ENDIF
+#endif
 
     FOR i := N_ROW_CHB TO N_COL_CHB
 
@@ -737,22 +818,27 @@ METHOD __validate_checkbox(axRow, hVariables) CLASS Parser
             RETURN .F.
         ENDIF
 
+#ifdef USE_VALIDATORS
         IF cType != 'N'
-            ::__add_to_debug(Config():get_config('IncorrectDataType'))
+            ::__add_to_log(Config():get_config('IncorrectDataType'))
             RETURN .F.
         ENDIF
+#endif
 
         axRow[i] := cast(axRow[i], cType)
 
+#ifdef USE_VALIDATORS
         IF ValType(axRow[i]) != cType
-            ::__add_to_debug(Config():get_config('IncorrectValue'))
+            ::__add_to_log(Config():get_config('IncorrectValue'))
             RETURN .F.
-#ifdef VALIDATE_DIMENSIONS
-        ELSEIF axRow[i] < 0
-            ::__add_to_debug(Config():get_config('IncorrectValue'))
-            RETURN .F.
-#endif
         ENDIF
+#endif
+#ifdef VALIDATE_DIMENSIONS
+        IF axRow[i] < 0
+            ::__add_to_log(Config():get_config('IncorrectValue'))
+            RETURN .F.
+        ENDIF
+#endif
     NEXT
 
 #ifdef VALIDATE_DIMENSIONS
@@ -761,34 +847,42 @@ METHOD __validate_checkbox(axRow, hVariables) CLASS Parser
     ENDIF
 #endif
 
+#ifdef USE_VALIDATORS
     IF Left(axRow[L_ID_VAR_CHB], 1) != VARIABLE
-        ::__add_to_debug(Config():get_config('CorruptionDetected'))
+        ::__add_to_log(Config():get_config('CorruptionDetected'))
         RETURN .F.
     ENDIF
+#endif
 
     cType := SubStr(axRow[L_ID_VAR_CHB], 2, 1)
 
+#ifdef USE_VALIDATORS
     IF cType != 'L'
-        ::__add_to_debug(Config():get_config('IncorrectDataType'))
+        ::__add_to_log(Config():get_config('IncorrectDataType'))
         RETURN .F.
     ENDIF
 
     IF AScan(::__axUsedKeys, axRow[L_ID_VAR_CHB]) != 0
-        ::__add_to_debug(Config():get_config('VariableRepeating'))
+        ::__add_to_log(Config():get_config('VariableRepeating'))
         RETURN .F.
     ENDIF
+#endif
     AAdd(::__axUsedKeys, axRow[L_ID_VAR_CHB])
 
     axRow[L_ID_VAR_CHB] := AllTrim(Right(axRow[L_ID_VAR_CHB], Len(axRow[L_ID_VAR_CHB]) - 2))
 
     nIndex := AScan(::__axKeys, axRow[L_ID_VAR_CHB])
 
+#ifdef USE_VALIDATORS
     IF nIndex == 0
-        ::__add_to_debug(Config():get_config('UnknownVariable'))
+        ::__add_to_log(Config():get_config('UnknownVariable'))
         RETURN .F.
     ELSE
+#endif
         ::__axValues[nIndex] := cast(::__axValues[nIndex], cType)
+#ifdef USE_VALIDATORS
     ENDIF
+#endif
 
     FOR i := C_CAPTION_CHB TO C_STYLE_CHB
 
@@ -796,23 +890,25 @@ METHOD __validate_checkbox(axRow, hVariables) CLASS Parser
             RETURN .F.
         ENDIF
 
+#ifdef USE_VALIDATORS
         IF cType != 'C'
-            ::__add_to_debug(Config():get_config('IncorrectDataType'))
+            ::__add_to_log(Config():get_config('IncorrectDataType'))
             RETURN .F.
         ENDIF
 
         IF i == C_COLOR_CHB
             IF !is_color(axRow[i])
-                ::__add_to_debug(Config():get_config('IncorrectValue'))
+                ::__add_to_log(Config():get_config('IncorrectValue'))
                 RETURN .F.
             ELSEIF Empty(hb_ColorIndex(axRow[i], 3)) .OR. !Empty(hb_ColorIndex(axRow[i], 4))
-                ::__add_to_debug(Config():get_config('IncorrectValue'))
+                ::__add_to_log(Config():get_config('IncorrectValue'))
                 RETURN .F.
             ENDIF
         ELSEIF i == C_STYLE_CHB .AND. !is_checkbox_style(axRow[i])
-            ::__add_to_debug(Config():get_config('IncorrectValue'))
+            ::__add_to_log(Config():get_config('IncorrectValue'))
             RETURN .F.
         ENDIF
+#endif
     NEXT
 
 RETURN .T.
@@ -824,10 +920,12 @@ METHOD __validate_listbox(axRow, hVariables) CLASS Parser
     LOCAL nIndex
     LOCAL i
 
+#ifdef USE_VALIDATORS
     IF Len(axRow) != L_SCROLLBAR_LSB
-        ::__add_to_debug(Config():get_config('CorruptionDetected'))
+        ::__add_to_log(Config():get_config('CorruptionDetected'))
         RETURN .F.
     ENDIF
+#endif
 
     FOR i := N_TOP_LSB TO N_RIGHT_LSB
 
@@ -835,84 +933,106 @@ METHOD __validate_listbox(axRow, hVariables) CLASS Parser
             RETURN .F.
         ENDIF
 
+#ifdef USE_VALIDATORS
         IF cType != 'N'
-            ::__add_to_debug(Config():get_config('IncorrectDataType'))
+            ::__add_to_log(Config():get_config('IncorrectDataType'))
             RETURN .F.
         ENDIF
+#endif
 
         axRow[i] := cast(axRow[i], cType)
 
+#ifdef USE_VALIDATORS
         IF ValType(axRow[i]) != cType
-            ::__add_to_debug(Config():get_config('IncorrectValue'))
+            ::__add_to_log(Config():get_config('IncorrectValue'))
             RETURN .F.
-#ifdef VALIDATE_DIMENSIONS
-        ELSEIF axRow[i] < 0
-            ::__add_to_debug(Config():get_config('IncorrectValue'))
-            RETURN .F.
-#endif
         ENDIF
+#endif
+#ifdef VALIDATE_DIMENSIONS
+        IF axRow[i] < 0
+            ::__add_to_log(Config():get_config('IncorrectValue'))
+            RETURN .F.
+        ENDIF
+#endif
     NEXT
 
+#ifdef USE_VALIDATORS
     IF axRow[N_BOTTOM_LSB] < axRow[N_TOP_LSB] .OR. axRow[N_RIGHT_LSB] < axRow[N_LEFT_LSB]
-        ::__add_to_debug(Config():get_config('IncorrectDimensions'))
+        ::__add_to_log(Config():get_config('IncorrectDimensions'))
         RETURN .F.
-#ifdef VALIDATE_DIMENSIONS
-    ELSEIF axRow[N_BOTTOM_LSB] > MaxRow() .OR. axRow[N_TOP_LSB] > MaxRow() .OR. axRow[N_RIGHT_LSB] > MaxCol() .OR. axRow[N_LEFT_LSB] > MaxCol()
-        ::__add_to_debug(Config():get_config('IncorrectValue'))
-        RETURN .F.
+    ENDIF
 #endif
-    ENDIF
-
-    IF Left(axRow[NC_ID_VAR_LSB], 1) != VARIABLE
-        ::__add_to_debug(Config():get_config('CorruptionDetected'))
+#ifdef VALIDATE_DIMENSIONS
+    IF axRow[N_BOTTOM_LSB] > MaxRow() .OR. axRow[N_TOP_LSB] > MaxRow() .OR. axRow[N_RIGHT_LSB] > MaxCol() .OR. axRow[N_LEFT_LSB] > MaxCol()
+        ::__add_to_log(Config():get_config('IncorrectValue'))
         RETURN .F.
     ENDIF
+#endif
+
+#ifdef USE_VALIDATORS
+    IF Left(axRow[NC_ID_VAR_LSB], 1) != VARIABLE
+        ::__add_to_log(Config():get_config('CorruptionDetected'))
+        RETURN .F.
+    ENDIF
+#endif
 
     cType := SubStr(axRow[NC_ID_VAR_LSB], 2, 1)
 
+#ifdef USE_VALIDATORS
     IF cType != 'N' .AND. cType != 'C'
-        ::__add_to_debug(Config():get_config('IncorrectDataType'))
+        ::__add_to_log(Config():get_config('IncorrectDataType'))
         RETURN .F.
     ENDIF
 
     IF AScan(::__axUsedKeys, axRow[NC_ID_VAR_LSB]) != 0
-        ::__add_to_debug(Config():get_config('VariableRepeating'))
+        ::__add_to_log(Config():get_config('VariableRepeating'))
         RETURN .F.
     ENDIF
+#endif
     AAdd(::__axUsedKeys, axRow[NC_ID_VAR_LSB])
 
     axRow[NC_ID_VAR_LSB] := AllTrim(Right(axRow[NC_ID_VAR_LSB], Len(axRow[NC_ID_VAR_LSB]) - 2))
 
     nIndex := AScan(::__axKeys, axRow[NC_ID_VAR_LSB])
 
+#ifdef USE_VALIDATORS
     IF nIndex == 0
-        ::__add_to_debug(Config():get_config('UnknownVariable'))
+        ::__add_to_log(Config():get_config('UnknownVariable'))
         RETURN .F.
     ELSE
+#endif
         ::__axValues[nIndex] := cast(::__axValues[nIndex], cType)
+#ifdef USE_VALIDATORS
     ENDIF
+#endif
 
+#ifdef USE_VALIDATORS
     IF ValType(::__axValues[nIndex]) != cType
-        ::__add_to_debug(Config():get_config('IncorrectValue'))
+        ::__add_to_log(Config():get_config('IncorrectValue'))
         RETURN .F.
     ENDIF
+#endif
 
     IF !::__basic_parse(@axRow[A_LIST_LSB], @cType, hVariables)
         RETURN .F.
     ENDIF
 
+#ifdef USE_VALIDATORS
     IF cType != 'A'
-        ::__add_to_debug(Config():get_config('IncorrectDataType'))
+        ::__add_to_log(Config():get_config('IncorrectDataType'))
         RETURN .F.
     ENDIF
+#endif
 
     IF ValType(axRow[A_LIST_LSB]) != 'A'
         hHash := hb_JsonDecode(axRow[A_LIST_LSB])
 
+#ifdef USE_VALIDATORS
         IF ValType(hHash) != 'H'
-            ::__add_to_debug(Config():get_config('IncorrectValue'))
+            ::__add_to_log(Config():get_config('IncorrectValue'))
             RETURN .F.
         ENDIF
+#endif
         axRow[A_LIST_LSB] := hHash[hb_hKeys(hHash)[1]]
     ENDIF
 
@@ -922,15 +1042,17 @@ METHOD __validate_listbox(axRow, hVariables) CLASS Parser
             RETURN .F.
         ENDIF
 
+#ifdef USE_VALIDATORS
         IF cType != 'C'
-            ::__add_to_debug(Config():get_config('IncorrectDataType'))
+            ::__add_to_log(Config():get_config('IncorrectDataType'))
             RETURN .F.
         ENDIF
 
         IF i == C_COLOR_LSB .AND. !is_color(axRow[i])
-            ::__add_to_debug(Config():get_config('IncorrectValue'))
+            ::__add_to_log(Config():get_config('IncorrectValue'))
             RETURN .F.
         ENDIF
+#endif
     NEXT
 
     FOR i := L_DROPDOWN_LSB TO L_SCROLLBAR_LSB
@@ -939,29 +1061,35 @@ METHOD __validate_listbox(axRow, hVariables) CLASS Parser
             RETURN .F.
         ENDIF
 
+#ifdef USE_VALIDATORS
         IF cType != 'L'
             RETURN .F.
         ENDIF
+#endif
 
         axRow[i] := cast(axRow[i], cType)
 
+#ifdef USE_VALIDATORS
         IF ValType(axRow[i]) != cType
-            ::__add_to_debug(Config():get_config('IncorrectValue'))
+            ::__add_to_log(Config():get_config('IncorrectValue'))
             RETURN .F.
         ENDIF
+#endif
     NEXT
 
+#ifdef USE_VALIDATORS
     IF axRow[L_DROPDOWN_LSB]
         IF Empty(hb_ColorIndex(axRow[C_COLOR_LSB], 7)) .OR. !Empty(hb_ColorIndex(axRow[C_COLOR_LSB], 8))
-            ::__add_to_debug(Config():get_config('IncorrectValue'))
+            ::__add_to_log(Config():get_config('IncorrectValue'))
             RETURN .F.
         ENDIF
     ELSE
         IF Empty(hb_ColorIndex(axRow[C_COLOR_LSB], 6)) .OR. !Empty(hb_ColorIndex(axRow[C_COLOR_LSB], 7))
-            ::__add_to_debug(Config():get_config('IncorrectValue'))
+            ::__add_to_log(Config():get_config('IncorrectValue'))
             RETURN .F.
         ENDIF
     ENDIF
+#endif
 
 RETURN .T.
 
@@ -972,10 +1100,12 @@ METHOD __validate_radiogroup(axRow, hVariables) CLASS Parser
     LOCAL nIndex
     LOCAL i
 
+#ifdef USE_VALIDATORS
     IF Len(axRow) != C_VALID_FNC_RGB
-        ::__add_to_debug(Config():get_config('CorruptionDetected'))
+        ::__add_to_log(Config():get_config('CorruptionDetected'))
         RETURN .F.
     ENDIF
+#endif
 
     FOR i := N_TOP_RGB TO N_RIGHT_RGB
 
@@ -983,85 +1113,107 @@ METHOD __validate_radiogroup(axRow, hVariables) CLASS Parser
             RETURN .F.
         ENDIF
 
+#ifdef USE_VALIDATORS
         IF cType != 'N'
-            ::__add_to_debug(Config():get_config('IncorrectDataType'))
+            ::__add_to_log(Config():get_config('IncorrectDataType'))
             RETURN .F.
         ENDIF
+#endif
 
         axRow[i] := cast(axRow[i], cType)
 
+#ifdef USE_VALIDATORS
         IF ValType(axRow[i]) != cType
-            ::__add_to_debug(Config():get_config('IncorrectValue'))
+            ::__add_to_log(Config():get_config('IncorrectValue'))
             RETURN .F.
-#ifdef VALIDATE_DIMENSIONS
-        ELSEIF axRow[i] < 0
-            ::__add_to_debug(Config():get_config('IncorrectValue'))
-            RETURN .F.
-#endif
         ENDIF
+#endif
+#ifdef VALIDATE_DIMENSIONS
+        IF axRow[i] < 0
+            ::__add_to_log(Config():get_config('IncorrectValue'))
+            RETURN .F.
+        ENDIF
+#endif
     NEXT
 
+#ifdef USE_VALIDATORS
     IF axRow[N_BOTTOM_RGB] < axRow[N_TOP_RGB] .OR. axRow[N_RIGHT_RGB] < axRow[N_LEFT_RGB]
-        ::__add_to_debug(Config():get_config('IncorrectDimensions'))
+        ::__add_to_log(Config():get_config('IncorrectDimensions'))
         RETURN .F.
-#ifdef VALIDATE_DIMENSIONS
-    ELSEIF axRow[N_BOTTOM_RGB] > MaxRow() .OR. axRow[N_TOP_RGB] > MaxRow() .OR. axRow[N_RIGHT_RGB] > MaxCol() .OR. axRow[N_LEFT_RGB] > MaxCol()
-        ::__add_to_debug(Config():get_config('IncorrectValue'))
-        RETURN .F.
+    ENDIF
 #endif
-    ENDIF
-
-    IF Left(axRow[NC_ID_VAR_RGB], 1) != VARIABLE
-        ::__add_to_debug(Config():get_config('CorruptionDetected'))
+#ifdef VALIDATE_DIMENSIONS
+    IF axRow[N_BOTTOM_RGB] > MaxRow() .OR. axRow[N_TOP_RGB] > MaxRow() .OR. axRow[N_RIGHT_RGB] > MaxCol() .OR. axRow[N_LEFT_RGB] > MaxCol()
+        ::__add_to_log(Config():get_config('IncorrectValue'))
         RETURN .F.
     ENDIF
+#endif
+
+#ifdef USE_VALIDATORS
+    IF Left(axRow[NC_ID_VAR_RGB], 1) != VARIABLE
+        ::__add_to_log(Config():get_config('CorruptionDetected'))
+        RETURN .F.
+    ENDIF
+#endif
 
     cType := SubStr(axRow[NC_ID_VAR_RGB], 2, 1)
 
+#ifdef USE_VALIDATORS
     IF cType != 'N' .AND. cType != 'C'
-        ::__add_to_debug(Config():get_config('IncorrectDataType'))
+        ::__add_to_log(Config():get_config('IncorrectDataType'))
         RETURN .F.
     ENDIF
 
     IF AScan(::__axUsedKeys, axRow[NC_ID_VAR_RGB]) != 0
-        ::__add_to_debug(Config():get_config('VariableRepeating'))
+        ::__add_to_log(Config():get_config('VariableRepeating'))
         RETURN .F.
     ENDIF
+#endif
     AAdd(::__axUsedKeys, axRow[NC_ID_VAR_RGB])
 
     axRow[NC_ID_VAR_RGB] := AllTrim(Right(axRow[NC_ID_VAR_RGB], Len(axRow[NC_ID_VAR_RGB]) - 2))
 
     nIndex := AScan(::__axKeys, axRow[NC_ID_VAR_RGB])
 
+#ifdef USE_VALIDATORS
     IF nIndex == 0
-        ::__add_to_debug(Config():get_config('UnknownVariable'))
+        ::__add_to_log(Config():get_config('UnknownVariable'))
         RETURN .F.
     ELSE
+#endif
         ::__axValues[nIndex] := cast(::__axValues[nIndex], cType)
+#ifdef USE_VALIDATORS
     ENDIF
+#endif
 
     axRow[NC_ID_VAR_RGB] := cast(axRow[NC_ID_VAR_RGB], cType)
 
+#ifdef USE_VALIDATORS
     IF ValType(axRow[NC_ID_VAR_RGB]) != cType
-        ::__add_to_debug(Config():get_config('IncorrectValue'))
+        ::__add_to_log(Config():get_config('IncorrectValue'))
         RETURN .F.
     ENDIF
+#endif
 
     IF !::__basic_parse(@axRow[A_GROUP_RGB], @cType, hVariables)
         RETURN .F.
     ENDIF
 
+#ifdef USE_VALIDATORS
     IF cType != 'A'
-        ::__add_to_debug(Config():get_config('IncorrectDataType'))
+        ::__add_to_log(Config():get_config('IncorrectDataType'))
         RETURN .F.
     ENDIF
+#endif
 
     IF ValType(axRow[A_GROUP_RGB]) != 'A'
         hHash := hb_JsonDecode(axRow[A_GROUP_RGB])
+#ifdef USE_VALIDATORS
         IF ValType(hHash) != 'H'
-            ::__add_to_debug(Config():get_config('IncorrectValue'))
+            ::__add_to_log(Config():get_config('IncorrectValue'))
             RETURN .F.
         ENDIF
+#endif
         axRow[A_GROUP_RGB] := hHash[hb_hKeys(hHash)[1]]
     ENDIF
 
@@ -1071,20 +1223,22 @@ METHOD __validate_radiogroup(axRow, hVariables) CLASS Parser
             RETURN .F.
         ENDIF
 
+#ifdef USE_VALIDATORS
         IF cType != 'C'
-            ::__add_to_debug(Config():get_config('IncorrectDataType'))
+            ::__add_to_log(Config():get_config('IncorrectDataType'))
             RETURN .F.
         ENDIF
 
         IF i == C_COLOR_RGB 
             IF !is_color(axRow[i])
-                ::__add_to_debug(Config():get_config('IncorrectValue'))
+                ::__add_to_log(Config():get_config('IncorrectValue'))
                 RETURN .F.
             ELSEIF Empty(hb_ColorIndex(axRow[i], 2)) .OR. !Empty(hb_ColorIndex(axRow[i], 3))
-                ::__add_to_debug(Config():get_config('IncorrectValue'))
+                ::__add_to_log(Config():get_config('IncorrectValue'))
                 RETURN .F.
             ENDIF
         ENDIF
+#endif
     NEXT
 
 RETURN .T.
@@ -1095,10 +1249,12 @@ METHOD __validate_pushbutton(axRow, hVariables) CLASS Parser
     LOCAL nIndex
     LOCAL i
 
+#ifdef USE_VALIDATORS
     IF Len(axRow) != C_STYLE_PSB
-        ::__add_to_debug(Config():get_config('CorruptionDetected'))
+        ::__add_to_log(Config():get_config('CorruptionDetected'))
         RETURN .F.
     ENDIF
+#endif
 
     FOR i := N_ROW_PSB TO N_COL_PSB
 
@@ -1106,52 +1262,67 @@ METHOD __validate_pushbutton(axRow, hVariables) CLASS Parser
             RETURN .F.
         ENDIF
 
+#ifdef USE_VALIDATORS
         IF cType != 'N'
-            ::__add_to_debug(Config():get_config('IncorrectDataType'))
+            ::__add_to_log(Config():get_config('IncorrectDataType'))
             RETURN .F.
         ENDIF
+#endif
 
         axRow[i] := cast(axRow[i], cType)
 
+#ifdef USE_VALIDATORS
         IF ValType(axRow[i]) != cType
-            ::__add_to_debug(Config():get_config('IncorrectValue'))
+            ::__add_to_log(Config():get_config('IncorrectValue'))
             RETURN .F.
-#ifdef VALIDATE_DIMENSIONS
-        ELSEIF axRow[i] < 0
-            ::__add_to_debug(Config():get_config('IncorrectValue'))
-            RETURN .F.
-#endif
         ENDIF
+#endif
+#ifdef VALIDATE_DIMENSIONS
+        IF axRow[i] < 0
+            ::__add_to_log(Config():get_config('IncorrectValue'))
+            RETURN .F.
+        ENDIF
+#endif
     NEXT
 
+#ifdef VALIDATE_DIMENSIONS
     IF Left(axRow[L_ID_VAR_PSB], 1) != VARIABLE
-        ::__add_to_debug(Config():get_config('CorruptionDetected'))
+        ::__add_to_log(Config():get_config('CorruptionDetected'))
         RETURN .F.
     ENDIF
+#endif
 
     cType := SubStr(axRow[L_ID_VAR_PSB], 2, 1)
 
+#ifdef VALIDATE_DIMENSIONS
     IF cType != 'L'
-        ::__add_to_debug(Config():get_config('IncorrectDataType'))
+        ::__add_to_log(Config():get_config('IncorrectDataType'))
         RETURN .F.
     ENDIF
+#endif
 
+#ifdef VALIDATE_DIMENSIONS
     IF AScan(::__axUsedKeys, axRow[L_ID_VAR_PSB]) != 0
-        ::__add_to_debug(Config():get_config('VariableRepeating'))
+        ::__add_to_log(Config():get_config('VariableRepeating'))
         RETURN .F.
     ENDIF
+#endif
     AAdd(::__axUsedKeys, axRow[L_ID_VAR_PSB])
 
     axRow[L_ID_VAR_PSB] := AllTrim(Right(axRow[L_ID_VAR_PSB], Len(axRow[L_ID_VAR_PSB]) - 2))
 
     nIndex := AScan(::__axKeys, axRow[L_ID_VAR_PSB])
 
+#ifdef VALIDATE_DIMENSIONS
     IF nIndex == 0
-        ::__add_to_debug(Config():get_config('UnknownVariable'))
+        ::__add_to_log(Config():get_config('UnknownVariable'))
         RETURN .F.
     ELSE
+#endif
         ::__axValues[nIndex] := cast(::__axValues[nIndex], cType)
+#ifdef VALIDATE_DIMENSIONS
     ENDIF
+#endif
 
     FOR i := C_CAPTION_PSB TO C_COLOR_PSB
 
@@ -1159,20 +1330,22 @@ METHOD __validate_pushbutton(axRow, hVariables) CLASS Parser
             RETURN .F.
         ENDIF
 
+#ifdef VALIDATE_DIMENSIONS
         IF cType != 'C'
-            ::__add_to_debug(Config():get_config('IncorrectDataType'))
+            ::__add_to_log(Config():get_config('IncorrectDataType'))
             RETURN .F.
         ENDIF
 
         IF i == C_COLOR_PSB
             IF !is_color(axRow[i])
-                ::__add_to_debug(Config():get_config('IncorrectValue'))
+                ::__add_to_log(Config():get_config('IncorrectValue'))
                 RETURN .F.
             ELSEIF Empty(hb_ColorIndex(axRow[i], 3)) .OR. !Empty(hb_ColorIndex(axRow[i], 5))
-                ::__add_to_debug(Config():get_config('IncorrectValue'))
+                ::__add_to_log(Config():get_config('IncorrectValue'))
                 RETURN .F.
             ENDIF
         ENDIF
+#endif
     NEXT
 
     FOR i := C_FOCUS_FNC_PSB TO C_STYLE_PSB
@@ -1181,15 +1354,17 @@ METHOD __validate_pushbutton(axRow, hVariables) CLASS Parser
             RETURN .F.
         ENDIF
 
+#ifdef VALIDATE_DIMENSIONS
         IF cType != 'C'
-            ::__add_to_debug(Config():get_config('IncorrectDataType'))
+            ::__add_to_log(Config():get_config('IncorrectDataType'))
             RETURN .F.
         ENDIF
 
         IF i == C_STYLE_PSB .AND. !is_pushbutton_style(axRow[i])
-            ::__add_to_debug(Config():get_config('IncorrectValue'))
+            ::__add_to_log(Config():get_config('IncorrectValue'))
             RETURN .F.
         ENDIF
+#endif
     NEXT
 
 RETURN .T.
