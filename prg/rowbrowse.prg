@@ -30,8 +30,8 @@ EXPORTED:
     METHOD get_separator(nIndex)
     METHOD get_header(nIndex)
 
-    METHOD home() INLINE IF(::__lActive, ::__go_first_visible(::__oTBrowse:rowPos), throw(RUNTIME_EXCEPTION))
-    METHOD end() INLINE IF(::__lActive, ::__go_last_visible(::__oTBrowse:rowPos, ::__oTBrowse:rowCount()), throw(RUNTIME_EXCEPTION))
+    METHOD home() INLINE IF(::__lPrepared, ::__go_first_visible(::__oTBrowse:rowPos), throw(RUNTIME_EXCEPTION))
+    METHOD end() INLINE IF(::__lPrepared, ::__go_last_visible(::__oTBrowse:rowPos, ::__oTBrowse:rowCount()), throw(RUNTIME_EXCEPTION))
 
     METHOD search(cTarget, lExactly, cPattern)
     METHOD search_keys(cSearchKeys)
@@ -64,24 +64,24 @@ EXPORTED:
     METHOD color_block(bColorBlock) SETGET                          // TBColumn colorBlock
 
     //Exported methods wrappers
-    METHOD down() INLINE IF(::__lActive, (::__oTBrowse:down(), NIL), throw(RUNTIME_EXCEPTION))                       // down() wrapper
-    METHOD up() INLINE IF(::__lActive, (::__oTBrowse:up(), NIL), throw(RUNTIME_EXCEPTION))                           // up() wrapper
-    METHOD go_top() INLINE IF(::__lActive, (::__oTBrowse:goTop(), NIL), throw(RUNTIME_EXCEPTION))                    // goTop() wrapper
-    METHOD go_bottom() INLINE IF(::__lActive, (::__oTBrowse:goBottom(), NIL), throw(RUNTIME_EXCEPTION))              // goBottom() wrapper
-    METHOD page_down() INLINE IF(::__lActive, (::__oTBrowse:pageDown(), NIL), throw(RUNTIME_EXCEPTION))              // pageDown() wrapper
-    METHOD page_up() INLINE IF(::__lActive, (::__oTBrowse:pageUp(), NIL), throw(RUNTIME_EXCEPTION))                  // pageUp() wrapper
-    METHOD configure() INLINE IF(::__lActive, (::__oTBrowse:configure(), NIL), throw(RUNTIME_EXCEPTION))             // configure() wrapper
-    METHOD dehighlight() INLINE IF(::__lActive, (::__oTBrowse:deHilite(), NIL), throw(RUNTIME_EXCEPTION))            // deHilite() wrapper
-    METHOD force_stable() INLINE IF(::__lActive, (::__oTBrowse:forceStable(), NIL), throw(RUNTIME_EXCEPTION))        // forceStable() wrapper
-    METHOD highlight() INLINE IF(::__lActive, (::__oTBrowse:hilite(), NIL), throw(RUNTIME_EXCEPTION))                // Hilite() wrapper
-    METHOD invalidate() INLINE IF(::__lActive, (::__oTBrowse:invalidate(), NIL), throw(RUNTIME_EXCEPTION))           // invalidate() wrapper
-    METHOD refresh_all() INLINE IF(::__lActive, (::__oTBrowse:refreshAll(), NIL), throw(RUNTIME_EXCEPTION))          // refreshAll() wrapper
-    METHOD refresh_current() INLINE IF(::__lActive, (::__oTBrowse:refreshCurrent(), NIL), throw(RUNTIME_EXCEPTION))  // refreshCurrent() wrapper
-    METHOD stabilize() INLINE IF(::__lActive, (::__oTBrowse:stabilize(), NIL), throw(RUNTIME_EXCEPTION))             // stabilize() wrapper
-    METHOD row_count() INLINE IF(::__lActive, ::__oTBrowse:rowCount(), throw(RUNTIME_EXCEPTION))                     // rowCount() wrapper
-    METHOD get_row_pos() INLINE IF(::__lActive, ::__oTBrowse:rowPos, throw(RUNTIME_EXCEPTION))                       // getRowPos wrapper
-    METHOD color_rectangle(anRows, anColors)                                                                         // colorRect() wrapper
-    METHOD hit_test(nRow)                                                                                            // HitTest() wrapper
+    METHOD down() INLINE IF(::__lPrepared, (::__oTBrowse:down(), NIL), throw(RUNTIME_EXCEPTION))                       // down() wrapper
+    METHOD up() INLINE IF(::__lPrepared, (::__oTBrowse:up(), NIL), throw(RUNTIME_EXCEPTION))                           // up() wrapper
+    METHOD go_top() INLINE IF(::__lPrepared, (::__oTBrowse:goTop(), NIL), throw(RUNTIME_EXCEPTION))                    // goTop() wrapper
+    METHOD go_bottom() INLINE IF(::__lPrepared, (::__oTBrowse:goBottom(), NIL), throw(RUNTIME_EXCEPTION))              // goBottom() wrapper
+    METHOD page_down() INLINE IF(::__lPrepared, (::__oTBrowse:pageDown(), NIL), throw(RUNTIME_EXCEPTION))              // pageDown() wrapper
+    METHOD page_up() INLINE IF(::__lPrepared, (::__oTBrowse:pageUp(), NIL), throw(RUNTIME_EXCEPTION))                  // pageUp() wrapper
+    METHOD configure() INLINE IF(::__lPrepared, (::__oTBrowse:configure(), NIL), throw(RUNTIME_EXCEPTION))             // configure() wrapper
+    METHOD dehighlight() INLINE IF(::__lPrepared, (::__oTBrowse:deHilite(), NIL), throw(RUNTIME_EXCEPTION))            // deHilite() wrapper
+    METHOD force_stable() INLINE IF(::__lPrepared, (::__oTBrowse:forceStable(), NIL), throw(RUNTIME_EXCEPTION))        // forceStable() wrapper
+    METHOD highlight() INLINE IF(::__lPrepared, (::__oTBrowse:hilite(), NIL), throw(RUNTIME_EXCEPTION))                // Hilite() wrapper
+    METHOD invalidate() INLINE IF(::__lPrepared, (::__oTBrowse:invalidate(), NIL), throw(RUNTIME_EXCEPTION))           // invalidate() wrapper
+    METHOD refresh_all() INLINE IF(::__lPrepared, (::__oTBrowse:refreshAll(), NIL), throw(RUNTIME_EXCEPTION))          // refreshAll() wrapper
+    METHOD refresh_current() INLINE IF(::__lPrepared, (::__oTBrowse:refreshCurrent(), NIL), throw(RUNTIME_EXCEPTION))  // refreshCurrent() wrapper
+    METHOD stabilize() INLINE IF(::__lPrepared, (::__oTBrowse:stabilize(), NIL), throw(RUNTIME_EXCEPTION))             // stabilize() wrapper
+    METHOD row_count() INLINE IF(::__lPrepared, ::__oTBrowse:rowCount(), throw(RUNTIME_EXCEPTION))                     // rowCount() wrapper
+    METHOD get_row_pos() INLINE IF(::__lPrepared, ::__oTBrowse:rowPos, throw(RUNTIME_EXCEPTION))                       // getRowPos wrapper
+    METHOD color_rectangle(anRows, anColors)                                                                           // colorRect() wrapper
+    METHOD hit_test(nRow)                                                                                              // HitTest() wrapper
 
 HIDDEN:
 
@@ -198,7 +198,7 @@ METHOD color_rectangle(anRows, anColors) CLASS Row_browse
 #ifdef USE_VALIDATORS
     LOCAL nNumber
 
-    IF !::__lActive
+    IF !::__lPrepared
         throw(RUNTIME_EXCEPTION)
     ENDIF
 
@@ -475,9 +475,9 @@ RETURN cOldColor
 
 METHOD hit_bottom(lHitBottom) CLASS Row_browse
 
-    LOCAL xOldHitBottom := IF(::__lActive, ::__oTBrowse:getBottomFlag(), NIL)
+    LOCAL xOldHitBottom := IF(::__lPrepared, ::__oTBrowse:getBottomFlag(), NIL)
 
-    IF lHitBottom != NIL .AND. ::__lActive
+    IF lHitBottom != NIL .AND. ::__lPrepared
 #ifdef USE_VALIDATORS
         assert_type(lHitBottom, 'L')
 #endif
@@ -488,9 +488,9 @@ RETURN xOldHitBottom
 
 METHOD hit_top(lHitTop) CLASS Row_browse
 
-    LOCAL xOldHitTop := IF(::__lActive, ::__oTBrowse:getTopFlag(), NIL)
+    LOCAL xOldHitTop := IF(::__lPrepared, ::__oTBrowse:getTopFlag(), NIL)
 
-    IF lHitTop != NIL .AND. ::__lActive
+    IF lHitTop != NIL .AND. ::__lPrepared
 #ifdef USE_VALIDATORS
         assert_type(lHitTop, 'L')
 #endif
@@ -566,9 +566,9 @@ RETURN bOldGoTop
 
 METHOD stable(lStable) CLASS Row_browse
 
-    LOCAL xOldStable := IF(::__lActive, ::__oTBrowse:getStableFlag(), NIL)
+    LOCAL xOldStable := IF(::__lPrepared, ::__oTBrowse:getStableFlag(), NIL)
 
-    IF lStable != NIL .AND. ::__lActive
+    IF lStable != NIL .AND. ::__lPrepared
 #ifdef USE_VALIDATORS
         assert_type(lStable, 'L')
 #endif
