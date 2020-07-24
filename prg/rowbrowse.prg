@@ -300,13 +300,14 @@ METHOD __keys_map_asserts(hKeysMap) CLASS Row_browse
     LOCAL nKey
 
     assert_type(hKeysMap, 'H')
-    assert_length(hKeysMap, Len(::__hKeysMap))
 
     FOR EACH nKey IN hb_hKeys(hKeysMap)
         assert_type(nKey, 'N')
         assert_type(hKeysMap[nKey], 'N')
 
         IF nKey < 0 .OR. hKeysMap[nKey] < 0
+            throw(ARGUMENT_VALUE_EXCEPTION)
+        ELSEIF AScan({K_ESC, K_DOWN, K_UP, K_PGUP, K_PGDN, K_HOME, K_END, K_CTRL_HOME, K_CTRL_END}, hKeysMap[nKey]) == 0
             throw(ARGUMENT_VALUE_EXCEPTION)
         ENDIF
     NEXT

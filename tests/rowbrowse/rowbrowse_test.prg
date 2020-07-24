@@ -7,7 +7,7 @@ PROCEDURE main()
     LOCAL oRowBrowse
     LOCAL hKeysMap := {K_ESC => K_ESC, K_DOWN => K_DOWN, K_UP => K_UP, K_PGUP => K_PGUP;
                        , K_PGDN => K_PGDN, K_HOME => K_HOME, K_END => K_END, K_CTRL_HOME => K_CTRL_HOME;
-                       , K_ENTER => K_CTRL_END;
+                       , K_ENTER => K_CTRL_END, K_CTRL_PGDN => K_CTRL_END, K_CTRL_PGUP => K_CTRL_HOME;
                       }
 
     USE dbRowBrowse NEW
@@ -32,6 +32,7 @@ PROCEDURE main()
     AEval(oRowBrowse:how_to(), {| axRow | AEval(axRow, {| xField, nIndex | QOut(nIndex), QQout(' -> '), QQOut(xField)}), QQOut(hb_OsNewLine())})
 
     Inkey(0)
+    CLS
 
     oRowBrowse:how_to({{10, 10, .T., ' ', 'L', '25%', '||', 'R', 'field->second'}})
 
