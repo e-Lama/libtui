@@ -220,6 +220,16 @@ STATIC FUNCTION __create_color_regexp(cPattern)
 
 RETURN hb_RegExComp(cRegEx)
 
+FUNCTION is_function_name(cFunctionName)
+
+#ifdef USE_VALIDATORS
+    IF PCount() != 1
+        throw(ARGUMENTS_NUMBER_EXCEPTION)
+    ENDIF
+#endif
+
+RETURN ValType(cFunctionName) == 'C' .AND. !Empty(cFunctionName) .AND. !(' ' $ cFunctionName) .AND. (Left(cFunctionName, 1) == '_' .OR. isAlpha(Left(cFunctionName, 1)))
+
 FUNCTION is_box(cBoxString)
 
 #ifdef USE_VALIDATORS
@@ -229,6 +239,16 @@ FUNCTION is_box(cBoxString)
 #endif
 
 RETURN ValType(cBoxString) == 'C' .AND. (Len(cBoxString) == 8 .OR. Len(cBoxString) == 9)
+
+FUNCTION is_scrollbar_style(cStyleString)
+
+#ifdef USE_VALIDATORS
+    IF PCount() != 1
+        throw(ARGUMENTS_NUMBER_EXCEPTION)
+    ENDIF
+#endif
+
+RETURN ValType(cStyleString) == 'C' .AND. Len(cStyleString) == 4
 
 FUNCTION is_pushbutton_style(cStyleString)
 

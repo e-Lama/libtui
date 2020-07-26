@@ -11,7 +11,7 @@
 #define SCROLLBAR_DOWN 3
 #define SCROLLBAR_RIGHT 4
 
-#command @ <top>, <left>, <bottom>, <right> MENU TO <ret> ITEMS <items> SELECTABLE <selectable> ;
+#command @ <top>, <left>, <bottom>, <right> MENUMTO <ret> ITEMS <items> [SELCTABLE <selectable>] ;
            [FUNCTION <function>] [STARTFROM <initialitem>] [COLOR <color>] [BORDER <border>] ;
            [ ;
                TITLE <title> [TITLECOLOR <titlecolor>] [ALIGN <align>] ; 

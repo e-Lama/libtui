@@ -32,7 +32,7 @@
            [BORDER <border>] [TITLE <title>] [ALIGN <align>] [TITLECOLOR <titlecolor>] ;
            [ROW <row>] [ACTION <action>] [COLORBLOCK <colorblock>] ;
            [HEADERCOLOR <headercolor>] [KEYMAP <keymap>] [CARGO <cargo>];
-           [AUTOHIGHLIGHT <autohighlight>] [SKIP <skip>] [GOBOTTOM <gobottom>] [GOTOP <gotop>]  => ;
+           [AUTOHIGHLIGHT <autohighlight>] [SKIP <skip>] [GOBOTTOM <gobottom>] [GOTOP <gotop>] => ;
            <obj> := Row_browse():new(<id>, <top>, <left>, <bottom>, <right>, <color> ;
                                     , <border>, <title>, <align>, <titlecolor>, <row>, <action> ;
                                     , <colorblock>, <headercolor>, <keymap>, <cargo> ;
