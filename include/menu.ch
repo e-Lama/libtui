@@ -1,10 +1,10 @@
-#define SELECT 1
-#define ABORT 2
-#define UP 3
-#define LEFT 4
-#define DOWN 5
-#define RIGHT 6
-#define CENTER 7
+#define MENU_SELECT 1
+#define MENU_ABORT 2
+#define MENU_UP 3
+#define MENU_LEFT 4
+#define MENU_DOWN 5
+#define MENU_RIGHT 6
+#define MENU_CENTER 7
 
 #define SCROLLBAR_UP 1
 #define SCROLLBAR_LEFT 2

@@ -348,7 +348,7 @@ FUNCTION display_menu(nTop, nLeft, nBottom, nRight, acMenuItems, xSelectable, xU
 
 RETURN nSelectedItem
 
-FUNCTION display_menu_autosize(nTop, nLeft, acMenuItems, xSelectable, xUserFunctionName, nInitialItem, cColor, cBorder, cTitle, cTitleColor, cTitleAlign)
+FUNCTION display_menu_autosize(nTop, nLeft, acMenuItems, xSelectable, xUserFunctionName, nInitialItem, cColor, cBorder, cTitle, cTitleColor, cTitleAlign, lScrollBar, nScrollBarFrom, nScrollBarTo, cScrollBarColor, nScrollBarOrientation, xScrollBarCargo, cScrollBarStyle, bScrollBarSBlock)
 
     LOCAL nBottom
     LOCAL nRight
@@ -368,9 +368,10 @@ FUNCTION display_menu_autosize(nTop, nLeft, acMenuItems, xSelectable, xUserFunct
         nRight := Max(nRight, nLeft + Len(cTitle))
     ENDIF
 
-RETURN display_menu(nTop, nLeft, nBottom, nRight, acMenuItems, xSelectable, xUserFunctionName, nInitialItem, cColor, cBorder, cTitle, cTitleColor, cTitleAlign)
+RETURN display_menu(nTop, nLeft, nBottom, nRight, acMenuItems, xSelectable, xUserFunctionName, nInitialItem, cColor, cBorder, cTitle, cTitleColor, cTitleAlign, lScrollBar, nScrollBarFrom, nScrollBarTo, cScrollBarColor, nScrollBarOrientation, xScrollBarCargo, cScrollBarStyle, bScrollBarSBlock)
 
-FUNCTION display_menu_center(nCenterRow, nCenterCol, nHeight, nWidth, acMenuItems, xSelectable, xUserFunctionName, nInitialItem, cColor, cBorder, cTitle, cTitleColor, cTitleAlign)
+
+FUNCTION display_menu_center(nCenterRow, nCenterCol, nHeight, nWidth, acMenuItems, xSelectable, xUserFunctionName, nInitialItem, cColor, cBorder, cTitle, cTitleColor, cTitleAlign, lScrollBar, nScrollBarFrom, nScrollBarTo, cScrollBarColor, nScrollBarOrientation, xScrollBarCargo, cScrollBarStyle, bScrollBarSBlock)
 
     LOCAL nTop
     LOCAL nLeft
@@ -389,9 +390,9 @@ FUNCTION display_menu_center(nCenterRow, nCenterCol, nHeight, nWidth, acMenuItem
     nBottom := nCenterRow + Int((nHeight + 1) / 2)
     nRight := nCenterCol + Int((nWidth + 1) / 2)
 
-RETURN display_menu(nTop, nLeft, nBottom, nRight, acMenuItems, xSelectable, xUserFunctionName, nInitialItem, cColor, cBorder, cTitle, cTitleColor, cTitleAlign)
+RETURN display_menu(nTop, nLeft, nBottom, nRight, acMenuItems, xSelectable, xUserFunctionName, nInitialItem, cColor, cBorder, cTitle, cTitleColor, cTitleAlign, lScrollBar, nScrollBarFrom, nScrollBarTo, cScrollBarColor, nScrollBarOrientation, xScrollBarCargo, cScrollBarStyle, bScrollBarSBlock)
 
-FUNCTION display_menu_center_autosize(nCenterRow, nCenterCol, acMenuItems, xSelectable, xUserFunctionName, nInitialItem, cColor, cBorder, cTitle, cTitleColor, cTitleAlign)
+FUNCTION display_menu_center_autosize(nCenterRow, nCenterCol, acMenuItems, xSelectable, xUserFunctionName, nInitialItem, cColor, cBorder, cTitle, cTitleColor, cTitleAlign, lScrollBar, nScrollBarFrom, nScrollBarTo, cScrollBarColor, nScrollBarOrientation, xScrollBarCargo, cScrollBarStyle, bScrollBarSBlock)
 
     LOCAL nHeight
     LOCAL nWidth
@@ -408,7 +409,7 @@ FUNCTION display_menu_center_autosize(nCenterRow, nCenterCol, acMenuItems, xSele
         nWidth := Max(nWidth, Len(cTitle) + 1)
     ENDIF
 
-RETURN display_menu_center(nCenterRow, nCenterCol, nHeight, nWidth, acMenuItems, xSelectable, xUserFunctionName, nInitialItem, cColor, cBorder, cTitle, cTitleColor, cTitleAlign)
+RETURN display_menu_center(nCenterRow, nCenterCol, nHeight, nWidth, acMenuItems, xSelectable, xUserFunctionName, nInitialItem, cColor, cBorder, cTitle, cTitleColor, cTitleAlign, lScrollBar, nScrollBarFrom, nScrollBarTo, cScrollBarColor, nScrollBarOrientation, xScrollBarCargo, cScrollBarStyle, bScrollBarSBlock)
 
 #pragma ENABLEWARNINGS = Off //because of unused variables
 FUNCTION menu_search_allow_exit(nMode, nCurrentElement, nRowPosition, oScrollBar)
@@ -419,9 +420,9 @@ FUNCTION menu_search_allow_exit(nMode, nCurrentElement, nRowPosition, oScrollBar
     DO CASE
         CASE nMode == AC_EXCEPT
             DO CASE
-                CASE nKey == Menu():__anKeys[SELECT]
+                CASE nKey == Menu():__anKeys[MENU_SELECT]
                     nReturnMode := AC_SELECT
-                CASE nKey == Menu():__anKeys[ABORT]
+                CASE nKey == Menu():__anKeys[MENU_ABORT]
                     IF YesNo(Config():get_config('DefaultExit'))
                         nReturnMode := AC_ABORT
                     ENDIF
@@ -468,7 +469,7 @@ FUNCTION menu_search_disallow_exit(nMode, nCurrentElement, nRowPosition, oScroll
     DO CASE
         CASE nMode == AC_EXCEPT
             DO CASE
-                CASE nKey == Menu():__anKeys[SELECT]
+                CASE nKey == Menu():__anKeys[MENU_SELECT]
                     nReturnMode := AC_SELECT
                 OTHERWISE
                     nReturnMode := AC_GOTO
@@ -514,21 +515,21 @@ FUNCTION menu_search_allow_exit_move(nMode, nCurrentElement, nRowPosition, oScro
     DO CASE
         CASE nMode == AC_EXCEPT
             DO CASE
-                CASE nKey == Menu():__anKeys[SELECT]
+                CASE nKey == Menu():__anKeys[MENU_SELECT]
                     nReturnMode := AC_SELECT
-                CASE nKey == Menu():__anKeys[ABORT]
+                CASE nKey == Menu():__anKeys[MENU_ABORT]
                     IF YesNo(Config():get_config('DefaultExit'))
                         nReturnMode := AC_ABORT
                     ENDIF
-                CASE nKey == Menu():__anKeys[UP]
+                CASE nKey == Menu():__anKeys[MENU_UP]
                     WMove(WRow() - 1, WCol())
-                CASE nKey == Menu():__anKeys[DOWN]
+                CASE nKey == Menu():__anKeys[MENU_DOWN]
                     WMove(WRow() + 1, WCol())
-                CASE nKey == Menu():__anKeys[LEFT]
+                CASE nKey == Menu():__anKeys[MENU_LEFT]
                     WMove(WRow(), WCol() - 1)
-                CASE nKey == Menu():__anKeys[RIGHT]
+                CASE nKey == Menu():__anKeys[MENU_RIGHT]
                     WMove(WRow(), WCol() + 1)
-                CASE nKey == Menu():__anKeys[SELECT]
+                CASE nKey == Menu():__anKeys[MENU_SELECT]
                     WCenter(.T.)
                 OTHERWISE
                     nReturnMode := AC_GOTO
@@ -573,17 +574,17 @@ FUNCTION menu_search_disallow_exit_move(nMode, nCurrentElement, nRowPosition)
     DO CASE
         CASE nMode == AC_EXCEPT
             DO CASE
-                CASE nKey == Menu():__anKeys[SELECT]
+                CASE nKey == Menu():__anKeys[MENU_SELECT]
                     nReturnMode := AC_SELECT
-                CASE nKey == Menu():__anKeys[UP]
+                CASE nKey == Menu():__anKeys[MENU_UP]
                     WMove(WRow() - 1, WCol())
-                CASE nKey == Menu():__anKeys[DOWN]
+                CASE nKey == Menu():__anKeys[MENU_DOWN]
                     WMove(WRow() + 1, WCol())
-                CASE nKey == Menu():__anKeys[LEFT]
+                CASE nKey == Menu():__anKeys[MENU_LEFT]
                     WMove(WRow(), WCol() - 1)
-                CASE nKey == Menu():__anKeys[RIGHT]
+                CASE nKey == Menu():__anKeys[MENU_RIGHT]
                     WMove(WRow(), WCol() + 1)
-                CASE nKey == Menu():__anKeys[CENTER]
+                CASE nKey == Menu():__anKeys[MENU_CENTER]
                     WCenter(.T.)
                 OTHERWISE
                     nReturnMode := AC_GOTO
