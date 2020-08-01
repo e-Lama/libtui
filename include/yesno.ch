@@ -23,3 +23,46 @@
 #define INFORM_MOVE Config():get_config('DefaultInformAllowMove')
 #define INFORM_CYCLIC Config():get_config('DefaultInformCyclic')
 #define INFORM_ACCEPT_FIRST Config():get_config('DefaultInformAcceptFirst')
+
+#command @ <top>, <left>, <bottom>, <right> MENU TO <ret> ITEMS <items> SELECTABLE <selectable> ;
+           [FUNCTION <function>] [STARTFROM <initialitem>] [COLOR <color>] [BORDER <border>] ;
+           [ ;
+               TITLE <title> [TITLECOLOR <titlecolor>] [ALIGN <align>] ; 
+           ] ;
+           [ ;
+               [<scrollable: SCROLLABLE>] [SCROLLFROM <scrollfrom>] [SCROLLTO <scrollto>]  ;
+               [ORIENTATION <orientation>] [CARGO <cargo>] [STYLE <style>] [BLOCK <block>] ;
+           ] => ;
+           <ret> := display_menu(<top>, <left>, <bottom>, <right>, <items>, <selectable>, <function> ;
+                                , <initialitem>, <color>, <border>, <title>, <titlecolor>, <align> ;
+                                , <.scrollable.>, <scrollfrom>, <scrollto>, <orientation>, <cargo> ;
+                                , <style>, <block> ;
+                                )
+
+#command @ YESNO <message> TO <ret> [ANWSERS <anwsers>] [COLOR <color>] [DEFAULT <currentoption>] ;
+           [<cyclic: CYCLIC>] [<safe: SAFE>] [<allowmove: MOVABLE>] [<acceptfirstfounded: FAST ACCEPT>] ;
+           [BORDER <border>] [ALIGN <align>] => ;
+           <ret> := YesNo(<message>, <anwsers>, <color>, <.safe.>, <.allowmove.>, <currentoption>, <.cyclic.> ;
+                         , <.acceptfirstfounded.>, <border>, <align> ;
+                         )
+
+#command @ NOYES <message> TO <ret> [ANWSERS <anwsers>] [COLOR <color>] [DEFAULT <currentoption>] ;
+           [<cyclic: CYCLIC>] [<safe: SAFE>] [<allowmove: MOVABLE>] [<acceptfirstfounded: FAST ACCEPT>] ;
+           [BORDER <border>] [ALIGN <align>] => ;
+           <ret> := NoYes(<message>, <anwsers>, <color>, <.safe.>, <.allowmove.>, <currentoption>, <.cyclic.> ;
+                         , <.acceptfirstfounded.>, <border>, <align> ;
+                         )
+
+#command @ DIALOG <message> TO <ret> [OPTIONS <options>] [COLOR <color>] [DEFAULT <currentoption>] ;
+           [<cyclic: CYCLIC>] [<safe: SAFE>] [<allowmove: MOVABLE>] [<acceptfirstfounded: FAST ACCEPT>] ;
+           [BORDER <border>] [ALIGN <align>] [<allowescape: ESCAPABLE>] [DELAY <delay>] => ;
+           <ret> := Dialog(<message>, <options>, <color>, <.allowescape.>, <delay>, <.safe.>, <.allowmove.> ;
+                         , <currentoption>, <.cyclic.>, <.acceptfirstfounded.>, <border>, <align> ;
+                         )
+
+#command @ INFORM <message> TO <ret> [COLOR <color>] [DEFAULT <currentoption>] ;
+           [<cyclic: CYCLIC>] [<safe: SAFE>] [<allowmove: MOVABLE>] [<acceptfirstfounded: FAST ACCEPT>] ;
+           [BORDER <border>] [ALIGN <align>] [<allowescape: ESCAPABLE>] [DELAY <delay>] => ;
+           <ret> := Inform(<message>, <color>, <.allowescape.>, <delay>, <.safe.>, <.allowmove.> ;
+                          , <.cyclic.>, <.acceptfirstfounded.>, <border>, <align> ;
+                          )

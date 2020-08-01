@@ -6,7 +6,6 @@ PROCEDURE main()
 
     PUBLIC GETLIST
 
-
     BEGIN SEQUENCE
 
         ErrorBlock({| oError | standard_error_handler(oError)})

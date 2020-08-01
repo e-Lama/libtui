@@ -4,6 +4,7 @@
 #include "hbclass.ch"
 
 #include "functions.ch"
+#include "align.ch"
 
 #include "setup.ch"
 
@@ -11,7 +12,7 @@ CREATE CLASS AlertLG
 
 EXPORTED:
 
-    METHOD AlertLG(xMessage, acOptions, cColorMessage, cColorButtons, nDelay, nRow, nLeft, nRight, nCurrentOption, lAllowEscape, lAllowMove, lCyclic, lAcceptFirstFounded, cBorder)
+    METHOD AlertLG(xMessage, acOptions, cColorMessage, cColorButtons, nDelay, nRow, nLeft, nRight, nCurrentOption, lAllowEscape, lAllowMove, lCyclic, lAcceptFirstFounded, cBorder, cAlign)
     METHOD keys_map(hKeysMap) SETGET
     METHOD create_centered(lCreateCentered)
 
@@ -27,8 +28,9 @@ HIDDEN:
 
     METHOD __merged_options_length(acOptions)
     METHOD __word_length_from(cTxt, nFrom)
-    METHOD __create_message(cTxt, nMaxWidth)
+    METHOD __create_message(cTxt, nMaxWidth, cAlign, nAlertWidth, nOptionsLength)
     METHOD __find_letter(nKey, nCurrentOption, acOptions, lAcceptFirstFounded, lFound)
+    METHOD __adjust(cTxt, nWidth)
 
 #ifdef USE_VALIDATORS
     METHOD __keys_map_asserts(hKeysMap)
@@ -36,7 +38,7 @@ HIDDEN:
 
 ENDCLASS LOCK
 
-METHOD AlertLG(xMessage, acOptions, cColorMessage, cColorButtons, nDelay, nRow, nLeft, nRight, nCurrentOption, lAllowEscape, lAllowMove, lCyclic, lAcceptFirstFounded, cBorder) CLASS AlertLG
+METHOD AlertLG(xMessage, acOptions, cColorMessage, cColorButtons, nDelay, nRow, nLeft, nRight, nCurrentOption, lAllowEscape, lAllowMove, lCyclic, lAcceptFirstFounded, cBorder, cAlign) CLASS AlertLG
 
     LOCAL nOldWindow := WSelect()
     LOCAL acOptionsTrimmed := Array(Len(acOptions))
@@ -56,7 +58,7 @@ METHOD AlertLG(xMessage, acOptions, cColorMessage, cColorButtons, nDelay, nRow, 
     WSelect(0)
 
 #ifdef USE_VALIDATORS
-    IF PCount() < 2 .OR. PCount() > 14
+    IF PCount() < 2 .OR. PCount() > 15
         throw(ARGUMENTS_NUMBER_EXCEPTION)
     ENDIF
 #endif
@@ -202,11 +204,18 @@ METHOD AlertLG(xMessage, acOptions, cColorMessage, cColorButtons, nDelay, nRow, 
 #endif
     ENDIF
 
+    IF cAlign == NIL
+        cAlign := ALIGN_CENTER
+#ifdef USE_VALIDATORS
+    ELSEIF ValType(cAlign) != 'C' .OR. AScan({ALIGN_LEFT, ALIGN_CENTER, ALIGN_RIGHT, ALIGN_JUSTIFIED}, cAlign) == 0
+        throw(ARGUMENT_VALUE_EXCEPTION)
+    ENDIF
+
     nOldCursor := SetCursor(SC_NONE)
     cOldColor := SetColor(cColorMessage)
 
     nOptionsLength := ::__merged_options_length(acOptionsTrimmed)
-    acMessage := ::__create_message(cMessage, Max(Min(nRight - nLeft - 4, Len(cMessage)), nOptionsLength))
+    acMessage := ::__create_message(cMessage, Max(Min(nRight - nLeft - 4, Len(cMessage)), nOptionsLength), cAlign, nRight - nLeft - 4, nOptionsLength)
     nMessageHeight := Len(acMessage)
 
     IF nRow == NIL
@@ -221,8 +230,6 @@ METHOD AlertLG(xMessage, acOptions, cColorMessage, cColorButtons, nDelay, nRow, 
     IF ::__lCreateCentered
         WCenter(.T.)
     ENDIF
-
-    AEval(acMessage, {| cLine, nIndex | acMessage[nIndex] := PadC(cLine, nWidth)})
 
     FOR i := 1 TO Len(acMessage)
         SetPos(i - 1, 2)
@@ -397,41 +404,53 @@ METHOD __word_length_from(cTxt, nFrom) CLASS AlertLG
 
 RETURN nLength
 
-METHOD __create_message(cTxt, nMaxWidth) CLASS AlertLG
+METHOD __create_message(cTxt, nMaxWidth, cAlign, nAlertWidth, nOptionsLength) CLASS AlertLG
 
-    LOCAL nLength := Len(cTxt)
     LOCAL acRows := {''}
     LOCAL nCurrentRow := 1
     LOCAL nCurrentWidth := 0
     LOCAL cCharacter
-    LOCAL i
 
-    FOR i := 1 TO nLength
-        cCharacter := SubStr(cTxt, i, 1) 
+    IF cAlign != ALIGN_JUSTIFIED
+        FOR EACH cCharacter IN cTxt
+            IF cCharacter == Chr(10)
+                nMaxWidth := Max(nMaxWidth, nCurrentWidth)
+                AAdd(acRows, '') 
+                ++nCurrentRow
+                nCurrentWidth := 0
+                LOOP
+            ELSEIF nCurrentWidth >= nMaxWidth .AND. SubStr(acRows[nCurrentRow], Len(acRows[nCurrentRow]), 1) == ' '
+                nMaxWidth := Max(nMaxWidth, nCurrentWidth)
+                AAdd(acRows, cCharacter)
+                ++nCurrentRow
+                nCurrentWidth := 1
+                LOOP
+            ELSEIF SubStr(acRows[nCurrentRow], Len(acRows[nCurrentRow]), 1) == ' ';
+                   .AND. ::__word_length_from(cTxt, cCharacter:__enumindex) + nCurrentWidth > nMaxWidth
 
-        IF cCharacter == Chr(10)
-            nMaxWidth := Max(nMaxWidth, nCurrentWidth)
-            AAdd(acRows, '') 
-            ++nCurrentRow
-            nCurrentWidth := 0
-            LOOP
-        ELSEIF nCurrentWidth >= nMaxWidth .AND. SubStr(acRows[nCurrentRow], Len(acRows[nCurrentRow]), 1) == ' '
-            nMaxWidth := Max(nMaxWidth, nCurrentWidth)
-            AAdd(acRows, cCharacter)
-            ++nCurrentRow
-            nCurrentWidth := 1
-            LOOP
-        ELSEIF SubStr(acRows[nCurrentRow], Len(acRows[nCurrentRow]), 1) == ' ' .AND. ::__word_length_from(cTxt, i) + nCurrentWidth > nMaxWidth
-            nMaxWidth := Max(nMaxWidth, nCurrentWidth)
-            AAdd(acRows, cCharacter)
-            ++nCurrentRow
-            nCurrentWidth := 1
-            LOOP
-        ELSE
-            acRows[nCurrentRow] += cCharacter
-            ++nCurrentWidth
-        ENDIF
-    NEXT
+                nMaxWidth := Max(nMaxWidth, nCurrentWidth)
+                AAdd(acRows, cCharacter)
+                ++nCurrentRow
+                nCurrentWidth := 1
+                LOOP
+            ELSE
+                acRows[nCurrentRow] += cCharacter
+                ++nCurrentWidth
+            ENDIF
+        NEXT
+    ENDIF
+
+    DO CASE
+        CASE cAlign == ALIGN_LEFT
+            AEval(acRows, {| cLine, nIndex | acRows[nIndex] := PadL(RTrim(cLine), nMaxWidth)})
+        CASE cAlign == ALIGN_CENTER
+            AEval(acRows, {| cLine, nIndex | acRows[nIndex] := PadC(AllTrim(cLine), nMaxWidth)})
+        CASE cAlign == ALIGN_RIGHT
+            AEval(acRows, {| cLine, nIndex | acRows[nIndex] := PadR(LTrim(cLine), nMaxWidth)})
+        CASE cAlign == ALIGN_JUSTIFIED
+            acRows[1] := ::__adjust(AllTrim(cTxt), Max(nOptionsLength, Min(nAlertWidth, Len(cTxt))))
+            acRows := hb_ATokens(acRows[1], hb_OsNewLine())
+    ENDCASE
 
 RETURN acRows
 
@@ -445,3 +464,69 @@ METHOD __merged_options_length(acOptions) CLASS AlertLG
     NEXT
 
 RETURN nLength
+
+METHOD __adjust(cTxt, nWidth) CLASS AlertLG
+
+    LOCAL acWords := hb_ATokens(cTxt, ' ')
+    LOCAL cAlignedTxt := ''
+    LOCAL nLineLength := 0
+    LOCAL nFirstWordInLine := 1
+    LOCAL nLastWordInLine := 1
+    LOCAL lSeparated := .F.
+    LOCAL nCurrentWordLength
+    LOCAL nDifference
+    LOCAL cWord
+    LOCAL i
+
+    FOR EACH cWord IN acWords
+
+        nCurrentWordLength := Len(cWord)
+
+        IF nLineLength + nCurrentWordLength + 1 <= nWidth
+            nLineLength += nCurrentWordLength + 1
+            lSeparated := .F.
+        ELSE
+            IF nLastWordInLine - nFirstWordInLine - 1 > 0
+                FOR i := nFirstWordInLine TO nLastWordInLine - 1
+                    acWords[i] += ' '
+                NEXT
+
+                nDifference := nWidth - nLineLength
+
+                DO WHILE nDifference >= nLastWordInLine - nFirstWordInLine - 1
+                    FOR i := nFirstWordInLine TO nLastWordInLine - 1
+                        acWords[i] += ' '
+                    NEXT
+                    nDifference -= nLastWordInLine - nFirstWordInLine - 1
+                ENDDO
+
+                FOR i := nFirstWordInLine TO nFirstWordInLine + nDifference
+                    acWords[i] += ' '
+                NEXT
+            ENDIF
+
+            acWords[nLastWordInLine] := hb_OsNewLine() + acWords[nLastWordInLine]
+
+            nLineLength := nCurrentWordLength + 1
+            nFirstWordInLine := nLastWordInLine
+            lSeparated := .T.
+        ENDIF
+
+        ++nLastWordInLine
+    NEXT
+
+    IF !lSeparated
+#pragma ENABLEWARNINGS = Off //unused variable cWord
+        AEval(acWords, {| cWord, nIndex | acWords[nIndex] += ' '}, nFirstWordInLine, nLastWordInLine)
+#pragma ENABLEWARNINGS = On
+    ENDIF
+
+    AEval(acWords, {| cWord | cAlignedTxt += cWord})
+
+    IF lSeparated
+        cAlignedTxt := Left(cAlignedTxt, Len(cAlignedTxt))
+    ELSE
+        cAlignedTxt := Left(cAlignedTxt, Len(cAlignedTxt) - 1)
+    ENDIF
+
+RETURN cAlignedTxt
