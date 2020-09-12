@@ -44,10 +44,16 @@ HIDDEN:
 
     METHOD __make_window(nTop, nLeft, nBottom, nRight, cBox, cColor, xShadow)
     METHOD __make_say(nRow, nCol, cExp, cSayPicture, cColorString)
-    METHOD __make_radiogroup(nTop, nLeft, nBottom, nRight, xIdVar, acGroup, cCaption, cMessage, cColor, cFocus, cWhen, cValid)
+    METHOD __make_radiogroup(nTop, nLeft, nBottom, nRight, xIdVar, acGroup, cCaption;
+                             , cMessage, cColor, cFocus, cWhen, cValid;
+                            )
     METHOD __make_box(nTop, nLeft, nBottom, nRight, cBoxString, cColorString)
-    METHOD __make_get(nRow, nCol, cExp, cSayPicture, cColorStringSay, xIdVar, cGetPicture, cColorStringGet, cCaption, cMessage, cWhen, cValid)
-    METHOD __make_listbox(nTop, nLeft, nBottom, nRight, xIdVar, axList, cCaption, cMessage, cWhen, cValid, cColor, cFocus, cState, lDropDown, lScrollBar)
+    METHOD __make_get(nRow, nCol, cExp, cSayPicture, cColorStringSay, xIdVar, cGetPicture;
+                      , cColorStringGet, cCaption, cMessage, cWhen, cValid;
+                     )
+    METHOD __make_listbox(nTop, nLeft, nBottom, nRight, xIdVar, axList, cCaption, cMessage;
+                          , cWhen, cValid, cColor, cFocus, cState, lDropDown, lScrollBar;
+                         )
     METHOD __make_checkbox(nRow, nCol, xIdVar, cCaption, cMessage, cWhen, cValid, cColor, cFocus, cState, cStyle)
     METHOD __make_pushbutton(nRow, nCol, xIdVar, cCaption, cMessage, cWhen, cValid, cColor, cFocus, cState, cStyle)
 
@@ -1371,7 +1377,8 @@ METHOD __validate_pushbutton(axRow, hVariables) CLASS Parser
 
 RETURN .T.
 
-METHOD __make_pushbutton(nRow, nCol, xIdVar, cCaption, cMessage, cWhen, cValid, cColor, cFocus, cState, cStyle) CLASS Parser
+METHOD __make_pushbutton(nRow, nCol, xIdVar, cCaption, cMessage, cWhen, cValid;
+                         , cColor, cFocus, cState, cStyle) CLASS Parser
 
     MEMVAR GETLIST
 
@@ -1397,7 +1404,8 @@ METHOD __make_pushbutton(nRow, nCol, xIdVar, cCaption, cMessage, cWhen, cValid, 
 
 RETURN .T.
 
-METHOD __make_radiogroup(nTop, nLeft, nBottom, nRight, xIdVar, acGroup, cCaption, cMessage, cColor, cFocus, cWhen, cValid) CLASS Parser
+METHOD __make_radiogroup(nTop, nLeft, nBottom, nRight, xIdVar, acGroup, cCaption;
+                         , cMessage, cColor, cFocus, cWhen, cValid) CLASS Parser
 
     MEMVAR GETLIST
 
@@ -1429,7 +1437,8 @@ METHOD __make_radiogroup(nTop, nLeft, nBottom, nRight, xIdVar, acGroup, cCaption
 
 RETURN .T.
 
-METHOD __make_checkbox(nRow, nCol, xIdVar, cCaption, cMessage, cWhen, cValid, cColor, cFocus, cState, cStyle) CLASS Parser
+METHOD __make_checkbox(nRow, nCol, xIdVar, cCaption, cMessage, cWhen, cValid;
+                       , cColor, cFocus, cState, cStyle) CLASS Parser
 
     MEMVAR GETLIST
 
@@ -1455,7 +1464,9 @@ METHOD __make_checkbox(nRow, nCol, xIdVar, cCaption, cMessage, cWhen, cValid, cC
 
 RETURN .T.
 
-METHOD __make_listbox(nTop, nLeft, nBottom, nRight, xIdVar, axList, cCaption, cMessage, cWhen, cValid, cColor, cFocus, cState, lDropDown, lScrollBar) CLASS Parser
+METHOD __make_listbox(nTop, nLeft, nBottom, nRight, xIdVar, axList, cCaption, cMessage;
+                      , cWhen, cValid, cColor, cFocus, cState, lDropDown, lScrollBar;
+                     ) CLASS Parser
 
     MEMVAR GETLIST
 
@@ -1488,7 +1499,8 @@ METHOD __make_listbox(nTop, nLeft, nBottom, nRight, xIdVar, axList, cCaption, cM
 
 RETURN .T.
 
-METHOD __make_get(nRow, nCol, cExp, cSayPicture, cColorStringSay, xIdVar, cGetPicture, cColorStringGet, cCaption, cMessage, cWhen, cValid) CLASS Parser
+METHOD __make_get(nRow, nCol, cExp, cSayPicture, cColorStringSay, xIdVar, cGetPicture;
+                  , cColorStringGet, cCaption, cMessage, cWhen, cValid) CLASS Parser
 
     MEMVAR GETLIST
     

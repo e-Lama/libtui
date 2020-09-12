@@ -12,7 +12,11 @@ CREATE CLASS AlertLG
 
 EXPORTED:
 
-    METHOD AlertLG(xMessage, acOptions, cColorMessage, cColorButtons, nDelay, nRow, nLeft, nRight, nCurrentOption, lAllowEscape, lAllowMove, lCyclic, lAcceptFirstFounded, cBorder, cAlign)
+    METHOD AlertLG(xMessage, acOptions, cColorMessage, cColorButtons, nDelay, nRow;
+                   , nLeft, nRight, nCurrentOption, lAllowEscape, lAllowMove, lCyclic;
+                   , lAcceptFirstFounded, cBorder, cAlign, lAllowMouse;
+                  )
+
     METHOD keys_map(hKeysMap) SETGET
     METHOD create_centered(lCreateCentered)
 
@@ -38,10 +42,15 @@ HIDDEN:
 
 ENDCLASS LOCK
 
-METHOD AlertLG(xMessage, acOptions, cColorMessage, cColorButtons, nDelay, nRow, nLeft, nRight, nCurrentOption, lAllowEscape, lAllowMove, lCyclic, lAcceptFirstFounded, cBorder, cAlign) CLASS AlertLG
+METHOD AlertLG(xMessage, acOptions, cColorMessage, cColorButtons, nDelay, nRow, nLeft;
+               , nRight, nCurrentOption, lAllowEscape, lAllowMove, lCyclic, lAcceptFirstFounded;
+               , cBorder, cAlign, lAllowMouse;
+              ) CLASS AlertLG
 
     LOCAL nOldWindow := WSelect()
     LOCAL acOptionsTrimmed := Array(Len(acOptions))
+    LOCAL anButtonsColFrom
+    LOCAL anButtonsColTo
     LOCAL cOldColor
     LOCAL nOldCursor
     LOCAL cMessage
@@ -53,12 +62,14 @@ METHOD AlertLG(xMessage, acOptions, cColorMessage, cColorButtons, nDelay, nRow, 
     LOCAL nShift
     LOCAL lFound
     LOCAL xResult
+    LOCAL nMouseCol
+    LOCAL nMouseRow
     LOCAL i
 
     WSelect(0)
 
 #ifdef USE_VALIDATORS
-    IF PCount() < 2 .OR. PCount() > 15
+    IF PCount() < 2 .OR. PCount() > 16
         throw(ARGUMENTS_NUMBER_EXCEPTION)
     ENDIF
 #endif
@@ -209,6 +220,15 @@ METHOD AlertLG(xMessage, acOptions, cColorMessage, cColorButtons, nDelay, nRow, 
 #ifdef USE_VALIDATORS
     ELSEIF ValType(cAlign) != 'C' .OR. AScan({ALIGN_LEFT, ALIGN_CENTER, ALIGN_RIGHT, ALIGN_JUSTIFIED}, cAlign) == 0
         throw(ARGUMENT_VALUE_EXCEPTION)
+#endif
+    ENDIF
+
+    IF lAllowMouse == NIL
+        lAllowMouse := .T.
+#ifdef USE_VALIDATORS
+    ELSE
+        assert_type(lAllowMouse, 'L')
+#endif
     ENDIF
 
     nOldCursor := SetCursor(SC_NONE)
@@ -239,10 +259,13 @@ METHOD AlertLG(xMessage, acOptions, cColorMessage, cColorButtons, nDelay, nRow, 
     DO WHILE .T.
 
         nShift := 0
+        anButtonsColFrom := {}
+        anButtonsColTo := {}
 
         DispBegin()
         FOR i := 1 TO Len(acOptionsTrimmed)
             SetPos(nMessageHeight + 1, Int((MaxCol() - nOptionsLength) / 2) + 4 * (i - 1) + nShift + 1)
+            AAdd(anButtonsColFrom, Col())
 
             IF i == nCurrentOption
                 SetColor(cColorButtons)
@@ -251,12 +274,17 @@ METHOD AlertLG(xMessage, acOptions, cColorMessage, cColorButtons, nDelay, nRow, 
             ELSE
                 DevOut(' ' + acOptionsTrimmed[i] + ' ')
             ENDIF
+
+            AAdd(anButtonsColTo, Col())
+
             QQOut('  ')
             nShift += Len(acOptionsTrimmed[i])
         NEXT
         DispEnd()
 
         nKey := Inkey(nDelay)
+        nMouseCol := MCol()
+        nMouseRow := MRow()
 
         IF nKey > 0 .AND. hb_HHasKey(::__hKeysMap, nKey)
             nKey := ::__hKeysMap[nKey]
@@ -272,6 +300,54 @@ METHOD AlertLG(xMessage, acOptions, cColorMessage, cColorButtons, nDelay, nRow, 
             IF ValType(xResult) == 'N'
                 nKey := xResult
             ENDIF
+        ENDIF
+
+        IF lAllowMouse
+            DO CASE
+                CASE nKey == K_MWBACKWARD
+                    nKey := K_LEFT
+                CASE nKey == K_MWFORWARD
+                    nKey := K_RIGHT
+                //CASE nKey ==  TODO . Poza tym ruszanie okienkiem
+                CASE nKey == K_LBUTTONDOWN
+                    IF nMouseRow == nMessageHeight + 1
+                        FOR i := 1 TO Len(anButtonsColFrom)
+                            IF nMouseCol >= anButtonsColFrom[i] .AND. nMouseCol <= anButtonsColTo[i]
+                                nCurrentOption := i
+                                EXIT
+                            ENDIF
+                        NEXT
+                    ELSEIF nMouseRow >= -1 .AND. nMouseCol >= -1 .AND. nMouseRow <= MaxRow() + 1 .AND. nMouseCol <= MaxCol() + 1
+
+                        DO WHILE nKey != K_LBUTTONUP
+
+                            nKey := Inkey()
+
+                            DO CASE
+                                CASE MRow() > nMouseRow .AND. MCol() > nMouseCol
+                                    WMove(WRow() + 1, WCol() + 1)
+                                CASE MRow() > nMouseRow .AND. MCol() == nMouseCol
+                                    WMove(WRow() + 1, WCol())
+                                CASE MRow() > nMouseRow .AND. MCol() < nMouseCol
+                                    WMove(WRow() + 1, WCol() - 1)
+                                CASE MRow() == nMouseRow .AND. MCol() > nMouseCol
+                                    WMove(WRow(), WCol() + 1)
+                                CASE MRow() == nMouseRow .AND. MCol() == nMouseCol
+                                    WMove(WRow(), WCol())
+                                CASE MRow() == nMouseRow .AND. MCol() < nMouseCol
+                                    WMove(WRow(), WCol() - 1)
+                                CASE MRow() < nMouseRow .AND. MCol() > nMouseCol
+                                    WMove(WRow() - 1, WCol() + 1)
+                                CASE MRow() < nMouseRow .AND. MCol() == nMouseCol
+                                    WMove(WRow() - 1, WCol())
+                                CASE MRow() < nMouseRow .AND. MCol() < nMouseCol
+                                    WMove(WRow() - 1, WCol() - 1)
+                            ENDCASE
+                        ENDDO
+
+
+                    ENDIF
+            ENDCASE
         ENDIF
             
         DO CASE
@@ -302,6 +378,10 @@ METHOD AlertLG(xMessage, acOptions, cColorMessage, cColorButtons, nDelay, nRow, 
                 WMove(WRow(), WCol() - 1)
             CASE lAllowMove .AND. nKey == K_ALT_ENTER
                 WCenter(.T.)
+            CASE nKey == K_LBUTTONUP
+                //Do nothing
+            CASE nKey == K_LDBLCLK
+                EXIT
             OTHERWISE
                 lFound := .F.
 

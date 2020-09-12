@@ -13,7 +13,7 @@ EXPORTED:
 
     METHOD new(cTableID, nTop, nLeft, nBottom, nRight, cColor, cBorder, cTitle, cTitleAlign;
                , cTitleColor, nStartRow, bUserAction, bColorBlock, acHeadersColors, hKeysMap, xCargo;
-               , bSkip, bGoBottom, bGoTop) CONSTRUCTOR
+               , bSkip, bGoBottom, bGoTop, lMousable) CONSTRUCTOR
 
     //Row_browse extensions
     METHOD display(lEnd)
@@ -87,6 +87,7 @@ HIDDEN:
 
     VAR __lPrepared AS LOGICAL INIT .F.
     VAR __lActive AS LOGICAL INIT .F.
+    VAR __lMousable AS LOGICAL INIT .T.
     VAR __cTitle AS CHARACTER INIT ''
     VAR __axHowTo AS ARRAY INIT Array(0)
     VAR __cTitleAlign AS CHARACTER INIT ALIGN_CENTER
@@ -124,7 +125,7 @@ HIDDEN:
     METHOD __linear_search(cTarget, lExactly, cPattern)
     METHOD __binary_search(cTarget, lExactly)
     METHOD __handle_action(nAction)
-    METHOD __handle_move(nKey)
+    METHOD __handle_move(nKey, nRow)
     METHOD __how_to_browse()
     METHOD __get_print_function()
     METHOD __go_first_visible()
@@ -578,9 +579,9 @@ METHOD stable(lStable) CLASS Row_browse
 
 RETURN xOldStable
 
- METHOD new(cTableID, nTop, nLeft, nBottom, nRight, cColor, cBorder, cTitle, cTitleAlign;
-               , cTitleColor, nStartRow, bUserAction, bColorBlock, acHeadersColors, hKeysMap, xCargo;
-               , bSkip, bGoBottom, bGoTop) CLASS Row_browse
+METHOD new(cTableID, nTop, nLeft, nBottom, nRight, cColor, cBorder, cTitle, cTitleAlign;
+           , cTitleColor, nStartRow, bUserAction, bColorBlock, acHeadersColors, hKeysMap, xCargo;
+           , bSkip, bGoBottom, bGoTop, lMousable) CLASS Row_browse
 
 #ifdef USE_VALIDATORS
     assert_type(cTableID, 'C')
@@ -725,6 +726,13 @@ RETURN xOldStable
         ::__bGoTop := bGoTop
     ENDIF
 
+    IF lMousable != NIL
+#ifdef USE_VALIDATORS
+        assert_type(lMousable, 'L')
+#endif
+        ::__lMousable := lMousable
+    ENDIF
+
 RETURN Self
 
 METHOD prepare() CLASS Row_browse
@@ -745,6 +753,7 @@ RETURN Self
 METHOD display(lEnd) CLASS Row_browse
 
     LOCAL lRestart := .F.
+    LOCAL nRowFromHeader
     LOCAL nAction
     LOCAL nKey
 
@@ -785,8 +794,9 @@ METHOD display(lEnd) CLASS Row_browse
             ::__print_header()
 
             nKey := Inkey(0)
+            nRowFromHeader := ::__oTBrowse:mRowPos
 
-            nAction := ::__handle_move(IF(hb_hHasKey(::__hKeysMap, nKey), ::__hKeysMap[nKey], nKey))
+            nAction := ::__handle_move(IF(hb_hHasKey(::__hKeysMap, nKey), ::__hKeysMap[nKey], nKey), nRowFromHeader)
 
             IF nAction != ROWBROWSE_NO_ACTION .AND. nAction != ROWBROWSE_END
                 nAction := ::__handle_action(Eval(::__bUserAction, Self, nKey))
@@ -863,7 +873,7 @@ METHOD __print_header() CLASS Row_browse
 
 RETURN NIL
 
-METHOD __handle_move(nKey) CLASS Row_browse
+METHOD __handle_move(nKey, nRow) CLASS Row_browse
 
     DO CASE
         CASE SetKey(nKey) != NIL
@@ -886,6 +896,23 @@ METHOD __handle_move(nKey) CLASS Row_browse
             ::__oTBrowse:GoTop()
         CASE nKey == K_CTRL_END
             ::__oTBrowse:GoBottom()
+        CASE ::__lMousable
+            DO CASE
+                CASE nKey == K_LBUTTONDOWN .AND. nRow != 0
+                    DO WHILE nRow > ::__oTBrowse:rowPos
+                      ::__oTBrowse:Down()
+                      --nRow
+                    ENDDO
+
+                    DO WHILE nRow < ::__oTBrowse:rowPos
+                      ::__oTBrowse:Up()
+                      ++nRow
+                    ENDDO
+                CASE nKey == K_MWFORWARD
+                    ::__oTBrowse:Down()
+                CASE nKey == K_MWBACKWARD
+                    ::__oTBrowse:Up()
+            ENDCASE
     ENDCASE 
 
 RETURN ROWBROWSE_NOTHING

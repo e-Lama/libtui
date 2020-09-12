@@ -10,6 +10,8 @@ PROCEDURE main()
                        , K_ENTER => K_CTRL_END, K_CTRL_PGDN => K_CTRL_END, K_CTRL_PGUP => K_CTRL_HOME;
                       }
 
+    Set(_SET_EVENTMASK, INKEY_ALL)
+
     USE dbRowBrowse NEW
     INDEX ON field->id + Str(field->col_nr) TO indRowBrowse
 
@@ -53,7 +55,7 @@ FUNCTION search_or_resize(oRowBrowse, nKey)
 
     @ 20, 1 CLEAR TO 20, MaxCol()
 
-    IF AScan({K_DOWN, K_UP, K_END}, nKey) != 0
+    IF AScan({K_DOWN, K_UP, K_END, K_MWFORWARD, K_MWBACKWARD, K_LBUTTONDOWN, K_LBUTTONUP, K_MOUSEMOVE}, nKey) != 0
         oRowBrowse:search_keys('')
         oRowBrowse:draw_border()
         oRowBrowse:print_title()

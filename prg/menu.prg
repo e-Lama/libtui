@@ -1,6 +1,5 @@
 #include "achoice.ch"
 #include "inkey.ch"
-#include "hbclass.ch"
 #include "button.ch"
 
 #include "align.ch"
@@ -9,119 +8,23 @@
 
 #include "setup.ch"
 
-CREATE CLASS Menu MODULE FRIENDLY
+STATIC FUNCTION user_function_handler(nMode, nCurrent, nPos, oScrollBar, acMenuItems, xSelectable;
+                                      , lIsBorder, anKeys, lMousable, nScrollBarOrientation;
+                                      , xUserFunctionName)
+RETURN Do(xUserFunctionName, nMode, nCurrent, nPos, oScrollBar, acMenuItems, xSelectable, lIsBorder, anKeys, lMousable, nScrollBarOrientation)
 
-EXPORTED:
+FUNCTION display_menu(nTop, nLeft, nBottom, nRight, acMenuItems, xSelectable, xUserFunctionName;
+                      , nInitialItem, cColor, cBorder, cTitle, cTitleColor, cTitleAlign, anKeys;
+                      , lMousable, lScrollBar, nScrollBarFrom, nScrollBarTo, cScrollBarColor;
+                      , nScrollBarOrientation, xScrollBarCargo, cScrollBarStyle, bScrollBarSBlock;
+                     )
 
-    METHOD keys(anKeys) SETGET
-    METHOD key(nPosition, nKey) SETGET
-    METHOD user_function_handler(nMode, nCurrent, nPos, oScrollBar, xUserFunctionName)
-
-    METHOD register_function(cFunctionName)
-    METHOD unregister_function(cFunctionName)
-
-HIDDEN:
-
-    CLASSVAR __anKeys INIT {K_ENTER, K_ESC, K_ALT_UP, K_ALT_LEFT, K_ALT_DOWN, K_ALT_RIGHT, K_ALT_ENTER}
-    CLASSVAR __acRegisteredUserFunctionNames INIT {'menu_search_allow_exit', 'menu_search_disallow_exit', 'menu_search_allow_exit_move', 'menu_search_disallow_exit_move'}
-
-ENDCLASS LOCK
-
-METHOD register_function(cFunctionName)
-
-    LOCAL nIndex := 1
-    LOCAL nArraySize := Len(::__acRegisteredUserFunctionNames)
-    LOCAL nNilIndex := 0
-
-#ifdef USE_VALIDATORS
-    IF ValType(cFunctionName) != 'C' .OR. !is_function_name(cFunctionName)
-        throw(ARGUMENT_VALUE_EXCEPTION)
-    ENDIF
-#endif
-
-    DO WHILE nIndex <= nArraySize
-        IF ::__acRegisteredUserFunctionNames[nIndex] == cFunctionName
-          RETURN NIL
-        ELSEIF ::__acRegisteredUserFunctionNames[nIndex] == NIL
-          nNilIndex := nIndex
-        ENDIF
-    ENDDO
-
-    IF nNilIndex == 0
-        AAdd(::__acRegisteredUserFunctionNames, cFunctionName)
-    ELSE
-        ::__acRegisteredUserFunctionNames[nNilIndex] := cFunctionName
-    ENDIF
-
-RETURN NIL
-
-METHOD unregister_function(cFunctionName)
-
-    LOCAL nPosition
-
-#ifdef USE_VALIDATORS
-    IF ValType(cFunctionName) != 'C' .OR. !is_function_name(cFunctionName)
-        throw(ARGUMENT_VALUE_EXCEPTION)
-    ENDIF
-#endif
-    
-    nPosition := AScan(::__acRegisteredUserFunctionNames, cFunctionName)
-
-    IF nPosition != 0
-        ADel(::__acRegisteredUserFunctionNames, cFunctionName)
-    ENDIF
-
-RETURN NIL
-
-METHOD user_function_handler(nMode, nCurrent, nPos, oScrollBar, xUserFunctionName) CLASS Menu
-RETURN Do(xUserFunctionName, nMode, nCurrent, nPos, oScrollBar)
-
-METHOD keys(anKeys) CLASS Menu
-
-    LOCAL anOldKeys := AClone(anKeys)
-
-    IF anKeys != NIL
-#ifdef USE_VALIDATORS
-        assert_type(anKeys, 'A')
-        assert_length(anKeys, Len(::__anKeys))
-        AEval(anKeys, {| nKey | assert_type(nKey, 'N')})
-#endif
-        ::__anKeys := anKeys
-    ENDIF
-
-RETURN anOldKeys
-
-METHOD key(nPosition, nKey) CLASS Menu
-
-    LOCAL nOldKey
-
-#ifdef USE_VALIDATORS
-    assert_type(nPosition, 'N')
-    IF nPosition < 0 .OR. nPosition > Len(::__anKeys) .OR. Int(nPosition) != nPosition
-        throw(ARGUMENT_VALUE_EXCEPTION)
-    ELSE
-        nOldKey := ::__anKeys[nPosition]
-    ENDIF
-#else
-    nOldKey := ::__anKeys[nPosition]
-#endif
-
-    IF ValType(nKey) != 'U'
-#ifdef USE_VALIDATORS
-        assert_type(nKey, 'N')
-#endif
-        ::__anKeys[nPosition] := nKey
-    ENDIF
-
-RETURN nOldKey
-
-FUNCTION display_menu(nTop, nLeft, nBottom, nRight, acMenuItems, xSelectable, xUserFunctionName, nInitialItem, cColor, cBorder, cTitle, cTitleColor, cTitleAlign, lScrollBar, nScrollBarFrom, nScrollBarTo, cScrollBarColor, nScrollBarOrientation, xScrollBarCargo, cScrollBarStyle, bScrollBarSBlock)
-
+    LOCAL lIsBorder := .F.
+    LOCAL nSelectedItem
+    LOCAL oScrollBar
     LOCAL nOldWindow := WSelect()
     LOCAL nOldShadow
     LOCAL cOldColor
-    LOCAL nSelectedItem
-    LOCAL oScrollBar
 
 #ifdef USE_VALIDATORS
     assert_type(nTop, 'N')
@@ -151,7 +54,7 @@ FUNCTION display_menu(nTop, nLeft, nBottom, nRight, acMenuItems, xSelectable, xU
 
     IF ValType(xSelectable) == 'A'
         AEval(xSelectable, {| lElement | assert_type(lElement, 'L')})
-    //Undocumented handling. You can find more about that in the src/rtl/achoice.prg
+    //Undocumented handling. You can find more about this in the src/rtl/achoice.prg
     ELSEIF Empty(xUserFunctionName) .AND. ValType(xSelectable) $ 'C;B;S'
         xUserFunctionName := xSelectable
         xSelectable := NIL
@@ -190,6 +93,21 @@ FUNCTION display_menu(nTop, nLeft, nBottom, nRight, acMenuItems, xSelectable, xU
 #endif
     ENDIF
 
+    IF ValType(anKeys) != 'A'
+        anKeys := MENU_BASIC_KEYS
+#ifdef USE_VALIDATORS
+        IF Len(anKeys) != Len(MENU_BASIC_KEYS)
+            throw(ARGUMENT_VALUE_EXCEPTION)
+        ELSE
+            AEval(anKeys, {| nKey | assert_type(nKey, 'N')})
+        ENDIF
+#endif
+    ENDIF
+
+    IF ValType(lMousable) != 'L'
+        lMousable := .T.
+    ENDIF
+   
     IF ValType(lScrollBar) != 'L'
       lScrollBar := .F.
     ENDIF
@@ -252,7 +170,11 @@ FUNCTION display_menu(nTop, nLeft, nBottom, nRight, acMenuItems, xSelectable, xU
 
     cOldColor := SetColor(cColor)
     WOpen(nTop, nLeft, nBottom, nRight)
-    WBox(cBorder)
+
+    IF ValType(cBorder) == 'C'
+        WBox(cBorder)
+        lIsBorder := .T.
+    ENDIF
 
     IF ValType(cTitle) == 'C' .AND. nTop > 0
         DO CASE
@@ -280,64 +202,78 @@ FUNCTION display_menu(nTop, nLeft, nBottom, nRight, acMenuItems, xSelectable, xU
     ENDIF
 
     IF lScrollBar
+        IF ValType(nScrollBarOrientation) != 'N'
+            nScrollBarOrientation := SCROLLBAR_RIGHT      
+        ENDIF
 
-      IF ValType(nScrollBarOrientation) != 'N'
-          nScrollBarOrientation := SCROLLBAR_RIGHT      
-      ENDIF
+        DO CASE
+            CASE nScrollBarOrientation == SCROLLBAR_LEFT .OR. nScrollBarOrientation == SCROLLBAR_RIGHT
+                IF ValType(nScrollBarFrom) != 'N'
+                    nScrollBarFrom := 0
+                ENDIF
 
-      DO CASE
-          CASE nScrollBarOrientation == SCROLLBAR_LEFT .OR. nScrollBarOrientation == SCROLLBAR_RIGHT
-              IF ValType(nScrollBarFrom) != 'N'
-                  nScrollBarFrom := 0
-              ENDIF
+                IF ValType(nScrollBarTo) != 'N'
+                    nScrollBarTo := MaxRow()
+                ENDIF
+            CASE nScrollBarOrientation == SCROLLBAR_UP .OR. nScrollBarOrientation == SCROLLBAR_DOWN
+                IF ValType(nScrollBarFrom) != 'N'
+                    nScrollBarFrom := 0
+                ENDIF
 
-              IF ValType(nScrollBarTo) != 'N'
-                  nScrollBarTo := MaxRow()
-              ENDIF
-          CASE nScrollBarOrientation == SCROLLBAR_UP .OR. nScrollBarOrientation == SCROLLBAR_DOWN
-              IF ValType(nScrollBarFrom) != 'N'
-                  nScrollBarFrom := 0
-              ENDIF
+                IF ValType(nScrollBarTo) != 'N'
+                    nScrollBarTo := MaxCol()
+                ENDIF
+        ENDCASE
 
-              IF ValType(nScrollBarTo) != 'N'
-                  nScrollBarTo := MaxCol()
-              ENDIF
-      ENDCASE
+        DO CASE
+            CASE nScrollBarOrientation == SCROLLBAR_LEFT 
+                oScrollBar := ScrollBar(nScrollBarFrom, nScrollBarTo, 0, bScrollBarSBlock, SCROLL_VERTICAL)
+            CASE nScrollBarOrientation == SCROLLBAR_RIGHT
+                oScrollBar := ScrollBar(nScrollBarFrom, nScrollBarTo, MaxCol(), bScrollBarSBlock, SCROLL_VERTICAL)
+            CASE nScrollBarOrientation == SCROLLBAR_UP 
+                oScrollBar := ScrollBar(nScrollBarFrom, nScrollBarTo, 0, bScrollBarSBlock, SCROLL_HORIZONTAL)
+            CASE nScrollBarOrientation == SCROLLBAR_DOWN
+                oScrollBar := ScrollBar(nScrollBarFrom, nScrollBarTo, MaxRow(), bScrollBarSBlock, SCROLL_HORIZONTAL)
+        ENDCASE
 
-      DO CASE
-          CASE nScrollBarOrientation == SCROLLBAR_LEFT 
-              oScrollBar := ScrollBar(nScrollBarFrom, nScrollBarTo, 0, bScrollBarSBlock, SCROLL_VERTICAL)
-          CASE nScrollBarOrientation == SCROLLBAR_RIGHT
-              oScrollBar := ScrollBar(nScrollBarFrom, nScrollBarTo, MaxCol(), bScrollBarSBlock, SCROLL_VERTICAL)
-          CASE nScrollBarOrientation == SCROLLBAR_UP 
-              oScrollBar := ScrollBar(nScrollBarFrom, nScrollBarTo, 0, bScrollBarSBlock, SCROLL_HORIZONTAL)
-          CASE nScrollBarOrientation == SCROLLBAR_DOWN
-              oScrollBar := ScrollBar(nScrollBarFrom, nScrollBarTo, MaxRow(), bScrollBarSBlock, SCROLL_HORIZONTAL)
-      ENDCASE
 
-      oScrollBar:total := Len(acMenuItems)
-      oScrollBar:cargo := xScrollBarCargo
+        oScrollBar:total := Len(acMenuItems)
+        oScrollBar:cargo := xScrollBarCargo
+        oScrollBar:current := IF(ValType(nInitialItem) == 'N', nInitialItem, 1)
 
-      IF ValType(cScrollBarColor) == 'C'
-          oScrollBar:colorSpec := cScrollBarColor
-      ENDIF
+        IF ValType(cScrollBarColor) == 'C'
+            oScrollBar:colorSpec := cScrollBarColor
+        ENDIF
 
-      IF ValType(cScrollBarStyle) == 'C'
-          oScrollBar:style := cScrollBarStyle
-      ENDIF
+        IF ValType(cScrollBarStyle) == 'C'
+            oScrollBar:style := cScrollBarStyle
+        ELSEIF nScrollBarOrientation == SCROLLBAR_UP .OR. nScrollBarOrientation == SCROLLBAR_DOWN
+            oScrollBar:style := Right(oScrollBar:style, 1) + SubStr(oScrollBar:style, 2, 2) + Left(oScrollBar:style, 1)
+        ENDIF
 
-      oScrollBar:display()
+        oScrollBar:display()
     ENDIF
 
-
     IF ValType(xUserFunctionName) == 'C'
-        IF AScan(Menu():__acRegisteredUserFunctionNames, xUserFunctionName) == 0
-            nSelectedItem := AChoice(IF(nScrollBarOrientation == SCROLLBAR_UP, 1, 0), IF(nScrollBarOrientation == SCROLLBAR_LEFT, 1, 0), IF(nScrollBarOrientation == SCROLLBAR_DOWN, MaxRow() - 1, MaxRow()), IF(nScrollBarOrientation == SCROLLBAR_RIGHT, MaxCol() - 1, MaxCol()), acMenuItems, xSelectable, xUserFunctionName, nInitialItem)
-        ELSE
-            nSelectedItem := AChoice(IF(nScrollBarOrientation == SCROLLBAR_UP, 1, 0), IF(nScrollBarOrientation == SCROLLBAR_LEFT, 1, 0), IF(nScrollBarOrientation == SCROLLBAR_DOWN, MaxRow() - 1, MaxRow()), IF(nScrollBarOrientation == SCROLLBAR_RIGHT, MaxCol() - 1, MaxCol()), acMenuItems, xSelectable, {| nMode, nCurrent, nPos | Menu():user_function_handler(nMode, nCurrent, nPos, oScrollBar, xUserFunctionName)}, nInitialItem)
-        ENDIF
+        nSelectedItem := AChoice(IF(nScrollBarOrientation == SCROLLBAR_UP, 1, 0);
+                                , IF(nScrollBarOrientation == SCROLLBAR_LEFT, 1, 0);
+                                , IF(nScrollBarOrientation == SCROLLBAR_DOWN, MaxRow() - 1, MaxRow());
+                                , IF(nScrollBarOrientation == SCROLLBAR_RIGHT, MaxCol() - 1, MaxCol());
+                                , acMenuItems, xSelectable, {| nMode, nCurrent, nPos |;
+                                      user_function_handler(nMode, nCurrent, nPos, oScrollBar, acMenuItems;
+                                                                   , xSelectable, lIsBorder, anKeys, lMousable;
+                                                                   , nScrollBarOrientation, xUserFunctionName;
+                                                                  );
+                                                            };
+                                , nInitialItem;
+                                )
     ELSE
-        nSelectedItem := AChoice(IF(nScrollBarOrientation == SCROLLBAR_UP, 1, 0), IF(nScrollBarOrientation == SCROLLBAR_LEFT, 1, 0), IF(nScrollBarOrientation == SCROLLBAR_DOWN, MaxRow() - 1, MaxRow()), IF(nScrollBarOrientation == SCROLLBAR_RIGHT, MaxCol() - 1, MaxCol()), acMenuItems, xSelectable, xUserFunctionName, nInitialItem)
+        nSelectedItem := AChoice(IF(nScrollBarOrientation == SCROLLBAR_UP, 1, 0);
+                                , IF(nScrollBarOrientation == SCROLLBAR_LEFT, 1, 0);
+                                , IF(nScrollBarOrientation == SCROLLBAR_DOWN, MaxRow() - 1, MaxRow());
+                                , IF(nScrollBarOrientation == SCROLLBAR_RIGHT, MaxCol() - 1, MaxCol());
+                                , acMenuItems, xSelectable, xUserFunctionName, nInitialItem;
+                                )
     ENDIF
 
     WClose()
@@ -348,7 +284,11 @@ FUNCTION display_menu(nTop, nLeft, nBottom, nRight, acMenuItems, xSelectable, xU
 
 RETURN nSelectedItem
 
-FUNCTION display_menu_autosize(nTop, nLeft, acMenuItems, xSelectable, xUserFunctionName, nInitialItem, cColor, cBorder, cTitle, cTitleColor, cTitleAlign, lScrollBar, nScrollBarFrom, nScrollBarTo, cScrollBarColor, nScrollBarOrientation, xScrollBarCargo, cScrollBarStyle, bScrollBarSBlock)
+FUNCTION display_menu_autosize(nTop, nLeft, acMenuItems, xSelectable, xUserFunctionName, nInitialItem;
+                               , cColor, cBorder, cTitle, cTitleColor, cTitleAlign, lScrollBar, nScrollBarFrom;
+                               , nScrollBarTo, cScrollBarColor, nScrollBarOrientation, xScrollBarCargo;
+                               , cScrollBarStyle, bScrollBarSBlock;
+                              )
 
     LOCAL nBottom
     LOCAL nRight
@@ -370,8 +310,11 @@ FUNCTION display_menu_autosize(nTop, nLeft, acMenuItems, xSelectable, xUserFunct
 
 RETURN display_menu(nTop, nLeft, nBottom, nRight, acMenuItems, xSelectable, xUserFunctionName, nInitialItem, cColor, cBorder, cTitle, cTitleColor, cTitleAlign, lScrollBar, nScrollBarFrom, nScrollBarTo, cScrollBarColor, nScrollBarOrientation, xScrollBarCargo, cScrollBarStyle, bScrollBarSBlock)
 
-
-FUNCTION display_menu_center(nCenterRow, nCenterCol, nHeight, nWidth, acMenuItems, xSelectable, xUserFunctionName, nInitialItem, cColor, cBorder, cTitle, cTitleColor, cTitleAlign, lScrollBar, nScrollBarFrom, nScrollBarTo, cScrollBarColor, nScrollBarOrientation, xScrollBarCargo, cScrollBarStyle, bScrollBarSBlock)
+FUNCTION display_menu_center(nCenterRow, nCenterCol, nHeight, nWidth, acMenuItems, xSelectable;
+                             , xUserFunctionName, nInitialItem, cColor, cBorder, cTitle, cTitleColor;
+                             , cTitleAlign, lScrollBar, nScrollBarFrom, nScrollBarTo, cScrollBarColor;
+                             , nScrollBarOrientation, xScrollBarCargo, cScrollBarStyle, bScrollBarSBlock;
+                            )
 
     LOCAL nTop
     LOCAL nLeft
@@ -392,7 +335,12 @@ FUNCTION display_menu_center(nCenterRow, nCenterCol, nHeight, nWidth, acMenuItem
 
 RETURN display_menu(nTop, nLeft, nBottom, nRight, acMenuItems, xSelectable, xUserFunctionName, nInitialItem, cColor, cBorder, cTitle, cTitleColor, cTitleAlign, lScrollBar, nScrollBarFrom, nScrollBarTo, cScrollBarColor, nScrollBarOrientation, xScrollBarCargo, cScrollBarStyle, bScrollBarSBlock)
 
-FUNCTION display_menu_center_autosize(nCenterRow, nCenterCol, acMenuItems, xSelectable, xUserFunctionName, nInitialItem, cColor, cBorder, cTitle, cTitleColor, cTitleAlign, lScrollBar, nScrollBarFrom, nScrollBarTo, cScrollBarColor, nScrollBarOrientation, xScrollBarCargo, cScrollBarStyle, bScrollBarSBlock)
+FUNCTION display_menu_center_autosize(nCenterRow, nCenterCol, acMenuItems, xSelectable, xUserFunctionName;
+                                      , nInitialItem, cColor, cBorder, cTitle, cTitleColor, cTitleAlign;
+                                      , lScrollBar, nScrollBarFrom, nScrollBarTo, cScrollBarColor;
+                                      , nScrollBarOrientation, xScrollBarCargo, cScrollBarStyle;
+                                      , bScrollBarSBlock;
+                                     )
 
     LOCAL nHeight
     LOCAL nWidth
@@ -412,150 +360,71 @@ FUNCTION display_menu_center_autosize(nCenterRow, nCenterCol, acMenuItems, xSele
 RETURN display_menu_center(nCenterRow, nCenterCol, nHeight, nWidth, acMenuItems, xSelectable, xUserFunctionName, nInitialItem, cColor, cBorder, cTitle, cTitleColor, cTitleAlign, lScrollBar, nScrollBarFrom, nScrollBarTo, cScrollBarColor, nScrollBarOrientation, xScrollBarCargo, cScrollBarStyle, bScrollBarSBlock)
 
 #pragma ENABLEWARNINGS = Off //because of unused variables
-FUNCTION menu_search_allow_exit(nMode, nCurrentElement, nRowPosition, oScrollBar)
+FUNCTION menu_search_allow_exit(nMode, nCurrentElement, nRowPosition, oScrollBar, acMenuItems, xSelectable;
+                                , lIsBorder, anKeys, lMousable, nScrollBarOrientation;
+                               )
 
     LOCAL nReturnMode := AC_CONT    
     LOCAL nKey := LastKey()
-
-    DO CASE
-        CASE nMode == AC_EXCEPT
-            DO CASE
-                CASE nKey == Menu():__anKeys[MENU_SELECT]
-                    nReturnMode := AC_SELECT
-                CASE nKey == Menu():__anKeys[MENU_ABORT]
-                    IF YesNo(Config():get_config('DefaultExit'))
-                        nReturnMode := AC_ABORT
-                    ENDIF
-                OTHERWISE
-                    nReturnMode := AC_GOTO
-            ENDCASE
-    ENDCASE
-
-    IF ValType(oScrollBar) == 'O'
-        nNewPosition := oScrollBar:current
-      
-        DO CASE
-            CASE nKey == K_CTRL_PGUP
-              nNewPosition := 1
-            CASE nKey == K_CTRL_PGDN
-              nNewPosition := oScrollBar:total
-            CASE nKey == K_CTRL_HOME
-              nNewPosition := nNewPosition - oScrollBar:barLength - 1
-            CASE nKey == K_CTRL_END
-              nNewPosition := nNewPosition + oScrollBar:barLength + 1
-            CASE nKey == K_PGUP
-              nNewPosition := nNewPosition - oScrollBar:barLength - 1
-            CASE nKey == K_PGDN
-              nNewPosition := nNewPosition + oScrollBar:barLength + 1
-            CASE nKey == K_UP
-              --nNewPosition
-            CASE nKey == K_DOWN
-              ++nNewPosition
-        ENDCASE
-
-        oScrollBar:current := nNewPosition
-        oScrollBar:update()
-    ENDIF
-
-RETURN nReturnMode
-#pragma ENABLEWARNINGS = On
-
-#pragma ENABLEWARNINGS = Off //because of unused variables
-FUNCTION menu_search_disallow_exit(nMode, nCurrentElement, nRowPosition, oScrollBar)
-
-    LOCAL nReturnMode := AC_CONT    
-    LOCAL nKey := LastKey()
-
-    DO CASE
-        CASE nMode == AC_EXCEPT
-            DO CASE
-                CASE nKey == Menu():__anKeys[MENU_SELECT]
-                    nReturnMode := AC_SELECT
-                OTHERWISE
-                    nReturnMode := AC_GOTO
-            ENDCASE
-    ENDCASE
-
-    IF ValType(oScrollBar) == 'O'
-        nNewPosition := oScrollBar:current
-      
-        DO CASE
-            CASE nKey == K_CTRL_PGUP
-              nNewPosition := 1
-            CASE nKey == K_CTRL_PGDN
-              nNewPosition := oScrollBar:total
-            CASE nKey == K_CTRL_HOME
-              nNewPosition := nNewPosition - oScrollBar:barLength - 1
-            CASE nKey == K_CTRL_END
-              nNewPosition := nNewPosition + oScrollBar:barLength + 1
-            CASE nKey == K_PGUP
-              nNewPosition := nNewPosition - oScrollBar:barLength - 1
-            CASE nKey == K_PGDN
-              nNewPosition := nNewPosition + oScrollBar:barLength + 1
-            CASE nKey == K_UP
-              --nNewPosition
-            CASE nKey == K_DOWN
-              ++nNewPosition
-        ENDCASE
-
-        oScrollBar:current := nNewPosition
-        oScrollBar:update()
-    ENDIF
-
-RETURN nReturnMode
-#pragma ENABLEWARNINGS = On
-
-#pragma ENABLEWARNINGS = Off //because of unused variables
-FUNCTION menu_search_allow_exit_move(nMode, nCurrentElement, nRowPosition, oScrollBar)
-
-    LOCAL nReturnMode := AC_CONT    
-    LOCAL nKey := LastKey()
+    LOCAL nMouseRow := MRow()
+    LOCAL nMouseCol := MCol()
+    LOCAL lScrollBar := (ValType(oScrollBar) == 'O')
+    LOCAL nHitStatus := IF(lScrollBar .AND. lMousable, oScrollBar:hitTest(nMouseRow, nMouseCol), HTNOWHERE)
+    LOCAL nBorderShift := cast(lIsBorder, 'N')
     LOCAL nNewPosition
 
     DO CASE
         CASE nMode == AC_EXCEPT
             DO CASE
-                CASE nKey == Menu():__anKeys[MENU_SELECT]
+                CASE nKey == anKeys[MENU_SELECT]
                     nReturnMode := AC_SELECT
-                CASE nKey == Menu():__anKeys[MENU_ABORT]
+                CASE nKey == anKeys[MENU_ABORT]
                     IF YesNo(Config():get_config('DefaultExit'))
                         nReturnMode := AC_ABORT
                     ENDIF
-                CASE nKey == Menu():__anKeys[MENU_UP]
-                    WMove(WRow() - 1, WCol())
-                CASE nKey == Menu():__anKeys[MENU_DOWN]
-                    WMove(WRow() + 1, WCol())
-                CASE nKey == Menu():__anKeys[MENU_LEFT]
-                    WMove(WRow(), WCol() - 1)
-                CASE nKey == Menu():__anKeys[MENU_RIGHT]
-                    WMove(WRow(), WCol() + 1)
-                CASE nKey == Menu():__anKeys[MENU_SELECT]
-                    WCenter(.T.)
                 OTHERWISE
                     nReturnMode := AC_GOTO
             ENDCASE
+        CASE nMode == AC_IDLE .AND. lScrollBar .AND. lMousable .AND. nKey == anKeys[MENU_LBUTTONUP]
+            DO CASE
+                CASE nHitStatus == HTSCROLLUNITDEC
+                    KEYBOARD Chr(K_UP)
+                CASE nHitStatus == HTSCROLLUNITINC
+                    KEYBOARD Chr(K_DOWN)
+                CASE nHitStatus == HTSCROLLBLOCKDEC
+                    move_thumb_up(oScrollBar, nCurrentElement, xSelectable, acMenuItems)
+                CASE nHitStatus == HTSCROLLBLOCKINC
+                    move_thumb_down(oScrollBar, nCurrentElement, xSelectable, acMenuItems)
+                CASE nHitStatus == HTSCROLLTHUMBDRAG
+            ENDCASE
     ENDCASE
 
-    IF ValType(oScrollBar) == 'O'
+    IF lScrollBar
         nNewPosition := oScrollBar:current
-      
+
         DO CASE
             CASE nKey == K_CTRL_PGUP
-              nNewPosition := 1
+                nNewPosition := 1
             CASE nKey == K_CTRL_PGDN
-              nNewPosition := oScrollBar:total
+                nNewPosition := oScrollBar:total
             CASE nKey == K_CTRL_HOME
-              nNewPosition := nNewPosition - oScrollBar:barLength - 1
+                nNewPosition := nNewPosition - oScrollBar:barLength - 1
             CASE nKey == K_CTRL_END
-              nNewPosition := nNewPosition + oScrollBar:barLength + 1
+                nNewPosition := nNewPosition + oScrollBar:barLength + 1
             CASE nKey == K_PGUP
-              nNewPosition := nNewPosition - oScrollBar:barLength - 1
+                nNewPosition := nNewPosition - oScrollBar:barLength - 1
             CASE nKey == K_PGDN
-              nNewPosition := nNewPosition + oScrollBar:barLength + 1
+                nNewPosition := nNewPosition + oScrollBar:barLength + 1
             CASE nKey == K_UP
-              --nNewPosition
+                nNewPosition := nCurrentElement
             CASE nKey == K_DOWN
-              ++nNewPosition
+                nNewPosition := nCurrentElement
+            CASE nKey == K_LBUTTONUP
+                nNewPosition := nCurrentElement
+            CASE nKey == K_MWBACKWARD
+                nNewPosition := nCurrentElement
+            CASE nKey == K_MWFORWARD
+                nNewPosition := nCurrentElement
         ENDCASE
 
         oScrollBar:current := nNewPosition
@@ -566,34 +435,44 @@ RETURN nReturnMode
 #pragma ENABLEWARNINGS = On
 
 #pragma ENABLEWARNINGS = Off //because of unused variables
-FUNCTION menu_search_disallow_exit_move(nMode, nCurrentElement, nRowPosition)
+FUNCTION menu_search_disallow_exit(nMode, nCurrentElement, nRowPosition, oScrollBar, acMenuItems, xSelectable;
+                                   , lIsBorder, anKeys, lMousable, nScrollBarOrientation;
+                                  )
 
     LOCAL nReturnMode := AC_CONT    
     LOCAL nKey := LastKey()
+    LOCAL nMouseRow := MRow()
+    LOCAL nMouseCol := MCol()
+    LOCAL lScrollBar := (ValType(oScrollBar) == 'O')
+    LOCAL nHitStatus := IF(lScrollBar .AND. lMousable, oScrollBar:hitTest(nMouseRow, nMouseCol), HTNOWHERE)
+    LOCAL nBorderShift := cast(lIsBorder, 'N')
+    LOCAL nNewPosition
 
     DO CASE
         CASE nMode == AC_EXCEPT
             DO CASE
-                CASE nKey == Menu():__anKeys[MENU_SELECT]
+                CASE nKey == anKeys[MENU_SELECT]
                     nReturnMode := AC_SELECT
-                CASE nKey == Menu():__anKeys[MENU_UP]
-                    WMove(WRow() - 1, WCol())
-                CASE nKey == Menu():__anKeys[MENU_DOWN]
-                    WMove(WRow() + 1, WCol())
-                CASE nKey == Menu():__anKeys[MENU_LEFT]
-                    WMove(WRow(), WCol() - 1)
-                CASE nKey == Menu():__anKeys[MENU_RIGHT]
-                    WMove(WRow(), WCol() + 1)
-                CASE nKey == Menu():__anKeys[MENU_CENTER]
-                    WCenter(.T.)
                 OTHERWISE
                     nReturnMode := AC_GOTO
             ENDCASE
+        CASE nMode == AC_IDLE .AND. lScrollBar .AND. lMousable .AND. nKey == anKeys[MENU_LBUTTONUP]
+            DO CASE
+                CASE nHitStatus == HTSCROLLUNITDEC
+                    KEYBOARD Chr(K_UP)
+                CASE nHitStatus == HTSCROLLUNITINC
+                    KEYBOARD Chr(K_DOWN)
+                CASE nHitStatus == HTSCROLLBLOCKDEC
+                    move_thumb_up(oScrollBar, nCurrentElement, xSelectable, acMenuItems)
+                CASE nHitStatus == HTSCROLLBLOCKINC
+                    move_thumb_down(oScrollBar, nCurrentElement, xSelectable, acMenuItems)
+                CASE nHitStatus == HTSCROLLTHUMBDRAG
+            ENDCASE
     ENDCASE
 
-    IF ValType(oScrollBar) == 'O'
+    IF lScrollBar
         nNewPosition := oScrollBar:current
-      
+
         DO CASE
             CASE nKey == K_CTRL_PGUP
               nNewPosition := 1
@@ -608,9 +487,303 @@ FUNCTION menu_search_disallow_exit_move(nMode, nCurrentElement, nRowPosition)
             CASE nKey == K_PGDN
               nNewPosition := nNewPosition + oScrollBar:barLength + 1
             CASE nKey == K_UP
-              --nNewPosition
+              nNewPosition := nCurrentElement
             CASE nKey == K_DOWN
-              ++nNewPosition
+              nNewPosition := nCurrentElement
+            CASE nKey == K_LBUTTONUP
+              nNewPosition := nCurrentElement
+            CASE nKey == K_MWBACKWARD
+              nNewPosition := nCurrentElement
+            CASE nKey == K_MWFORWARD
+              nNewPosition := nCurrentElement
+        ENDCASE
+
+        oScrollBar:current := nNewPosition
+        oScrollBar:update()
+    ENDIF
+
+RETURN nReturnMode
+#pragma ENABLEWARNINGS = On
+
+#pragma ENABLEWARNINGS = Off //because of unused variables
+
+STATIC PROCEDURE move_thumb_up(oScrollBar, nCurrentElement, xSelectable, acMenuItems)
+
+    LOCAL alSelectable := IF(ValType(xSelectable) == 'A', xSelectable, AFill(Array(Len(acMenuItems)), xSelectable))
+    LOCAL nMousePosition := IF(oScrollBar:orient == SCROLL_VERTICAL, MRow(), MCol())
+    LOCAL nMoveUpOrRight := 0
+    LOCAL nOldCurrentPosition := oScrollBar:current
+
+    DispBegin()
+
+    DO WHILE oScrollBar:thumbpos > nMousePosition
+        --oScrollBar:current
+
+        IF oScrollBar:current > 0 .AND. !alSelectable[oScrollBar:current]
+            LOOP
+        ENDIF
+
+        oScrollBar:update()
+        ++nMoveUpOrRight
+    ENDDO
+
+    oScrollBar:current := nOldCurrentPosition
+    oScrollBar:update()
+
+    KEYBOARD Replicate(Chr(K_UP), nMoveUpOrRight)
+
+    DispEnd()
+
+RETURN
+
+STATIC PROCEDURE move_thumb_down(oScrollBar, nCurrentElement, xSelectable, acMenuItems)
+
+    LOCAL alSelectable := IF(ValType(xSelectable) == 'A', xSelectable, AFill(Array(Len(acMenuItems)), xSelectable))
+    LOCAL nMousePosition := IF(oScrollBar:orient == SCROLL_VERTICAL, MRow(), MCol())
+    LOCAL nMoveDownOrLeft := 0
+    LOCAL nOldCurrentPosition := oScrollBar:current
+
+    DispBegin()
+
+    DO WHILE oScrollBar:thumbpos < nMousePosition
+        ++oScrollBar:current
+
+        IF oScrollBar:current < Len(acMenuItems) .AND. !alSelectable[oScrollBar:current]
+            LOOP
+        ENDIF
+
+        oScrollBar:update()
+        ++nMoveDownOrLeft
+    ENDDO
+
+    oScrollBar:current := nOldCurrentPosition
+    oScrollBar:update()
+
+    KEYBOARD Replicate(Chr(K_DOWN), nMoveDownOrLeft)
+
+    DispEnd()
+
+RETURN
+
+FUNCTION menu_search_allow_exit_move(nMode, nCurrentElement, nRowPosition, oScrollBar;
+                                     , acMenuItems, xSelectable, lIsBorder, anKeys;
+                                     , lMousable, nScrollBarOrientation;
+                                    )
+
+    LOCAL nReturnMode := AC_CONT    
+    LOCAL nKey := LastKey()
+    LOCAL nMouseRow := MRow()
+    LOCAL nMouseCol := MCol()
+    LOCAL lScrollBar := (ValType(oScrollBar) == 'O')
+    LOCAL nHitStatus := IF(lScrollBar .AND. lMousable, oScrollBar:hitTest(nMouseRow, nMouseCol), HTNOWHERE)
+    LOCAL nBorderShift := cast(lIsBorder, 'N')
+    LOCAL nNewPosition
+
+    DO CASE
+        CASE nMode == AC_EXCEPT
+            DO CASE
+                CASE nKey == anKeys[MENU_SELECT]
+                    nReturnMode := AC_SELECT
+                CASE nKey == anKeys[MENU_ABORT]
+                    IF YesNo(Config():get_config('DefaultExit'))
+                        nReturnMode := AC_ABORT
+                    ENDIF
+                CASE nKey == anKeys[MENU_UP]
+                    WMove(WRow() - 1, WCol())
+                CASE nKey == anKeys[MENU_DOWN]
+                    WMove(WRow() + 1, WCol())
+                CASE nKey == anKeys[MENU_LEFT]
+                    WMove(WRow(), WCol() - 1)
+                CASE nKey == anKeys[MENU_RIGHT]
+                    WMove(WRow(), WCol() + 1)
+                CASE nKey == anKeys[MENU_CENTER]
+                    WCenter(.T.)
+                OTHERWISE
+                    nReturnMode := AC_GOTO
+            ENDCASE
+        CASE nMode == AC_IDLE .AND. lScrollBar .AND. lMousable .AND. nKey == anKeys[MENU_LBUTTONUP]
+            DO CASE
+                CASE nHitStatus == HTSCROLLUNITDEC
+                    KEYBOARD Chr(K_UP)
+                CASE nHitStatus == HTSCROLLUNITINC
+                    KEYBOARD Chr(K_DOWN)
+                CASE nHitStatus == HTSCROLLBLOCKDEC
+                    move_thumb_up(oScrollBar, nCurrentElement, xSelectable, acMenuItems)
+                CASE nHitStatus == HTSCROLLBLOCKINC
+                    move_thumb_down(oScrollBar, nCurrentElement, xSelectable, acMenuItems)
+                CASE nHitStatus == HTSCROLLTHUMBDRAG
+            ENDCASE
+    ENDCASE
+
+    IF nHitStatus == HTNOWHERE .AND. nKey == anKeys[MENU_LBUTTONDOWN] .AND. lMousable;
+       .AND. nMouseRow >= -1 * nBorderShift .AND. nMouseCol >= -1 * nBorderShift;
+       .AND. nMouseRow <= MaxRow() + nBorderShift .AND. nMouseCol <= MaxCol() + nBorderShift
+
+        DO WHILE nKey != anKeys[MENU_LBUTTONUP]
+
+            nKey := Inkey()
+
+            DO CASE
+                CASE MRow() > nMouseRow .AND. MCol() > nMouseCol
+                    WMove(WRow() + 1, WCol() + 1)
+                CASE MRow() > nMouseRow .AND. MCol() == nMouseCol
+                    WMove(WRow() + 1, WCol())
+                CASE MRow() > nMouseRow .AND. MCol() < nMouseCol
+                    WMove(WRow() + 1, WCol() - 1)
+                CASE MRow() == nMouseRow .AND. MCol() > nMouseCol
+                    WMove(WRow(), WCol() + 1)
+                CASE MRow() == nMouseRow .AND. MCol() == nMouseCol
+                    WMove(WRow(), WCol())
+                CASE MRow() == nMouseRow .AND. MCol() < nMouseCol
+                    WMove(WRow(), WCol() - 1)
+                CASE MRow() < nMouseRow .AND. MCol() > nMouseCol
+                    WMove(WRow() - 1, WCol() + 1)
+                CASE MRow() < nMouseRow .AND. MCol() == nMouseCol
+                    WMove(WRow() - 1, WCol())
+                CASE MRow() < nMouseRow .AND. MCol() < nMouseCol
+                    WMove(WRow() - 1, WCol() - 1)
+            ENDCASE
+        ENDDO
+    ENDIF
+
+    IF lScrollBar
+        nNewPosition := oScrollBar:current
+
+        DO CASE
+            CASE nKey == K_CTRL_PGUP
+                nNewPosition := 1
+            CASE nKey == K_CTRL_PGDN
+                nNewPosition := oScrollBar:total
+            CASE nKey == K_CTRL_HOME
+                nNewPosition := nNewPosition - oScrollBar:barLength - 1
+            CASE nKey == K_CTRL_END
+                nNewPosition := nNewPosition + oScrollBar:barLength + 1
+            CASE nKey == K_PGUP
+                nNewPosition := nNewPosition - oScrollBar:barLength - 1
+            CASE nKey == K_PGDN
+                nNewPosition := nNewPosition + oScrollBar:barLength + 1
+            CASE nKey == K_UP
+                nNewPosition := nCurrentElement
+            CASE nKey == K_DOWN
+                nNewPosition := nCurrentElement
+            CASE nKey == K_LBUTTONUP
+                nNewPosition := nCurrentElement
+            CASE nKey == K_MWBACKWARD
+                nNewPosition := nCurrentElement
+            CASE nKey == K_MWFORWARD
+                nNewPosition := nCurrentElement
+        ENDCASE
+
+        oScrollBar:current := nNewPosition
+        oScrollBar:update()
+    ENDIF
+
+RETURN nReturnMode
+#pragma ENABLEWARNINGS = On
+
+#pragma ENABLEWARNINGS = Off //because of unused variables
+FUNCTION menu_search_disallow_exit_move(nMode, nCurrentElement, nRowPosition, oScrollBar, acMenuItems;
+                                        , xSelectable, lIsBorder, anKeys, lMousable, nScrollBarOrientation;
+                                       )
+
+    LOCAL nReturnMode := AC_CONT    
+    LOCAL nKey := LastKey()
+    LOCAL nMouseRow := MRow()
+    LOCAL nMouseCol := MCol()
+    LOCAL lScrollBar := (ValType(oScrollBar) == 'O')
+    LOCAL nHitStatus := IF(lScrollBar .AND. lMousable, oScrollBar:hitTest(nMouseRow, nMouseCol), HTNOWHERE)
+    LOCAL nBorderShift := cast(lIsBorder, 'N')
+    LOCAL nNewPosition
+
+    DO CASE
+        CASE nMode == AC_EXCEPT
+            DO CASE
+                CASE nKey == anKeys[MENU_SELECT]
+                    nReturnMode := AC_SELECT
+                CASE nKey == anKeys[MENU_UP]
+                    WMove(WRow() - 1, WCol())
+                CASE nKey == anKeys[MENU_DOWN]
+                    WMove(WRow() + 1, WCol())
+                CASE nKey == anKeys[MENU_LEFT]
+                    WMove(WRow(), WCol() - 1)
+                CASE nKey == anKeys[MENU_RIGHT]
+                    WMove(WRow(), WCol() + 1)
+                CASE nKey == anKeys[MENU_CENTER]
+                    WCenter(.T.)
+                OTHERWISE
+                    nReturnMode := AC_GOTO
+            ENDCASE
+        CASE nMode == AC_IDLE .AND. lScrollBar .AND. lMousable .AND. nKey == anKeys[MENU_LBUTTONUP]
+            DO CASE
+                CASE nHitStatus == HTSCROLLUNITDEC
+                    KEYBOARD Chr(K_UP)
+                CASE nHitStatus == HTSCROLLUNITINC
+                    KEYBOARD Chr(K_DOWN)
+                CASE nHitStatus == HTSCROLLBLOCKDEC
+                    move_thumb_up(oScrollBar, nCurrentElement, xSelectable, acMenuItems)
+                CASE nHitStatus == HTSCROLLBLOCKINC
+                    move_thumb_down(oScrollBar, nCurrentElement, xSelectable, acMenuItems)
+                CASE nHitStatus == HTSCROLLTHUMBDRAG
+            ENDCASE
+    ENDCASE
+
+    IF nHitStatus == HTNOWHERE .AND. nKey == anKeys[MENU_LBUTTONDOWN] .AND. lMousable;
+       .AND. nMouseRow >= -1 * nBorderShift .AND. nMouseCol >= -1 * nBorderShift;
+       .AND. nMouseRow <= MaxRow() + nBorderShift .AND. nMouseCol <= MaxCol() + nBorderShift
+
+        DO WHILE nKey != anKeys[MENU_LBUTTONUP]
+
+            nKey := Inkey()
+
+            DO CASE
+                CASE MRow() > nMouseRow .AND. MCol() > nMouseCol
+                    WMove(WRow() + 1, WCol() + 1)
+                CASE MRow() > nMouseRow .AND. MCol() == nMouseCol
+                    WMove(WRow() + 1, WCol())
+                CASE MRow() > nMouseRow .AND. MCol() < nMouseCol
+                    WMove(WRow() + 1, WCol() - 1)
+                CASE MRow() == nMouseRow .AND. MCol() > nMouseCol
+                    WMove(WRow(), WCol() + 1)
+                CASE MRow() == nMouseRow .AND. MCol() == nMouseCol
+                    WMove(WRow(), WCol())
+                CASE MRow() == nMouseRow .AND. MCol() < nMouseCol
+                    WMove(WRow(), WCol() - 1)
+                CASE MRow() < nMouseRow .AND. MCol() > nMouseCol
+                    WMove(WRow() - 1, WCol() + 1)
+                CASE MRow() < nMouseRow .AND. MCol() == nMouseCol
+                    WMove(WRow() - 1, WCol())
+                CASE MRow() < nMouseRow .AND. MCol() < nMouseCol
+                    WMove(WRow() - 1, WCol() - 1)
+            ENDCASE
+        ENDDO
+    ENDIF
+
+    IF lScrollBar
+        nNewPosition := oScrollBar:current
+
+        DO CASE
+            CASE nKey == K_CTRL_PGUP
+                nNewPosition := 1
+            CASE nKey == K_CTRL_PGDN
+                nNewPosition := oScrollBar:total
+            CASE nKey == K_CTRL_HOME
+                nNewPosition := nNewPosition - oScrollBar:barLength - 1
+            CASE nKey == K_CTRL_END
+                nNewPosition := nNewPosition + oScrollBar:barLength + 1
+            CASE nKey == K_PGUP
+                nNewPosition := nNewPosition - oScrollBar:barLength - 1
+            CASE nKey == K_PGDN
+                nNewPosition := nNewPosition + oScrollBar:barLength + 1
+            CASE nKey == K_UP
+                nNewPosition := nCurrentElement
+            CASE nKey == K_DOWN
+                nNewPosition := nCurrentElement
+            CASE nKey == K_LBUTTONUP
+                nNewPosition := nCurrentElement
+            CASE nKey == K_MWBACKWARD
+                nNewPosition := nCurrentElement
+            CASE nKey == K_MWFORWARD
+                nNewPosition := nCurrentElement
         ENDCASE
 
         oScrollBar:current := nNewPosition

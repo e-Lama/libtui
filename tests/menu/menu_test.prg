@@ -11,17 +11,20 @@ PROCEDURE main()
     LOCAL nResult
     LOCAL oError
 
+    Set( _SET_EVENTMASK, INKEY_ALL )
+
     AFill(alAllowed, .T.)
     alAllowed[2] := .F.
+    alAllowed[3] := .F.
+    alAllowed[4] := .F.
 
     BEGIN SEQUENCE
 
         ErrorBlock({| oError | standard_error_handler(oError)})
-        Menu():keys({K_ENTER, K_ESC, K_ALT_UP, K_ALT_LEFT, K_ALT_DOWN, K_RIGHT, K_ALT_ENTER})
 
         CLS
 
-        @ 3, 4, 15, 25 MENU TO nResult ITEMS acMenuItems SELECTABLE alAllowed FUNCTION 'menu_search_allow_exit_move' STARTFROM 4 COLOR 'N/W*,W+/B,,,W/N' BORDER B_SINGLE TITLE ' Title ' TITLECOLOR 'W/B' ALIGN ALIGN_CENTER SCROLLABLE
+        @ 0, 4, 7, 25 MENU TO nResult ITEMS acMenuItems SELECTABLE alAllowed FUNCTION 'menu_search_allow_exit_move' STARTFROM 3 COLOR 'N/W*,W+/B,,,W/N' BORDER B_SINGLE TITLE ' Title ' TITLECOLOR 'W/B' ALIGN ALIGN_CENTER MOUSABLE SCROLLABLE
 
         ? nResult
 

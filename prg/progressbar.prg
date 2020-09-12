@@ -39,7 +39,8 @@ CREATE CLASS Progress_bar
 
 EXPORTED:
 
-    METHOD new(nRow, nLeft, nRight, nActualValue, nTargetValue, nDisplayPosition, nFormat, nAccuracy, lReverse, cDescriptionColor, cSlash, acPatterns, acColors) CONSTRUCTOR
+    METHOD new(nRow, nLeft, nRight, nActualValue, nTargetValue, nDisplayPosition, nFormat, nAccuracy;
+               , lReverse, cDescriptionColor, cSlash, acPatterns, acColors) CONSTRUCTOR
 
     METHOD increment(nHowMany)
     METHOD decrement(nHowMany)
@@ -216,7 +217,9 @@ METHOD reverse(lReverse) CLASS Progress_bar
 
 RETURN lOldReverse
 
-METHOD new(nRow, nLeft, nRight, nActualValue, nTargetValue, nDisplayPosition, nFormat, nAccuracy, lReverse, cDescriptionColor, cSlash, acPatterns, acColors) CLASS Progress_bar
+METHOD new(nRow, nLeft, nRight, nActualValue, nTargetValue, nDisplayPosition, nFormat;
+           , nAccuracy, lReverse, cDescriptionColor, cSlash, acPatterns, acColors;
+          ) CLASS Progress_bar
 
 #ifdef USE_VALIDATORS
     LOCAL cDescription

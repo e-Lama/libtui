@@ -6,12 +6,14 @@
 
 #include "setup.ch"
 
-FUNCTION YesNo(xMessage, acAnwsers, cColor, lSafe, lAllowMove, nCurrentOption, lCyclic, lAcceptFirstFounded, cBorder, cAlign)
+FUNCTION YesNo(xMessage, acAnwsers, cColor, lSafe, lAllowMove, nCurrentOption;
+               , lCyclic, lAcceptFirstFounded, cBorder, cAlign, lAllowMouse;
+              )
     
     LOCAL lResult
 
 #ifdef USE_VALIDATORS
-    IF PCount() < 1 .OR. PCount() > 10
+    IF PCount() < 1 .OR. PCount() > 11
         throw(ARGUMENTS_NUMBER_EXCEPTION)
     ENDIF
 
@@ -31,6 +33,7 @@ FUNCTION YesNo(xMessage, acAnwsers, cColor, lSafe, lAllowMove, nCurrentOption, l
                           , IF(ValType(lAcceptFirstFounded) == 'L', lAcceptFirstFounded, .F.);
                           , IF(ValType(cBorder) == 'C', cBorder, NIL);
                           , IF(ValType(cAlign) == 'C', cAlign, NIL);
+                          , IF(ValType(lAllowMouse) == 'L', lAllowMouse, .T.);
                           ) == 1, .T., .F.;
                      )
     ELSE
@@ -42,18 +45,21 @@ FUNCTION YesNo(xMessage, acAnwsers, cColor, lSafe, lAllowMove, nCurrentOption, l
                           , IF(ValType(lAcceptFirstFounded) == 'L', lAcceptFirstFounded, YESNO_ACCEPT_FIRST);
                           , IF(ValType(cBorder) == 'C', cBorder, NIL);
                           , IF(ValType(cAlign) == 'C', cAlign, NIL);
+                          , IF(ValType(lAllowMouse) == 'L', lAllowMouse, .T.);
                           ) == 1, .T., .F.;
                      )
     ENDIF
 
 RETURN lResult
 
-FUNCTION NoYes(xMessage, acAnwsers, cColor, lSafe, lAllowMove, nCurrentOption, lCyclic, lAcceptFirstFounded, cBorder, cAlign)
+FUNCTION NoYes(xMessage, acAnwsers, cColor, lSafe, lAllowMove, nCurrentOption, lCyclic;
+               , lAcceptFirstFounded, cBorder, cAlign, lAllowMouse;
+              )
 
     LOCAL lResult
 
 #ifdef USE_VALIDATORS
-    IF PCount() < 1 .OR. PCount() > 10
+    IF PCount() < 1 .OR. PCount() > 11
         throw(ARGUMENTS_NUMBER_EXCEPTION)
     ENDIF
 
@@ -73,6 +79,7 @@ FUNCTION NoYes(xMessage, acAnwsers, cColor, lSafe, lAllowMove, nCurrentOption, l
                           , IF(ValType(lAcceptFirstFounded) == 'L', lAcceptFirstFounded, .F.);
                           , IF(ValType(cBorder) == 'C', cBorder, NIL);
                           , IF(ValType(cAlign) == 'C', cAlign, NIL);
+                          , IF(ValType(lAllowMouse) == 'L', lAllowMouse, .T.);
                           ) == 1, .F., .T.;
                      )
     ELSE
@@ -84,18 +91,21 @@ FUNCTION NoYes(xMessage, acAnwsers, cColor, lSafe, lAllowMove, nCurrentOption, l
                           , IF(ValType(lAcceptFirstFounded) == 'L', lAcceptFirstFounded, YESNO_ACCEPT_FIRST);
                           , IF(ValType(cBorder) == 'C', cBorder, NIL);
                           , IF(ValType(cAlign) == 'C', cAlign, NIL);
+                          , IF(ValType(lAllowMouse) == 'L', lAllowMouse, .T.);
                           ) == 1, .F., .T.;
                      )
     ENDIF
 
 RETURN lResult
 
-FUNCTION Dialog(xMessage, acOptions, cColor, lAllowEscape, nDelay, lSafe, lAllowMove, nCurrentOption, lCyclic, lAcceptFirstFounded, cBorder, cAlign)
+FUNCTION Dialog(xMessage, acOptions, cColor, lAllowEscape, nDelay, lSafe, lAllowMove, nCurrentOption;
+                , lCyclic, lAcceptFirstFounded, cBorder, cAlign, lAllowMouse;
+               )
 
     LOCAL nResult
 
 #ifdef USE_VALIDATORS
-    IF PCount() < 1 .OR. PCount() > 12
+    IF PCount() < 1 .OR. PCount() > 13
         throw(ARGUMENTS_NUMBER_EXCEPTION)
     ENDIF
 #endif
@@ -111,6 +121,7 @@ FUNCTION Dialog(xMessage, acOptions, cColor, lAllowEscape, nDelay, lSafe, lAllow
                                   , IF(ValType(lAcceptFirstFounded) == 'L', lAcceptFirstFounded, .F.);
                                   , IF(ValType(cBorder) == 'C', cBorder, NIL);
                                   , IF(ValType(cAlign) == 'C', cAlign, NIL);
+                                  , IF(ValType(lAllowMouse) == 'L', lAllowMouse, .T.);
                                   )
     ELSE
         nResult := __print_message(xMessage, acOptions, IF(ValType(cColor) == 'C', cColor, DIALOG_COLOR);
@@ -121,17 +132,20 @@ FUNCTION Dialog(xMessage, acOptions, cColor, lAllowEscape, nDelay, lSafe, lAllow
                                   , IF(ValType(lAcceptFirstFounded) == 'L', lAcceptFirstFounded, DIALOG_ACCEPT_FIRST);
                                   , IF(ValType(cBorder) == 'C', cBorder, NIL);
                                   , IF(ValType(cAlign) == 'C', cAlign, NIL);
+                                  , IF(ValType(lAllowMouse) == 'L', lAllowMouse, .T.);
                                   )
     ENDIF
 
 RETURN nResult
 
-FUNCTION Inform(xMessage, cColor, lAllowEscape, nDelay, lSafe, lAllowMove, lCyclic, lAcceptFirstFounded, cBorder, cAlign)
+FUNCTION Inform(xMessage, cColor, lAllowEscape, nDelay, lSafe, lAllowMove, lCyclic;
+                , lAcceptFirstFounded, cBorder, cAlign, lAllowMouse;
+               )
 
     LOCAL nResult
 
 #ifdef USE_VALIDATORS
-    IF PCount() < 1 .OR. PCount() > 10
+    IF PCount() < 1 .OR. PCount() > 11
         throw(ARGUMENTS_NUMBER_EXCEPTION)
     ENDIF
 #endif
@@ -146,6 +160,7 @@ FUNCTION Inform(xMessage, cColor, lAllowEscape, nDelay, lSafe, lAllowMove, lCycl
                                   , IF(ValType(lAcceptFirstFounded) == 'L', lAcceptFirstFounded, .F.);
                                   , IF(ValType(cBorder) == 'C', cBorder, NIL);
                                   , IF(ValType(cAlign) == 'C', cAlign, NIL);
+                                  , IF(ValType(lAllowMouse) == 'L', lAllowMouse, .T.);
                                   )
     ELSE
         nResult := __print_message(xMessage, {OK}, IF(ValType(cColor) == 'C', cColor, INFORM_COLOR);
@@ -155,12 +170,16 @@ FUNCTION Inform(xMessage, cColor, lAllowEscape, nDelay, lSafe, lAllowMove, lCycl
                                   , IF(ValType(lAcceptFirstFounded) == 'L', lAcceptFirstFounded, INFORM_ACCEPT_FIRST);
                                   , IF(ValType(cBorder) == 'C', cBorder, NIL);
                                   , IF(ValType(cAlign) == 'C', cAlign, NIL);
+                                  , IF(ValType(lAllowMouse) == 'L', lAllowMouse, .T.);
                                   )
     ENDIF
 
 RETURN nResult
 
-STATIC FUNCTION __print_message(xMessage, acOptions, cColor, lAllowEscape, nDelay, lSafe, lAllowMove, nCurrentOption, lCyclic, lAcceptFirstFounded, cBorder, cAlign)
+STATIC FUNCTION __print_message(xMessage, acOptions, cColor, lAllowEscape, nDelay, lSafe;
+                                , lAllowMove, nCurrentOption, lCyclic, lAcceptFirstFounded;
+                                , cBorder, cAlign, lAllowMouse;
+                               )
 
     LOCAL acOptionsOk := Array(0)
     LOCAL nOldShadow := WSetShadow(-1)
@@ -195,7 +214,7 @@ STATIC FUNCTION __print_message(xMessage, acOptions, cColor, lAllowEscape, nDela
     nReturn := AlertLG():AlertLG(xMessage, acOptionsOk, hb_ColorIndex(cColor, CLR_STANDARD);
                                 , hb_ColorIndex(CLR_ENHANCED), nDelay, NIL, NIL, NIL, nCurrentOption;
                                 , lAllowEscape, lAllowMove, lCyclic, lAcceptFirstFounded, cBorder;
-                                , cAlign;
+                                , cAlign, lAllowMouse;
                                 )
 
     WSetShadow(NToColor(nOldShadow))

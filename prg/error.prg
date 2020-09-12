@@ -105,16 +105,19 @@ FUNCTION standard_error_handler(oError)
     LOCAL cMessage := IF(ValType(oError:cargo) == 'C' .AND. 'EXCEPTION' $ oError:cargo, 'Exception: ' + oError:description, __get_message(oError))
     LOCAL cOsError := IF(Empty(oError:osCode), '', ';' + hb_StrFormat('(DOS Error %1$d)', oError:osCode))
     LOCAL n := 0
-    LOCAL xHandler
     LOCAL acStack
     LOCAL cCall
     LOCAL xKey
+
+#ifdef HB_CLP_STRICT
+    LOCAL xHandler
 
     xHandler := __handle_harbour_errors(oError)
 
     IF xHandler != NIL
         RETURN xHandler
     ENDIF
+#endif
 
     WSetShadow(-1)
     Alert(cMessage + cOsError)
@@ -220,6 +223,7 @@ STATIC FUNCTION __get_message(oError)
 RETURN cMessage
 
 //Because of a compatibility some errors are allowed
+#ifdef HB_CLP_STRICT
 STATIC FUNCTION __handle_harbour_errors(oError)
 
     LOCAL n := 0
@@ -233,3 +237,4 @@ STATIC FUNCTION __handle_harbour_errors(oError)
     ENDIF
 
 RETURN NIL
+#endif

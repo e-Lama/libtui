@@ -31,10 +31,11 @@
 #command @ <top>, <left>, <bottom>, <right> ROWBROWSE <obj> ID <id> [COLOR <color>] ;
            [BORDER <border>] [TITLE <title>] [ALIGN <align>] [TITLECOLOR <titlecolor>] ;
            [ROW <row>] [ACTION <action>] [COLORBLOCK <colorblock>] ;
-           [HEADERCOLOR <headercolor>] [KEYMAP <keymap>] [CARGO <cargo>];
-           [AUTOHIGHLIGHT <autohighlight>] [SKIP <skip>] [GOBOTTOM <gobottom>] [GOTOP <gotop>] => ;
+           [HEADERCOLOR <headercolor>] [KEYMAP <keymap>] [CARGO <cargo>] ;
+           [AUTOHIGHLIGHT <autohighlight>] [SKIP <skip>] [GOBOTTOM <gobottom>] ;
+           [GOTOP <gotop>] [<mousable: MOUSABLE>] => ;
            <obj> := Row_browse():new(<id>, <top>, <left>, <bottom>, <right>, <color> ;
                                     , <border>, <title>, <align>, <titlecolor>, <row>, <action> ;
                                     , <colorblock>, <headercolor>, <keymap>, <cargo> ;
-                                    , <autohighlight>, <skip>, <gobottom>, <gotop> ;
+                                    , <autohighlight>, <skip>, <gobottom>, <gotop>, <.mousable.> ;
                                     )
