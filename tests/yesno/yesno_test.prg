@@ -1,3 +1,5 @@
+#include "inkey.ch"
+
 #include "yesno.ch"
 
 REQUEST HB_CODEPAGE_UTF8EX
@@ -8,6 +10,8 @@ PROCEDURE main()
     LOCAL cLongText := 'Wikipedia is a multilingual online encyclopedia created and maintained as an open collaboration project[4] by a community of volunteer editors using a wiki-based editing system.[5] It is the largest and most popular general reference work on the World Wide Web.[6][7][8] It is also one of the 15 most popular websites ranked by Alexa, as of June 2020.[9] It features exclusively free content and no commercial ads and is owned and supported by the Wikimedia Foundation, a non-profit organization funded primarily through donations.'
     LOCAL lAnwser
     LOCAL nAnwser
+
+    Set(_SET_EVENTMASK, INKEY_ALL)
 
     hb_cdpSelect('UTF8EX') 
 

@@ -18,14 +18,72 @@
 #command @ <top>, <left>, <bottom>, <right> MENU TO <ret> ITEMS <items> SELECTABLE <selectable> ;
            [FUNCTION <function>] [STARTFROM <initialitem>] [COLOR <color>] [BORDER <border>] ;
            [ ;
-               TITLE <title> [TITLECOLOR <titlecolor>] [ALIGN <align>] [KEYS <keys>] [<mousable: MOUSABLE>] ; 
+               TITLE <title> [TITLECOLOR <titlecolor>] [ALIGN <align>] ; 
            ] ;
            [ ;
                [<scrollable: SCROLLABLE>] [SCROLLFROM <scrollfrom>] [SCROLLTO <scrollto>]  ;
-               [SCROLLCOLOR <scrollcolor>] [ORIENTATION <orientation>] [CARGO <cargo>] [STYLE <style>] [BLOCK <block>] ;
-           ] => ;
+               [SCROLLCOLOR <scrollcolor>] [ORIENTATION <orientation>] [CARGO <cargo>] ;
+               [STYLE <style>] [BLOCK <block>] ;
+           ] ;
+           [KEYS <keys>] [<mousable: MOUSABLE>] [ITEMALIGN <itemalign>] ;
+           => ;
            <ret> := display_menu(<top>, <left>, <bottom>, <right>, <items>, <selectable>, <function> ;
                                 , <initialitem>, <color>, <border>, <title>, <titlecolor>, <align> ;
                                 , <keys>, <.mousable.>, <.scrollable.>, <scrollfrom>, <scrollto> ;
+                                , <scrollcolor>, <orientation>, <cargo>, <style>, <block>, <itemalign> ;
+                                )
+
+#command @ <top>, <left> MENU AUTOSIZE TO <ret> ITEMS <items> SELECTABLE <selectable> ;
+           [FUNCTION <function>] [STARTFROM <initialitem>] [COLOR <color>] [BORDER <border>] ;
+           [ ;
+               TITLE <title> [TITLECOLOR <titlecolor>] [ALIGN <align>] ; 
+           ] ;
+           [ ;
+               [<scrollable: SCROLLABLE>] [SCROLLFROM <scrollfrom>] [SCROLLTO <scrollto>]  ;
+               [SCROLLCOLOR <scrollcolor>] [ORIENTATION <orientation>] [CARGO <cargo>] ;
+               [STYLE <style>] [BLOCK <block>] ;
+           ] ;
+           [KEYS <keys>] [<mousable: MOUSABLE>] ;
+           => ;
+           <ret> := display_menu_autosize(<top>, <left>, <items>, <selectable>, <function> ;
+                                , <initialitem>, <color>, <border>, <title>, <titlecolor>, <align> ;
+                                , <keys>, <.mousable.>, <.scrollable.>, <scrollfrom>, <scrollto> ;
                                 , <scrollcolor>, <orientation>, <cargo>, <style>, <block> ;
+                                )
+
+#command @ <centerrow>, <centercol>, <height>, <width> MENU CENTER TO <ret> ITEMS <items> SELECTABLE <selectable> ;
+           [FUNCTION <function>] [STARTFROM <initialitem>] [COLOR <color>] [BORDER <border>] ;
+           [ ;
+               TITLE <title> [TITLECOLOR <titlecolor>] [ALIGN <align>] ; 
+           ] ;
+           [ ;
+               [<scrollable: SCROLLABLE>] [SCROLLFROM <scrollfrom>] [SCROLLTO <scrollto>]  ;
+               [SCROLLCOLOR <scrollcolor>] [ORIENTATION <orientation>] [CARGO <cargo>] ;
+               [STYLE <style>] [BLOCK <block>] ;
+           ] ;
+           [KEYS <keys>] [<mousable: MOUSABLE>] ;
+           => ;
+           <ret> := display_menu_center(<centerrow>, <centercol>, <height>, <width>, <items> ;
+                                , <selectable>, <function>, <initialitem>, <color>, <border> ;
+                                , <title>, <titlecolor>, <align>, <keys>, <.mousable.> ;
+                                , <.scrollable.>, <scrollfrom>, <scrollto>, <scrollcolor> ;
+                                , <orientation>, <cargo>, <style>, <block> ;
+                                )
+
+#command @ <centerrow>, <centercol> MENU CENTER AUTOSIZE TO <ret> ITEMS <items> SELECTABLE <selectable> ;
+           [FUNCTION <function>] [STARTFROM <initialitem>] [COLOR <color>] [BORDER <border>] ;
+           [ ;
+               TITLE <title> [TITLECOLOR <titlecolor>] [ALIGN <align>] ; 
+           ] ;
+           [ ;
+               [<scrollable: SCROLLABLE>] [SCROLLFROM <scrollfrom>] [SCROLLTO <scrollto>]  ;
+               [SCROLLCOLOR <scrollcolor>] [ORIENTATION <orientation>] [CARGO <cargo>] ;
+               [STYLE <style>] [BLOCK <block>] ;
+           ] ;
+           [KEYS <keys>] [<mousable: MOUSABLE>] ;
+           => ;
+           <ret> := display_menu_center_autosize(<centerrow>, <centercol>, <items>, <selectable>, <function> ;
+                                , <initialitem>, <color>, <border>, <title>, <titlecolor>, <align>, <keys>, <.mousable.> ;
+                                , <.scrollable.>, <scrollfrom>, <scrollto>, <scrollcolor>, <orientation> ;
+                                , <cargo>, <style>, <block> ;
                                 )

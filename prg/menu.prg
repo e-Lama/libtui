@@ -9,14 +9,15 @@
 #include "setup.ch"
 
 STATIC FUNCTION user_function_handler(nMode, nCurrent, nPos, oScrollBar, acMenuItems, xSelectable;
-                                      , lIsBorder, anKeys, lMousable, nScrollBarOrientation;
+                                      , lIsBorder, axKeys, lMousable, nScrollBarOrientation;
                                       , xUserFunctionName)
-RETURN Do(xUserFunctionName, nMode, nCurrent, nPos, oScrollBar, acMenuItems, xSelectable, lIsBorder, anKeys, lMousable, nScrollBarOrientation)
+RETURN Do(xUserFunctionName, nMode, nCurrent, nPos, oScrollBar, acMenuItems, xSelectable, lIsBorder, axKeys, lMousable, nScrollBarOrientation)
 
 FUNCTION display_menu(nTop, nLeft, nBottom, nRight, acMenuItems, xSelectable, xUserFunctionName;
-                      , nInitialItem, cColor, cBorder, cTitle, cTitleColor, cTitleAlign, anKeys;
+                      , nInitialItem, cColor, cBorder, cTitle, cTitleColor, cTitleAlign, axKeys;
                       , lMousable, lScrollBar, nScrollBarFrom, nScrollBarTo, cScrollBarColor;
                       , nScrollBarOrientation, xScrollBarCargo, cScrollBarStyle, bScrollBarSBlock;
+                      , cItemAlign;
                      )
 
     LOCAL lIsBorder := .F.
@@ -93,13 +94,13 @@ FUNCTION display_menu(nTop, nLeft, nBottom, nRight, acMenuItems, xSelectable, xU
 #endif
     ENDIF
 
-    IF ValType(anKeys) != 'A'
-        anKeys := MENU_BASIC_KEYS
+    IF ValType(axKeys) != 'A'
+        axKeys := MENU_BASIC_KEYS
 #ifdef USE_VALIDATORS
-        IF Len(anKeys) != Len(MENU_BASIC_KEYS)
+        IF Len(axKeys) != Len(MENU_BASIC_KEYS)
             throw(ARGUMENT_VALUE_EXCEPTION)
         ELSE
-            AEval(anKeys, {| nKey | assert_type(nKey, 'N')})
+            AEval(axKeys, {| xKey | IF(ValType(xKey) == 'A', AEval(xKey, {| nKey | assert_type(nKey, 'N')}), assert_type(xKey, 'N'))})
         ENDIF
 #endif
     ENDIF
@@ -113,6 +114,9 @@ FUNCTION display_menu(nTop, nLeft, nBottom, nRight, acMenuItems, xSelectable, xU
     ENDIF
 
     IF lScrollBar
+    
+        hb_Default(@nScrollBarOrientation, SCROLLBAR_RIGHT)
+
 #ifdef USE_VALIDATORS
         IF ValType(cScrollBarColor) == 'C' .AND. !is_color(cTitleColor, .T.)
             throw(ARGUMENT_VALUE_EXCEPTION)
@@ -165,6 +169,15 @@ FUNCTION display_menu(nTop, nLeft, nBottom, nRight, acMenuItems, xSelectable, xU
         IF !(ValType(bScrollBarSBlock) $ 'B;U')
             throw(ARGUMENT_VALUE_EXCEPTION)
         ENDIF
+
+#endif
+    ENDIF
+
+    IF ValType(cItemAlign) != 'C'
+        cItemAlign := ALIGN_LEFT
+#ifdef USE_VALIDATORS
+    ELSEIF AScan({ALIGN_LEFT, ALIGN_CENTER, ALIGN_RIGHT}, cItemAlign) == 0
+        throw(ARGUMENT_VALUE_EXCEPTION)
 #endif
     ENDIF
 
@@ -199,6 +212,20 @@ FUNCTION display_menu(nTop, nLeft, nBottom, nRight, acMenuItems, xSelectable, xU
             OTHERWISE
                 throw(RUNTIME_EXCEPTION)
         ENDCASE
+    ENDIF
+
+    IF cItemAlign == ALIGN_CENTER
+        IF lScrollBar .AND. (nScrollBarOrientation == SCROLLBAR_RIGHT .OR. nScrollBarOrientation == SCROLLBAR_LEFT)
+            AEval(acMenuItems, {| cItem, nKey | acMenuItems[nKey] := PadC(cItem, MaxCol())})
+        ELSE
+            AEval(acMenuItems, {| cItem, nKey | acMenuItems[nKey] := PadC(cItem, MaxCol() + 1)})
+        ENDIF
+    ELSEIF cItemAlign == ALIGN_RIGHT
+        IF lScrollBar .AND. (nScrollBarOrientation == SCROLLBAR_RIGHT .OR. nScrollBarOrientation == SCROLLBAR_LEFT)
+            AEval(acMenuItems, {| cItem, nKey | acMenuItems[nKey] := PadL(cItem, MaxCol())})
+        ELSE
+            AEval(acMenuItems, {| cItem, nKey | acMenuItems[nKey] := PadL(cItem, MaxCol() + 1)})
+        ENDIF
     ENDIF
 
     IF lScrollBar
@@ -236,7 +263,6 @@ FUNCTION display_menu(nTop, nLeft, nBottom, nRight, acMenuItems, xSelectable, xU
                 oScrollBar := ScrollBar(nScrollBarFrom, nScrollBarTo, MaxRow(), bScrollBarSBlock, SCROLL_HORIZONTAL)
         ENDCASE
 
-
         oScrollBar:total := Len(acMenuItems)
         oScrollBar:cargo := xScrollBarCargo
         oScrollBar:current := IF(ValType(nInitialItem) == 'N', nInitialItem, 1)
@@ -261,7 +287,7 @@ FUNCTION display_menu(nTop, nLeft, nBottom, nRight, acMenuItems, xSelectable, xU
                                 , IF(nScrollBarOrientation == SCROLLBAR_RIGHT, MaxCol() - 1, MaxCol());
                                 , acMenuItems, xSelectable, {| nMode, nCurrent, nPos |;
                                       user_function_handler(nMode, nCurrent, nPos, oScrollBar, acMenuItems;
-                                                                   , xSelectable, lIsBorder, anKeys, lMousable;
+                                                                   , xSelectable, lIsBorder, axKeys, lMousable;
                                                                    , nScrollBarOrientation, xUserFunctionName;
                                                                   );
                                                             };
@@ -285,9 +311,10 @@ FUNCTION display_menu(nTop, nLeft, nBottom, nRight, acMenuItems, xSelectable, xU
 RETURN nSelectedItem
 
 FUNCTION display_menu_autosize(nTop, nLeft, acMenuItems, xSelectable, xUserFunctionName, nInitialItem;
-                               , cColor, cBorder, cTitle, cTitleColor, cTitleAlign, lScrollBar, nScrollBarFrom;
-                               , nScrollBarTo, cScrollBarColor, nScrollBarOrientation, xScrollBarCargo;
-                               , cScrollBarStyle, bScrollBarSBlock;
+                               , cColor, cBorder, cTitle, cTitleColor, cTitleAlign, axKeys, lMousable;
+                               , lScrollBar, nScrollBarFrom, nScrollBarTo, cScrollBarColor;
+                               , nScrollBarOrientation, xScrollBarCargo, cScrollBarStyle, bScrollBarSBlock;
+                               , cItemAlign;
                               )
 
     LOCAL nBottom
@@ -308,12 +335,13 @@ FUNCTION display_menu_autosize(nTop, nLeft, acMenuItems, xSelectable, xUserFunct
         nRight := Max(nRight, nLeft + Len(cTitle))
     ENDIF
 
-RETURN display_menu(nTop, nLeft, nBottom, nRight, acMenuItems, xSelectable, xUserFunctionName, nInitialItem, cColor, cBorder, cTitle, cTitleColor, cTitleAlign, lScrollBar, nScrollBarFrom, nScrollBarTo, cScrollBarColor, nScrollBarOrientation, xScrollBarCargo, cScrollBarStyle, bScrollBarSBlock)
+RETURN display_menu(nTop, nLeft, nBottom, nRight, acMenuItems, xSelectable, xUserFunctionName, nInitialItem, cColor, cBorder, cTitle, cTitleColor, cTitleAlign, axKeys, lMousable, lScrollBar, nScrollBarFrom, nScrollBarTo, cScrollBarColor, nScrollBarOrientation, xScrollBarCargo, cScrollBarStyle, bScrollBarSBlock, cItemAlign)
 
 FUNCTION display_menu_center(nCenterRow, nCenterCol, nHeight, nWidth, acMenuItems, xSelectable;
                              , xUserFunctionName, nInitialItem, cColor, cBorder, cTitle, cTitleColor;
-                             , cTitleAlign, lScrollBar, nScrollBarFrom, nScrollBarTo, cScrollBarColor;
-                             , nScrollBarOrientation, xScrollBarCargo, cScrollBarStyle, bScrollBarSBlock;
+                             , cTitleAlign, axKeys, lMousable, lScrollBar, nScrollBarFrom, nScrollBarTo;
+                             , cScrollBarColor, nScrollBarOrientation, xScrollBarCargo, cScrollBarStyle;
+                             , bScrollBarSBlock, cItemAlign;
                             )
 
     LOCAL nTop
@@ -333,13 +361,13 @@ FUNCTION display_menu_center(nCenterRow, nCenterCol, nHeight, nWidth, acMenuItem
     nBottom := nCenterRow + Int((nHeight + 1) / 2)
     nRight := nCenterCol + Int((nWidth + 1) / 2)
 
-RETURN display_menu(nTop, nLeft, nBottom, nRight, acMenuItems, xSelectable, xUserFunctionName, nInitialItem, cColor, cBorder, cTitle, cTitleColor, cTitleAlign, lScrollBar, nScrollBarFrom, nScrollBarTo, cScrollBarColor, nScrollBarOrientation, xScrollBarCargo, cScrollBarStyle, bScrollBarSBlock)
+RETURN display_menu(nTop, nLeft, nBottom, nRight, acMenuItems, xSelectable, xUserFunctionName, nInitialItem, cColor, cBorder, cTitle, cTitleColor, cTitleAlign, axKeys, lMousable, lScrollBar, nScrollBarFrom, nScrollBarTo, cScrollBarColor, nScrollBarOrientation, xScrollBarCargo, cScrollBarStyle, bScrollBarSBlock, cItemAlign)
 
 FUNCTION display_menu_center_autosize(nCenterRow, nCenterCol, acMenuItems, xSelectable, xUserFunctionName;
                                       , nInitialItem, cColor, cBorder, cTitle, cTitleColor, cTitleAlign;
-                                      , lScrollBar, nScrollBarFrom, nScrollBarTo, cScrollBarColor;
-                                      , nScrollBarOrientation, xScrollBarCargo, cScrollBarStyle;
-                                      , bScrollBarSBlock;
+                                      , axKeys, lMousable, lScrollBar, nScrollBarFrom, nScrollBarTo;
+                                      , cScrollBarColor, nScrollBarOrientation, xScrollBarCargo;
+                                      , cScrollBarStyle, bScrollBarSBlock, cItemAlign;
                                      )
 
     LOCAL nHeight
@@ -357,11 +385,23 @@ FUNCTION display_menu_center_autosize(nCenterRow, nCenterCol, acMenuItems, xSele
         nWidth := Max(nWidth, Len(cTitle) + 1)
     ENDIF
 
-RETURN display_menu_center(nCenterRow, nCenterCol, nHeight, nWidth, acMenuItems, xSelectable, xUserFunctionName, nInitialItem, cColor, cBorder, cTitle, cTitleColor, cTitleAlign, lScrollBar, nScrollBarFrom, nScrollBarTo, cScrollBarColor, nScrollBarOrientation, xScrollBarCargo, cScrollBarStyle, bScrollBarSBlock)
+RETURN display_menu_center(nCenterRow, nCenterCol, nHeight, nWidth, acMenuItems, xSelectable, xUserFunctionName, nInitialItem, cColor, cBorder, cTitle, cTitleColor, cTitleAlign, axKeys, lMousable, lScrollBar, nScrollBarFrom, nScrollBarTo, cScrollBarColor, nScrollBarOrientation, xScrollBarCargo, cScrollBarStyle, bScrollBarSBlock, cItemAlign)
+
+STATIC FUNCTION was_menu_key(nKey, xKey)
+
+  LOCAL lWasKey := .F.
+
+  IF ValType(xKey) == 'N' .AND. nKey == xKey
+    lWasKey := .T.
+  ELSEIF AScan(xKey, nKey) != 0
+    lWasKey := .T.
+  ENDIF
+    
+RETURN lWasKey
 
 #pragma ENABLEWARNINGS = Off //because of unused variables
 FUNCTION menu_search_allow_exit(nMode, nCurrentElement, nRowPosition, oScrollBar, acMenuItems, xSelectable;
-                                , lIsBorder, anKeys, lMousable, nScrollBarOrientation;
+                                , lIsBorder, axKeys, lMousable, nScrollBarOrientation;
                                )
 
     LOCAL nReturnMode := AC_CONT    
@@ -376,16 +416,16 @@ FUNCTION menu_search_allow_exit(nMode, nCurrentElement, nRowPosition, oScrollBar
     DO CASE
         CASE nMode == AC_EXCEPT
             DO CASE
-                CASE nKey == anKeys[MENU_SELECT]
+                CASE was_menu_key(nKey, axKeys[MENU_SELECT])
                     nReturnMode := AC_SELECT
-                CASE nKey == anKeys[MENU_ABORT]
+                CASE was_menu_key(nKey, axKeys[MENU_ABORT])
                     IF YesNo(Config():get_config('DefaultExit'))
                         nReturnMode := AC_ABORT
                     ENDIF
                 OTHERWISE
                     nReturnMode := AC_GOTO
             ENDCASE
-        CASE nMode == AC_IDLE .AND. lScrollBar .AND. lMousable .AND. nKey == anKeys[MENU_LBUTTONUP]
+        CASE nMode == AC_IDLE .AND. lScrollBar .AND. lMousable .AND. was_menu_key(nKey, axKeys[MENU_LBUTTONUP])
             DO CASE
                 CASE nHitStatus == HTSCROLLUNITDEC
                     KEYBOARD Chr(K_UP)
@@ -436,7 +476,7 @@ RETURN nReturnMode
 
 #pragma ENABLEWARNINGS = Off //because of unused variables
 FUNCTION menu_search_disallow_exit(nMode, nCurrentElement, nRowPosition, oScrollBar, acMenuItems, xSelectable;
-                                   , lIsBorder, anKeys, lMousable, nScrollBarOrientation;
+                                   , lIsBorder, axKeys, lMousable, nScrollBarOrientation;
                                   )
 
     LOCAL nReturnMode := AC_CONT    
@@ -451,12 +491,12 @@ FUNCTION menu_search_disallow_exit(nMode, nCurrentElement, nRowPosition, oScroll
     DO CASE
         CASE nMode == AC_EXCEPT
             DO CASE
-                CASE nKey == anKeys[MENU_SELECT]
+                CASE was_menu_key(nKey, axKeys[MENU_SELECT])
                     nReturnMode := AC_SELECT
                 OTHERWISE
                     nReturnMode := AC_GOTO
             ENDCASE
-        CASE nMode == AC_IDLE .AND. lScrollBar .AND. lMousable .AND. nKey == anKeys[MENU_LBUTTONUP]
+        CASE nMode == AC_IDLE .AND. lScrollBar .AND. lMousable .AND. was_menu_key(nKey, axKeys[MENU_LBUTTONUP])
             DO CASE
                 CASE nHitStatus == HTSCROLLUNITDEC
                     KEYBOARD Chr(K_UP)
@@ -566,7 +606,7 @@ STATIC PROCEDURE move_thumb_down(oScrollBar, nCurrentElement, xSelectable, acMen
 RETURN
 
 FUNCTION menu_search_allow_exit_move(nMode, nCurrentElement, nRowPosition, oScrollBar;
-                                     , acMenuItems, xSelectable, lIsBorder, anKeys;
+                                     , acMenuItems, xSelectable, lIsBorder, axKeys;
                                      , lMousable, nScrollBarOrientation;
                                     )
 
@@ -582,26 +622,26 @@ FUNCTION menu_search_allow_exit_move(nMode, nCurrentElement, nRowPosition, oScro
     DO CASE
         CASE nMode == AC_EXCEPT
             DO CASE
-                CASE nKey == anKeys[MENU_SELECT]
+                CASE was_menu_key(nKey, axKeys[MENU_SELECT])
                     nReturnMode := AC_SELECT
-                CASE nKey == anKeys[MENU_ABORT]
+                CASE was_menu_key(nKey, axKeys[MENU_ABORT])
                     IF YesNo(Config():get_config('DefaultExit'))
                         nReturnMode := AC_ABORT
                     ENDIF
-                CASE nKey == anKeys[MENU_UP]
+                CASE was_menu_key(nKey, axKeys[MENU_UP])
                     WMove(WRow() - 1, WCol())
-                CASE nKey == anKeys[MENU_DOWN]
+                CASE was_menu_key(nKey, axKeys[MENU_DOWN])
                     WMove(WRow() + 1, WCol())
-                CASE nKey == anKeys[MENU_LEFT]
+                CASE was_menu_key(nKey, axKeys[MENU_LEFT])
                     WMove(WRow(), WCol() - 1)
-                CASE nKey == anKeys[MENU_RIGHT]
+                CASE was_menu_key(nKey, axKeys[MENU_RIGHT])
                     WMove(WRow(), WCol() + 1)
-                CASE nKey == anKeys[MENU_CENTER]
+                CASE was_menu_key(nKey, axKeys[MENU_CENTER])
                     WCenter(.T.)
                 OTHERWISE
                     nReturnMode := AC_GOTO
             ENDCASE
-        CASE nMode == AC_IDLE .AND. lScrollBar .AND. lMousable .AND. nKey == anKeys[MENU_LBUTTONUP]
+        CASE nMode == AC_IDLE .AND. lScrollBar .AND. lMousable .AND. was_menu_key(nKey, axKeys[MENU_LBUTTONUP])
             DO CASE
                 CASE nHitStatus == HTSCROLLUNITDEC
                     KEYBOARD Chr(K_UP)
@@ -615,11 +655,11 @@ FUNCTION menu_search_allow_exit_move(nMode, nCurrentElement, nRowPosition, oScro
             ENDCASE
     ENDCASE
 
-    IF nHitStatus == HTNOWHERE .AND. nKey == anKeys[MENU_LBUTTONDOWN] .AND. lMousable;
+    IF nHitStatus == HTNOWHERE .AND. was_menu_key(nKey, axKeys[MENU_LBUTTONDOWN]) .AND. lMousable;
        .AND. nMouseRow >= -1 * nBorderShift .AND. nMouseCol >= -1 * nBorderShift;
        .AND. nMouseRow <= MaxRow() + nBorderShift .AND. nMouseCol <= MaxCol() + nBorderShift
 
-        DO WHILE nKey != anKeys[MENU_LBUTTONUP]
+        DO WHILE !was_menu_key(nKey, axKeys[MENU_LBUTTONUP])
 
             nKey := Inkey()
 
@@ -642,6 +682,8 @@ FUNCTION menu_search_allow_exit_move(nMode, nCurrentElement, nRowPosition, oScro
                     WMove(WRow() - 1, WCol())
                 CASE MRow() < nMouseRow .AND. MCol() < nMouseCol
                     WMove(WRow() - 1, WCol() - 1)
+                OTHERWISE
+                    hb_idleSleep(0.1)
             ENDCASE
         ENDDO
     ENDIF
@@ -683,7 +725,7 @@ RETURN nReturnMode
 
 #pragma ENABLEWARNINGS = Off //because of unused variables
 FUNCTION menu_search_disallow_exit_move(nMode, nCurrentElement, nRowPosition, oScrollBar, acMenuItems;
-                                        , xSelectable, lIsBorder, anKeys, lMousable, nScrollBarOrientation;
+                                        , xSelectable, lIsBorder, axKeys, lMousable, nScrollBarOrientation;
                                        )
 
     LOCAL nReturnMode := AC_CONT    
@@ -698,22 +740,22 @@ FUNCTION menu_search_disallow_exit_move(nMode, nCurrentElement, nRowPosition, oS
     DO CASE
         CASE nMode == AC_EXCEPT
             DO CASE
-                CASE nKey == anKeys[MENU_SELECT]
+                CASE was_menu_key(nKey, axKeys[MENU_SELECT])
                     nReturnMode := AC_SELECT
-                CASE nKey == anKeys[MENU_UP]
+                CASE was_menu_key(nKey, axKeys[MENU_UP])
                     WMove(WRow() - 1, WCol())
-                CASE nKey == anKeys[MENU_DOWN]
+                CASE was_menu_key(nKey, axKeys[MENU_DOWN])
                     WMove(WRow() + 1, WCol())
-                CASE nKey == anKeys[MENU_LEFT]
+                CASE was_menu_key(nKey, axKeys[MENU_LEFT])
                     WMove(WRow(), WCol() - 1)
-                CASE nKey == anKeys[MENU_RIGHT]
+                CASE was_menu_key(nKey, axKeys[MENU_RIGHT])
                     WMove(WRow(), WCol() + 1)
-                CASE nKey == anKeys[MENU_CENTER]
+                CASE was_menu_key(nKey, axKeys[MENU_CENTER])
                     WCenter(.T.)
                 OTHERWISE
                     nReturnMode := AC_GOTO
             ENDCASE
-        CASE nMode == AC_IDLE .AND. lScrollBar .AND. lMousable .AND. nKey == anKeys[MENU_LBUTTONUP]
+        CASE nMode == AC_IDLE .AND. lScrollBar .AND. lMousable .AND. was_menu_key(nKey, axKeys[MENU_LBUTTONUP])
             DO CASE
                 CASE nHitStatus == HTSCROLLUNITDEC
                     KEYBOARD Chr(K_UP)
@@ -727,11 +769,11 @@ FUNCTION menu_search_disallow_exit_move(nMode, nCurrentElement, nRowPosition, oS
             ENDCASE
     ENDCASE
 
-    IF nHitStatus == HTNOWHERE .AND. nKey == anKeys[MENU_LBUTTONDOWN] .AND. lMousable;
+    IF nHitStatus == HTNOWHERE .AND. was_menu_key(nKey, axKeys[MENU_LBUTTONDOWN]) .AND. lMousable;
        .AND. nMouseRow >= -1 * nBorderShift .AND. nMouseCol >= -1 * nBorderShift;
        .AND. nMouseRow <= MaxRow() + nBorderShift .AND. nMouseCol <= MaxCol() + nBorderShift
 
-        DO WHILE nKey != anKeys[MENU_LBUTTONUP]
+        DO WHILE !was_menu_key(nKey, axKeys[MENU_LBUTTONUP])
 
             nKey := Inkey()
 
@@ -754,6 +796,8 @@ FUNCTION menu_search_disallow_exit_move(nMode, nCurrentElement, nRowPosition, oS
                     WMove(WRow() - 1, WCol())
                 CASE MRow() < nMouseRow .AND. MCol() < nMouseCol
                     WMove(WRow() - 1, WCol() - 1)
+                OTHERWISE
+                    hb_idleSleep(0.1)
             ENDCASE
         ENDDO
     ENDIF

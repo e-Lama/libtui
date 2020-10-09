@@ -11,7 +11,7 @@ PROCEDURE main()
     LOCAL nResult
     LOCAL oError
 
-    Set( _SET_EVENTMASK, INKEY_ALL )
+    Set(_SET_EVENTMASK, INKEY_ALL)
 
     AFill(alAllowed, .T.)
     alAllowed[2] := .F.

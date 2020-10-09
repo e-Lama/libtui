@@ -799,7 +799,7 @@ METHOD display(lEnd) CLASS Row_browse
             nAction := ::__handle_move(IF(hb_hHasKey(::__hKeysMap, nKey), ::__hKeysMap[nKey], nKey), nRowFromHeader)
 
             IF nAction != ROWBROWSE_NO_ACTION .AND. nAction != ROWBROWSE_END
-                nAction := ::__handle_action(Eval(::__bUserAction, Self, nKey))
+                nAction := ::__handle_action(Eval(::__bUserAction, Self, nKey, nRowFromHeader))
             ENDIF
 
             IF nAction == ROWBROWSE_END

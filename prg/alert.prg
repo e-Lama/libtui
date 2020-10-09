@@ -308,7 +308,6 @@ METHOD AlertLG(xMessage, acOptions, cColorMessage, cColorButtons, nDelay, nRow, 
                     nKey := K_LEFT
                 CASE nKey == K_MWFORWARD
                     nKey := K_RIGHT
-                //CASE nKey ==  TODO . Poza tym ruszanie okienkiem
                 CASE nKey == K_LBUTTONDOWN
                     IF nMouseRow == nMessageHeight + 1
                         FOR i := 1 TO Len(anButtonsColFrom)
@@ -342,6 +341,8 @@ METHOD AlertLG(xMessage, acOptions, cColorMessage, cColorButtons, nDelay, nRow, 
                                     WMove(WRow() - 1, WCol())
                                 CASE MRow() < nMouseRow .AND. MCol() < nMouseCol
                                     WMove(WRow() - 1, WCol() - 1)
+                                OTHERWISE
+                                    hb_idleSleep(0.1)
                             ENDCASE
                         ENDDO
 
